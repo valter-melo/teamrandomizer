@@ -1,0 +1,55 @@
+:root {
+  /* Backgrounds */
+  --bg: #121212;
+  --surface: #1a1a1a;
+  --surface-2: #222;
+  --surface-3: #292929;
+
+  /* Borders */
+  --border: #333;
+  --border-2: #444;
+
+  /* Text */
+  --text: #e0e0e0;
+  --text-2: #bbb;
+  --muted: #888;
+
+  /* Brand */
+  --primary: #4CAF50;
+
+  /* Semantic */
+  --danger: #f44336;
+  --info: #2196F3;
+  --warn: #ff9800;
+
+  /* Pots (padronizado) */
+  --pot-1: #4CAF50;
+  --pot-2: #3154c5;
+  --pot-3: #cebd23;
+  --pot-4: #ce2323;
+
+  /* Radius / shadow */
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+
+  --shadow-1: 0 2px 8px rgba(0,0,0,0.25);
+  --shadow-2: 0 4px 12px rgba(0,0,0,0.35);
+
+  /* Spacing scale */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+
+  /* Typography */
+  --fs-1: 0.75rem;
+  --fs-2: 0.85rem;
+  --fs-3: 0.95rem;
+  --fs-4: 1.1rem;
+  --fs-5: 1.3rem;
+
+  /* Focus */
+  --focus: 0 0 0 3px rgba(76, 175, 80, 0.25);
+}

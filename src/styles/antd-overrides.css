@@ -1,0 +1,120 @@
+/* Layout escuro consistente */
+.ant-layout,
+.ant-layout-content {
+  background: var(--bg) !important;
+}
+
+/* Card com cara de "surface" */
+.ant-card {
+  background: var(--surface) !important;
+  border-radius: var(--r-md) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-1);
+}
+
+.ant-card-head {
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.ant-card-head-title {
+  color: var(--primary) !important;
+  font-weight: 900 !important;
+}
+
+/* Inputs */
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select-selector,
+.ant-input-password {
+  background: var(--surface-2) !important;
+  border-color: var(--border-2) !important;
+  color: var(--text) !important;
+  border-radius: var(--r-sm) !important;
+}
+
+.ant-input::placeholder { color: rgba(255,255,255,.45) !important; }
+
+/* Table */
+.ant-table,
+.ant-table-container,
+.ant-table-content {
+  background: transparent !important;
+}
+
+.ant-table-container {
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-md) !important;
+  overflow: hidden;
+}
+
+.ant-table-thead > tr > th {
+  background: var(--surface-2) !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.ant-table-tbody > tr > td {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid rgba(255,255,255,.06) !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: var(--surface-3) !important;
+}
+
+/* Menu (sider) */
+.ant-menu {
+  background: transparent !important;
+}
+
+.ant-menu-item {
+  border-radius: var(--r-sm) !important;
+}
+
+.ant-menu-item-selected {
+  background: rgba(43,217,107,0.12) !important;
+  color: var(--primary) !important;
+}
+
+/* Botões no padrão do seu CSS */
+.btn-generate.ant-btn,
+.btn-generate.ant-btn-primary {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #000 !important;
+  font-weight: 900 !important;
+  border-radius: var(--r-sm) !important;
+}
+
+.btn-save.ant-btn {
+  background: var(--info) !important;
+  border-color: var(--info) !important;
+  color: #fff !important;
+  font-weight: 900 !important;
+  border-radius: var(--r-sm) !important;
+}
+
+.btn-copy.ant-btn {
+  background: var(--warn) !important;
+  border-color: var(--warn) !important;
+  color: #fff !important;
+  font-weight: 900 !important;
+  border-radius: var(--r-sm) !important;
+}
+
+.btn-reset.ant-btn {
+  background: var(--danger) !important;
+  border-color: var(--danger) !important;
+  color: #fff !important;
+  font-weight: 900 !important;
+  border-radius: var(--r-sm) !important;
+}
+
+/* Dropzone estilo seu tracejado */
+.dropzone {
+  border: 2px dashed rgba(43,217,107,0.65);
+  border-radius: var(--r-md);
+  background: rgba(43,217,107,0.04);
+  padding: 16px;
+}

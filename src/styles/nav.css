@@ -1,0 +1,63 @@
+.nav-sider {
+  background: var(--surface-2) !important;
+  border-right: 1px solid var(--border);
+  box-shadow: var(--shadow-1);
+}
+
+.nav-brand {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.nav-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-sm);
+  background: rgba(43,217,107,0.10);
+  border: 1px solid rgba(43,217,107,0.30);
+}
+
+.nav-title {
+  font-weight: 900;
+  color: var(--primary);
+  line-height: 1.1;
+}
+
+.nav-subtitle {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+
+.nav-menu {
+  background: transparent !important;
+  border-right: none !important;
+  padding: 10px;
+}
+
+.nav-menu .ant-menu-item {
+  border-radius: var(--r-sm) !important;
+  margin: 6px 0 !important;
+  height: 42px !important;
+  line-height: 42px !important;
+  color: var(--text-2) !important;
+  font-weight: 800;
+}
+
+.nav-menu .ant-menu-item:hover {
+  background: var(--surface-3) !important;
+  color: #fff !important;
+}
+
+.nav-menu .ant-menu-item-selected {
+  background: rgba(43,217,107,0.12) !important;
+  color: var(--primary) !important;
+}
+
+.nav-menu .ant-menu-item-selected::after {
+  border-right: 3px solid var(--primary) !important;
+}

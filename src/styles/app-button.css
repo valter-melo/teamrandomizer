@@ -1,0 +1,34 @@
+.action-btn-compact {
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform .15s, opacity .15s;
+  min-width: 44px;
+}
+
+.action-btn-compact:hover {
+  transform: translateY(-1px);
+  opacity: .95;
+}
+
+.action-btn-compact.generate {
+  background: var(--primary);
+  color: #000;
+}
+
+.action-btn-compact.save {
+  background: var(--info);
+  color: #fff;
+}
+
+.action-btn-compact.copy {
+  background: var(--warn);
+  color: #fff;
+}
+
+.action-btn-compact.reset {
+  background: var(--danger);
+  color: #fff;
+}

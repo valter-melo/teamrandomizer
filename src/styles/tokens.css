@@ -1,0 +1,38 @@
+:root{
+  /* Base */
+  --bg: #1a1a1a;
+  --surface: #161616;
+  --surface-2: #1a1a1a;
+  --surface-3: #18201c;
+
+  --text: rgba(255,255,255,.92);
+  --text-2: rgba(255,255,255,.72);
+
+  --muted: rgba(255,255,255,.70);
+  --muted-2: rgba(255,255,255,.55);
+
+  --border: rgba(43, 217, 107, 0.18);
+  --border-2: rgba(255,255,255,.10);
+
+  /* Cores de ação (seguindo sua CSS) */
+  --primary: #2bd96b;  /* generate / destaque */
+  --info: #2f9bff;     /* save */
+  --warn: #ff9f1a;     /* copy */
+  --danger: #ff4d4f;   /* reset */
+
+  /* Radius / fontes */
+  --r-sm: 10px;
+  --r-md: 14px;
+
+  --fs-2: 0.9rem;
+  --fs-3: 0.95rem;
+  --fs-4: 1.05rem;
+  --fs-5: 1.25rem;
+
+  /* Sombras (equivalentes ao seu look) */
+  --shadow-1: 0 6px 16px rgba(0,0,0,.35);
+  --shadow-2: 0 10px 25px rgba(0,0,0,.45);
+}
+
+/* Base do app */
+html, body, #root { height: 100%; background: var(--bg); }
