@@ -43,7 +43,7 @@ export default function Nav() {
           ]
         : [
             { key: `${base}/login`, icon: <LoginOutlined />, label: "Login" },
-            { key: "/signup", icon: <UserOutlined />, label: "Criar Tenant" },
+            { key: "/signup", icon: <UserOutlined />, label: "Criar Grupo" },
           ],
     [token, base]
   );
