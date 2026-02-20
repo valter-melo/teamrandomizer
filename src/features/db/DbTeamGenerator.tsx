@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Checkbox, Input, InputNumber, Spin, Typography, message, Tag } from "antd";
 import type { CheckboxChangeEvent } from "antd/es/checkbox";
-import { ReloadOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import { ArrowLeftOutlined } from "@ant-design/icons";
 import { http } from "../../api/http";
 import "../../styles/team-generator.css";
 
