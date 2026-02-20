@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { Tabs, message, Spin } from "antd";
+import { Tabs, message } from "antd";
 import type { TabsProps } from "antd";
 
 import FileUpload from "../components/FileUpload";
@@ -11,7 +11,6 @@ import { http } from "../api/http";
 
 import "../styles/team-generator.css";
 
-// ===== Types do modo TXT =====
 export type PlayerColumns = {
   coluna1: string[];
   coluna2: string[];
@@ -35,9 +34,8 @@ function clamp(n: number, min: number, max: number) {
 
 export default function TeamGenerator() {
   const [activeTab, setActiveTab] = useState<TabKey>("upload");
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
 
-  // ===== TXT state =====
   const [playersTxt, setPlayersTxt] = useState<PlayerColumns>({
     coluna1: [],
     coluna2: [],
@@ -51,13 +49,9 @@ export default function TeamGenerator() {
 
   const [, setDatabasePlayersMap] = useState<PotPlayersMap>({ 1: [], 2: [], 3: [], 4: [] });
 
-  // ===== HISTORY =====
-  const [history, setHistory] = useState<any[]>([]);
+  const [, setHistory] = useState<any[]>([]);
   const [historyLoaded, setHistoryLoaded] = useState(false);
 
-  // =========================================================================================
-  // TXT: Parse/Upload
-  // =========================================================================================
   const parsePlayers = useCallback((text: string): PlayerColumns => {
     const lines = text.split("\n");
     let currentColumn: keyof PlayerColumns | null = null;
@@ -215,14 +209,12 @@ export default function TeamGenerator() {
     setActiveTab("upload");
   }, []);
 
-  // =========================================================================================
-  // HISTORY
-  // =========================================================================================
   const apiLoadHistoryOnce = useCallback(async () => {
     if (historyLoaded) return;
     setLoading(true);
     try {
-      const { data } = await http.get<any[]>("/history");
+      const { data } = await http.get<any[]>("/history/sessions");
+      console.log(data);
       setHistory(data);
       setHistoryLoaded(true);
     } catch (e: any) {
@@ -232,9 +224,6 @@ export default function TeamGenerator() {
     }
   }, [historyLoaded]);
 
-  // =========================================================================================
-  // Derived
-  // =========================================================================================
   const hasPlayersTxt = useMemo(() => Object.values(playersTxt).some((col) => col.length > 0), [playersTxt]);
   const hasTeamsTxt = teamsTxt.length > 0;
   const canGenerateTxt = useMemo(() => Object.values(playersTxt).every((col) => col.length >= 4), [playersTxt]);
@@ -302,7 +291,7 @@ export default function TeamGenerator() {
   const tabsItems: TabsProps["items"] = [
     { key: "upload", label: "Upload TXT" },
     { key: "database", label: "Banco de Dados" },
-    { key: "history", label: "Histórico" },
+    //{ key: "history", label: "Histórico" },
   ];
 
   const onTabChange = useCallback(
@@ -314,30 +303,16 @@ export default function TeamGenerator() {
     [apiLoadHistoryOnce]
   );
 
-  // =========================================================================================
-  // Render
-  // =========================================================================================
   return (
     <div className="team-generator-compact">
-      {/* Header */}
-      <div className="compact-header">
-        <div className="logo-title">
-          <img src="/BoraVer.svg" alt="Logo" className="compact-logo" />
-          <div className="title-section">
-            <h1>Gerador de Times</h1>
-            <p className="subtitle">Sorteio balanceado</p>
-          </div>
-        </div>
-      </div>
 
       {/* Tabs */}
       <div className="main-tabs">
-        <div style={{ padding: "0 20px" }}>
+        <div style={{ padding: "0 20px", marginTop: "20px" }}>
           <Tabs items={tabsItems} activeKey={activeTab} onChange={onTabChange} />
         </div>
       </div>
 
-      {/* UPLOAD TXT: continua 2 colunas COM resultado próprio */}
       {activeTab === "upload" && (
         <div className="main-content">
           {/* LEFT */}
@@ -376,7 +351,6 @@ export default function TeamGenerator() {
             )}
           </div>
 
-          {/* RIGHT (somente TXT) */}
           <div className="results-column ui-scroll">
             <div className="results-section ui-card">
               <div className="results-header">
@@ -447,10 +421,9 @@ export default function TeamGenerator() {
         </div>
       )}
 
-      {/* DATABASE: tela cheia / wizard, COM resultado próprio dentro do DbTeamGenerator */}
       {activeTab === "database" && <DbTeamGenerator />}
 
-      {/* HISTORY: tela própria */}
+      {/* HISTORY: tela própria
       {activeTab === "history" && (
         <div className="main-content">
           <div className="ui-card" style={{ padding: 16 }}>
@@ -467,7 +440,7 @@ export default function TeamGenerator() {
             )}
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

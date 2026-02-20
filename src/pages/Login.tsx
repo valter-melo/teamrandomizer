@@ -1,7 +1,8 @@
-import { Button, Card, Form, Input, message } from "antd";
-import { login } from "../api/auth";
+import { Card, Form, Input, message } from "antd";
+import { loginBySlug } from "../api/auth";
 import { authStore } from "../auth/store";
 import { useNavigate } from "react-router-dom";
+import AppButton from "../components/AppButton";
 
 export default function Login() {
   const [form] = Form.useForm();
@@ -9,33 +10,60 @@ export default function Login() {
 
   async function onFinish(values: any) {
     try {
-      const res = await login(values);
-      authStore.set({ token: res.token, tenantId: res.tenantId, userId: res.userId, role: res.role });
-      message.success("Logado!");
-      nav("/dashboard");
+      const res = await loginBySlug(values);
+
+      authStore.set({
+        token: res.token,
+        tenantId: res.tenantId,
+        userId: res.userId,
+        role: res.role,
+        tenantSlug: values.tenantSlug,
+      });
+
+      message.success("Bem-vindo!");
+      nav(`/t/${values.tenantSlug}/dashboard`);
     } catch (e: any) {
       message.error(e?.response?.data?.message ?? "Falha no login");
     }
   }
 
   return (
-    <Card title="Login" style={{ maxWidth: 520 }}>
-      <Form layout="vertical" form={form} onFinish={onFinish} initialValues={{ tenantId: authStore.getTenantId() ?? "" }}>
-        <Form.Item label="TenantId (UUID)" name="tenantId" rules={[{ required: true }]}>
-          <Input placeholder="Cole o UUID do tenant" />
+    <Card title="Entrar no grupo" style={{ maxWidth: 520 }}>
+      <Form
+        layout="vertical"
+        form={form}
+        onFinish={onFinish}
+        initialValues={{
+          tenantSlug: authStore.getTenantSlug() ?? "",
+        }}
+      >
+        <Form.Item
+          label="Grupo"
+          name="tenantSlug"
+          rules={[{ required: true, message: "Informe o grupo" }]}
+        >
+          <Input placeholder="ex: boraver" />
         </Form.Item>
 
-        <Form.Item label="Email" name="email" rules={[{ required: true, type: "email" }]}>
+        <Form.Item
+          label="Email"
+          name="email"
+          rules={[{ required: true, type: "email" }]}
+        >
           <Input />
         </Form.Item>
 
-        <Form.Item label="Senha" name="password" rules={[{ required: true }]}>
+        <Form.Item
+          label="Senha"
+          name="password"
+          rules={[{ required: true }]}
+        >
           <Input.Password />
         </Form.Item>
 
-        <Button type="primary" htmlType="submit" block>
+        <AppButton tone="generate" htmlType="submit" block>
           Entrar
-        </Button>
+        </AppButton>
       </Form>
     </Card>
   );

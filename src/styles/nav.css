@@ -1,24 +1,35 @@
+/* src/styles/nav.css (ou onde você mantém o CSS do Nav) */
+
 .nav-sider {
-  background: var(--surface-2) !important;
+  background: var(--surface) !important;
   border-right: 1px solid var(--border);
-  box-shadow: var(--shadow-1);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 }
 
+/* BRAND */
 .nav-brand {
-  padding: 14px 16px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  padding: 14px 14px;
   border-bottom: 1px solid var(--border);
-  background: var(--surface);
+}
+
+.nav-brand.collapsed {
+  justify-content: center;
+  padding: 14px 0;
 }
 
 .nav-logo {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--r-sm);
-  background: rgba(43,217,107,0.10);
-  border: 1px solid rgba(43,217,107,0.30);
+  object-fit: contain;
+  background: var(--surface-2);
+  padding: 6px;
+  border: 1px solid var(--border);
 }
 
 .nav-title {
@@ -28,15 +39,18 @@
 }
 
 .nav-subtitle {
-  font-size: 12px;
   color: var(--text-2);
-  margin-top: 2px;
+  font-weight: 800;
+  font-size: var(--fs-2);
+  opacity: 0.9;
 }
 
+/* MENU ocupa o meio inteiro */
 .nav-menu {
   background: transparent !important;
-  border-right: none !important;
-  padding: 10px;
+  border-right: 0 !important;
+  flex: 1;
+  padding: 10px 10px 0 10px;
 }
 
 .nav-menu .ant-menu-item {
@@ -54,10 +68,40 @@
 }
 
 .nav-menu .ant-menu-item-selected {
-  background: rgba(43,217,107,0.12) !important;
+  background: rgba(43, 217, 107, 0.12) !important;
   color: var(--primary) !important;
 }
 
 .nav-menu .ant-menu-item-selected::after {
   border-right: 3px solid var(--primary) !important;
+}
+
+/* FOOTER fixo no rodapé */
+.nav-footer {
+  margin-top: auto;
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Botão verde padrão no rodapé */
+.nav-toggle-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mobile: por padrão colapsa melhor e evita overflow */
+@media (max-width: 768px) {
+  .nav-menu {
+    padding: 8px;
+  }
+  .nav-footer {
+    padding: 10px;
+  }
 }

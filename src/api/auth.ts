@@ -12,7 +12,17 @@ export async function registerTenant(payload: {
   return data;
 }
 
-export async function login(payload: { tenantId: string; email: string; password: string }) {
-  const { data } = await http.post<AuthResponse>("/auth/login", payload);
+export async function login(payload: { slug: string; email: string; password: string }) {
+  const { data } = await http.post("/auth/login", payload);
   return data;
+}
+
+export function loginBySlug(payload: {
+  tenantSlug: string;
+  email: string;
+  password: string;
+}) {
+  return http
+    .post("/auth/login-by-slug", payload)
+    .then((r) => r.data);
 }

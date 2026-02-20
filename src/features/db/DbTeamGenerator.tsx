@@ -195,7 +195,8 @@ export default function DbTeamGenerator() {
     setResult(null);
 
     try {
-      const { data } = await http.post<GenerateDbResponse>("/v1/teams/generate/db", payload);
+      console.log(payload);
+      const { data } = await http.post<GenerateDbResponse>("/teams/generate/db", payload);      
       setResult(data);
       setStep("result");
       message.success("Times gerados com sucesso!");
@@ -239,7 +240,7 @@ export default function DbTeamGenerator() {
   const TopBar = (
     <div className="ui-card" style={{ padding: 15 }}>
       <div className="config-header-compact">
-        <span className="config-title">🧠 Sorteio pelo Banco</span>
+        <span className="config-title"></span>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button
@@ -249,11 +250,11 @@ export default function DbTeamGenerator() {
             disabled={playersLoading || skillsLoading}
             title="Recarregar dados"
           >
-            <ReloadOutlined /> Recarregar
+            Recarregar
           </button>
 
           <button type="button" className="action-btn-compact reset" onClick={resetAll} title="Reiniciar">
-            Reiniciar
+            Limpar
           </button>
         </div>
       </div>
@@ -299,6 +300,17 @@ export default function DbTeamGenerator() {
         <span className="players-count ui-badge">{selectedPlayersCount}</span>
       </div>
 
+      <button
+        type="button"
+        className="action-btn-compact generate"
+        onClick={goNext}
+        disabled={!canGoNext}
+        title={!canGoNext ? `Selecione ${needed} jogadores` : "Ir para skills"}
+        style={{marginBottom: 10}}
+      >
+        Próximo: Skills
+      </button>
+      
       <Input
         placeholder="Buscar jogador..."
         value={playerQuery}
@@ -354,16 +366,6 @@ export default function DbTeamGenerator() {
         <Text style={{ color: "var(--text-2)", fontWeight: 800 }}>
           Selecionados: {selectedPlayersCount} / {needed}
         </Text>
-
-        <button
-          type="button"
-          className="action-btn-compact generate"
-          onClick={goNext}
-          disabled={!canGoNext}
-          title={!canGoNext ? `Selecione ${needed} jogadores` : "Ir para skills"}
-        >
-          Próximo: Skills
-        </button>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { Card, Space, Table, Button, message } from "antd";
+import { Card, Space, Table, message } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { listSkills } from "../api/skills";

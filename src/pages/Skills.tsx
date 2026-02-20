@@ -1,4 +1,4 @@
-import { Button, Card, Form, Input, Space, Table, message } from "antd";
+import { Card, Form, Input, Space, Table, message } from "antd";
 import { useEffect, useState } from "react";
 import { createSkill, listSkills } from "../api/skills";
 import type { Skill } from "../api/skills"

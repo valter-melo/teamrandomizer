@@ -15,6 +15,7 @@ export default function SignupTenant() {
       message.success("Tenant criado com sucesso!");
       nav(res.token ? "/dashboard" : "/login");
     } catch (e: any) {
+      console.log(e);
       message.error(e?.response?.data?.message ?? "Falha ao criar tenant");
     }
   }
@@ -22,7 +23,11 @@ export default function SignupTenant() {
   return (
     <Card title="Criar Tenant + Admin" style={{ maxWidth: 520 }}>
       <Form layout="vertical" form={form} onFinish={onFinish}>
-        <Form.Item label="Nome do grupo (tenant)" name="tenantName" rules={[{ required: true }]}>
+        <Form.Item label="Identificador do grupo" name="tenantName" rules={[{ required: true }]}>
+          <Input />
+        </Form.Item>
+
+        <Form.Item label="Nome do grupo (tenant)" name="tenantSlug" rules={[{ required: true }]}>
           <Input />
         </Form.Item>
 
