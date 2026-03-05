@@ -42,7 +42,7 @@ export default function Login() {
           name="tenantSlug"
           rules={[{ required: true, message: "Informe o grupo" }]}
         >
-          <Input placeholder="ex: boraver" />
+          <Input />
         </Form.Item>
 
         <Form.Item

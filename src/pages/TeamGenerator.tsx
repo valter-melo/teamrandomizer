@@ -5,6 +5,7 @@ import type { TabsProps } from "antd";
 import FileUpload from "../components/FileUpload";
 import PlayerColumn from "../components/PlayerColumn";
 import DbTeamGenerator from "../features/db/DbTeamGenerator";
+import { PotSelection } from "../components/PotSelection";
 
 import AppButton from "../components/AppButton";
 import { http } from "../api/http";
@@ -23,7 +24,7 @@ interface TeamTxt {
   jogadores: string[];
 }
 
-type TabKey = "upload" | "database" | "history";
+type TabKey = "upload" | "database" | "potes" | "history"; // adicionado "potes"
 type PotPlayersMap = { [pot: number]: string[] };
 
 const DEFAULT_MAX_TEAMS = 8;
@@ -288,17 +289,18 @@ export default function TeamGenerator() {
     );
   };
 
+  // Atualizar as tabs para incluir "potes"
   const tabsItems: TabsProps["items"] = [
     { key: "upload", label: "Upload TXT" },
     { key: "database", label: "Banco de Dados" },
-    //{ key: "history", label: "Histórico" },
+    { key: "potes", label: "Potes" }, // nova aba
   ];
 
   const onTabChange = useCallback(
     async (k: string) => {
       const next = k as TabKey;
       setActiveTab(next);
-      if (next === "history") await apiLoadHistoryOnce();
+      if (next === "history") await apiLoadHistoryOnce(); // se você tiver uma aba history, senão ignore
     },
     [apiLoadHistoryOnce]
   );
@@ -315,7 +317,7 @@ export default function TeamGenerator() {
 
       {activeTab === "upload" && (
         <div className="main-content">
-          {/* LEFT */}
+          {/* conteúdo existente para upload */}
           <div className="controls-column ui-scroll">
             <div className="upload-section-compact ui-card">
               <FileUpload key={key} onFileUpload={handleFileUpload} />
@@ -423,24 +425,7 @@ export default function TeamGenerator() {
 
       {activeTab === "database" && <DbTeamGenerator />}
 
-      {/* HISTORY: tela própria
-      {activeTab === "history" && (
-        <div className="main-content">
-          <div className="ui-card" style={{ padding: 16 }}>
-            {loading ? (
-              <div style={{ padding: 28, display: "flex", justifyContent: "center" }}>
-                <Spin />
-              </div>
-            ) : (
-              <div className="empty-state">
-                <div className="empty-icon">📅</div>
-                <h3>Histórico</h3>
-                <p>Carregue e liste sorteios anteriores aqui (via endpoint).</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )} */}
+      {activeTab === "potes" && <PotSelection />} {/* nova aba */}
     </div>
   );
 }
