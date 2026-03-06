@@ -18,7 +18,6 @@ type Player = {
 
 type Skill = {
   id: UUID;
-  code: string;
   name: string;
   active: boolean;
 };
@@ -92,7 +91,7 @@ export default function DbTeamGenerator() {
   const filteredSkills = useMemo(() => {
     const q = skillQuery.trim().toLowerCase();
     if (!q) return activeSkills;
-    return activeSkills.filter((s) => `${s.name} ${s.code}`.toLowerCase().includes(q));
+    return activeSkills.filter((s) => `${s.name}`.toLowerCase().includes(q));
   }, [activeSkills, skillQuery]);
 
   const selectedSkills = useMemo(
@@ -417,7 +416,6 @@ export default function DbTeamGenerator() {
                     <Checkbox checked={checked} onChange={(e) => toggleSkill(s.id, e.target.checked)} />
                     <div style={{ display: "flex", flexDirection: "column" }}>
                       <span style={{ fontWeight: 900, color: "#fff" }}>{s.name}</span>
-                      <span style={{ fontSize: 12, color: "var(--text-2)", fontWeight: 800 }}>{s.code}</span>
                     </div>
                   </div>
 

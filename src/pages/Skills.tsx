@@ -24,7 +24,7 @@ export default function Skills() {
   }, []);
 
   async function onCreate(values: any) {
-    try {
+    try {        
       await createSkill(values);
       message.success("Skill criada");
       await refresh();
@@ -37,13 +37,10 @@ export default function Skills() {
     <Space direction="vertical" style={{ width: "100%" }} size={16}>
       <Card title="Nova Skill">
         <Form layout="inline" onFinish={onCreate}>
-          <Form.Item name="code" rules={[{ required: true }]} label="Code">
-            <Input placeholder="SAQUE" style={{ width: 160 }} />
-          </Form.Item>
           <Form.Item name="name" rules={[{ required: true }]} label="Nome">
             <Input placeholder="Saque" style={{ width: 280 }} />
           </Form.Item>
-          <AppButton tone="generate">
+          <AppButton tone="generate" htmlType="submit">
             Adicionar
           </AppButton>
         </Form>
@@ -55,7 +52,6 @@ export default function Skills() {
           loading={loading}
           dataSource={items}
           columns={[
-            { title: "Code", dataIndex: "code" },
             { title: "Nome", dataIndex: "name" },
             { title: "Ativa", dataIndex: "active", render: (v) => (v ? "Sim" : "Não") },
           ]}
