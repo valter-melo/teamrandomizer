@@ -66,3 +66,19 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Para a tabela de classificação em TVs */
+.tv-table .ant-table-thead > tr > th,
+.tv-table .ant-table-tbody > tr > td {
+  font-size: 28px !important;
+  padding: 20px 16px !important;
+  background-color: #1a1a1a !important;
+  color: #fff !important;
+  border-color: #444 !important;
+}
+.tv-table .ant-table-thead > tr > th {
+  background-color: #0d0d0d !important;
+  color: #2bd96b !important;
+  font-weight: bold;
+  font-size: 30px !important;
+}

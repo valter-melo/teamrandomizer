@@ -1,13 +1,20 @@
-import axios from "axios";
-import { authStore } from "../auth/store";
+import axios from 'axios';
+import { authStore } from '../auth/store';
 
-export const http = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  timeout: 20000,
+const http = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 120000,
 });
 
 http.interceptors.request.use((config) => {
   const token = authStore.getToken();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
+
+export { http };

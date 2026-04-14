@@ -1,7 +1,7 @@
 import React, { useCallback, useRef } from 'react';
 import type { ChangeEvent } from 'react';
 import type { DragEvent } from 'react';
-import type { FileUploadProps } from './types/intex';
+import type { FileUploadProps } from './types';
 import './styles/FileUpload.css';
 
 const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {

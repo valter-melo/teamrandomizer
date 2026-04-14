@@ -10,6 +10,8 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   TeamOutlined,
+  ScheduleOutlined,    // novo
+  EditOutlined,         // novo
 } from "@ant-design/icons";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { authStore } from "../auth/store";
@@ -22,7 +24,7 @@ export default function Nav() {
   const { slug } = useParams();
   const token = authStore.getToken();
 
-  // ✅ lembra estado do menu
+  // estado do menu (recolhido/expandido)
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem("nav:collapsed") === "1");
 
   useEffect(() => {
@@ -39,6 +41,8 @@ export default function Nav() {
             { key: `${base}/skills`, icon: <StarOutlined />, label: "Skills" },
             { key: `${base}/players`, icon: <UserOutlined />, label: "Jogadores" },
             { key: `${base}/generator`, icon: <TeamOutlined />, label: "Gerar Times" },
+            { key: "/championships", icon: <ScheduleOutlined />, label: "Campeonatos" },
+            { key: "/manual-teams", icon: <EditOutlined />, label: "Montagem Manual" }, 
             { key: `${base}/logout`, icon: <LogoutOutlined />, label: "Sair" },
           ]
         : [
