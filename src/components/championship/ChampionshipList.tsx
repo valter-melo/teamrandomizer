@@ -27,8 +27,7 @@ export const ChampionshipList: React.FC = () => {
 
   return (
     <Card title="Campeonatos">
-      <Space direction="vertical" style={{ width: '100%' }}>
-        <Button type="primary" onClick={() => navigate('/championships/create')}>Novo Campeonato</Button>
+      <Space orientation="vertical" style={{ width: '100%' }}>
         <Table dataSource={data} columns={columns} rowKey="id" />
       </Space>
     </Card>

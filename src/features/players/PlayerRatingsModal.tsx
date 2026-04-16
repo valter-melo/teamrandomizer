@@ -99,8 +99,10 @@ export default function PlayerRatingsModal({
         <Card
           title="Skills"
           style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-          headStyle={{ borderColor: "var(--border)" }}
-          bodyStyle={{ padding: 0 }}
+          styles={{
+            header: { borderColor: "var(--border)" },
+            body: { padding: 0 },
+          }}
         >
           <Table<Row>
             rowKey="id"

@@ -1,7 +1,6 @@
-// src/components/championship/ScoreboardModal.tsx
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, InputNumber, Space, Typography, message, Row, Col, Card, Tooltip } from 'antd';
-import { SettingOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons';
+import { SettingOutlined, PlusOutlined, MinusOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { http } from '../../api/http';
 import type { Team } from '../types';
 
@@ -128,8 +127,15 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
       footer={null}
       width="100vw"
       style={{ top: 0, maxWidth: '100vw', height: '100vh', padding: 0, overflow: 'hidden' }}
-      bodyStyle={{ height: 'calc(100vh - 55px)', padding: 16, overflow: 'auto', position: 'relative' }}
-      closeIcon={<span style={{ fontSize: 24, color: '#fff' }}>✕</span>}
+      styles={{
+        body: {
+          height: 'calc(100vh - 55px)', 
+          padding: 16, 
+          overflow: 'auto', 
+          position: 'relative'
+        },
+      }}      
+      closeIcon={<CloseCircleOutlined style={{ fontSize: 20, color: 'white' }} />}
     >
       <div style={{ position: 'relative', minHeight: '100%' }}>
         {/* Logo centralizada */}
@@ -160,7 +166,7 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
             </div>
             <Row gutter={[16, 32]} justify="center" align="middle" style={{ minHeight: '70vh', position: 'relative', zIndex: 1 }}>
               <Col xs={24} md={10} style={{ textAlign: 'center' }}>
-                <Card bordered={false} style={{ backgroundColor: '#f0f2f5', padding: '8px 0' }}>
+                <Card variant='borderless' style={{ backgroundColor: '#f0f2f5', padding: '8px 0' }}>
                   <Title level={3} style={styles.title}>Time {homeTeamIndex}</Title>
                   {homeTeam && (
                     <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '4px' }}>
@@ -196,7 +202,7 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
                 <Text style={{ fontSize: 68 }}>VS</Text>
               </Col>
               <Col xs={24} md={10} style={{ textAlign: 'center' }}>
-                <Card bordered={false} style={{ backgroundColor: '#f0f2f5', padding: '8px 0' }}>
+                <Card variant='borderless' style={{ backgroundColor: '#f0f2f5', padding: '8px 0' }}>
                   <Title level={3} style={styles.title}>Time {awayTeamIndex}</Title>
                   {awayTeam && (
                     <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '4px' }}>

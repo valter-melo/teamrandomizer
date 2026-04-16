@@ -59,16 +59,16 @@ export const GroupStandings: React.FC<Props> = ({ standings, groupName, qualifie
     { key: 'played', label: 'J', render: (val: StandingEntry) => val.played },
     { key: 'wins', label: 'V', render: (val: StandingEntry) => val.wins },
     { key: 'losses', label: 'D', render: (val: StandingEntry) => val.losses },
-    { key: 'goalsDifference', label: 'SG', render: (val: StandingEntry) => val.goalsDifference },
-    { key: 'goalsFor', label: 'GP', render: (val: StandingEntry) => val.goalsFor },
-    { key: 'goalsAgainst', label: 'GC', render: (val: StandingEntry) => val.goalsAgainst },
+    { key: 'goalsFor', label: 'PP', render: (val: StandingEntry) => val.goalsFor },
+    { key: 'goalsAgainst', label: 'PC', render: (val: StandingEntry) => val.goalsAgainst },
+    { key: 'goalsDifference', label: 'SP', render: (val: StandingEntry) => val.goalsDifference },
   ];
 
   return (
     <Card
       title={groupName}
       style={{ marginBottom: 16, backgroundColor: '#1a1a1a', border: '1px solid #333' }}
-      headStyle={{ fontSize: 28, color: '#2bd96b' }}
+      styles={{ header: { fontSize: 28, color: '#2bd96b' } }}
     >
       <StyledTable>
         <thead>

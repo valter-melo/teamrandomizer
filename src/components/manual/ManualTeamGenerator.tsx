@@ -4,6 +4,7 @@ import { Button, Card, InputNumber, Input, Row, Col, message, List, Modal, Form,
 import { usePlayers } from '../../hooks/usePlayers';
 import { useManualTeams } from '../../hooks/useManualTeams';
 import { useNavigate } from 'react-router-dom';
+import './ManualTeamGenerator.css'; // Importa o CSS para customizar o Select
 
 const { Title } = Typography;
 
@@ -16,7 +17,6 @@ export const ManualTeamGenerator: React.FC = () => {
   const [teamCount, setTeamCount] = useState(2);
   const [playersPerTeam, setPlayersPerTeam] = useState(4);
   const [teams, setTeams] = useState<{ [key: number]: string[] }>({});
-  const [sessionName, setSessionName] = useState('');
 
   // Configuração do campeonato (modal)
   const [modalVisible, setModalVisible] = useState(false);
@@ -55,13 +55,9 @@ export const ManualTeamGenerator: React.FC = () => {
   const isComplete = totalSelected === needed;
 
   const handleOpenModal = () => {
-    console.log('handleOpenModal called', { isComplete, sessionName, totalSelected, needed });
+    console.log('handleOpenModal called', { isComplete, totalSelected, needed });
     if (!isComplete) {
       message.error(`Selecione exatamente ${needed} jogadores (${totalSelected} selecionados)`);
-      return;
-    }
-    if (!sessionName.trim()) {
-      message.error('Informe um nome para a sessão de times');
       return;
     }
     setModalVisible(true);
@@ -82,7 +78,7 @@ export const ManualTeamGenerator: React.FC = () => {
         playerIds,
         groupId: teamGroups[parseInt(idx)] || 1,
       })),
-      sessionName,
+
     };
     try {
       const result = await saveManualTeams(payload);
@@ -105,15 +101,23 @@ export const ManualTeamGenerator: React.FC = () => {
           <Card title="Configuração">
             <div style={{ marginBottom: 16 }}>
               <label>Número de times: </label>
-              <InputNumber min={1} value={teamCount} onChange={val => setTeamCount(val || 1)} />
+              <Input
+                type="number"
+                min={1}
+                value={teamCount}
+                onChange={e => setTeamCount(Math.max(1, Number(e.target.value) || 1))}
+                style={{ width: 120 }}
+              />
             </div>
             <div style={{ marginBottom: 16 }}>
               <label>Jogadores por time: </label>
-              <InputNumber min={1} value={playersPerTeam} onChange={val => setPlayersPerTeam(val || 1)} />
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <label>Nome da sessão (opcional): </label>
-              <Input value={sessionName} onChange={e => setSessionName(e.target.value)} placeholder="Ex: Montagem 23/03" />
+              <Input
+                type="number"
+                min={1}
+                value={playersPerTeam}
+                onChange={e => setPlayersPerTeam(Math.max(1, Number(e.target.value) || 1))}
+                style={{ width: 120 }}
+              />
             </div>
             <div>Total selecionado: {totalSelected} / {needed}</div>
             <Button type="primary" onClick={handleOpenModal} disabled={!isComplete} style={{ marginTop: 16 }}>
@@ -188,14 +192,16 @@ export const ManualTeamGenerator: React.FC = () => {
               <div key={teamIdx} style={{ marginBottom: 8, display: 'flex', alignItems: 'center' }}>
                 <span style={{ width: 80 }}>Time {teamIdx}</span>
                 <Select
+                  className="group-select"
+                  classNames={{ popup: { root: 'group-select-dropdown' } }}
                   value={teamGroups[teamIdx]}
                   onChange={val => setTeamGroups(prev => ({ ...prev, [teamIdx]: val }))}
                   style={{ width: 120 }}
-                >
-                  {Array.from({ length: groupsCount }, (_, g) => g + 1).map(g => (
-                    <Select.Option key={g} value={g}>Grupo {g}</Select.Option>
-                  ))}
-                </Select>
+                  options={Array.from({ length: groupsCount }, (_, g) => ({
+                    value: g + 1,
+                    label: `Grupo ${g + 1}`,
+                  }))}
+                />
               </div>
             ))}
           </Form.Item>

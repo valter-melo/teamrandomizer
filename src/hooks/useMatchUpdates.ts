@@ -1,14 +1,19 @@
 import { useEffect } from 'react';
+import { API_BASE_URL } from '../api/config';
 
-export const useMatchUpdates = (championshipId: string, onUpdate: (data: any) => void) => {
+
+export const useMatchUpdates = (
+  championshipId: string,
+  onUpdate: (data: any) => void,
+  enabled: boolean = true
+) => {
   useEffect(() => {
-    if (!championshipId) return;
-
     let eventSource: EventSource | null = null;
-    let reconnectTimeout: number | null = null; // ← corrigido: number
+    let reconnectTimeout: number | null = null;
+    let closedByCleanup = false;
 
     const connect = () => {
-      eventSource = new EventSource(`/championships/${championshipId}/stream`);
+      eventSource = new EventSource(`${API_BASE_URL}/championships/${championshipId}/stream`);
 
       eventSource.addEventListener('matchUpdate', (event) => {
         try {
@@ -21,28 +26,36 @@ export const useMatchUpdates = (championshipId: string, onUpdate: (data: any) =>
 
       eventSource.onerror = (err) => {
         console.error('SSE error', err);
+
         if (eventSource) {
           eventSource.close();
           eventSource = null;
         }
-        if (reconnectTimeout) clearTimeout(reconnectTimeout);
-        reconnectTimeout = setTimeout(() => {
-          console.log('Tentando reconectar SSE...');
-          connect();
-        }, 5000);
+
+        if (!closedByCleanup) {
+          if (reconnectTimeout !== null) {
+            clearTimeout(reconnectTimeout);
+          }
+
+          reconnectTimeout = window.setTimeout(() => {
+            connect();
+          }, 5000);
+        }
       };
     };
 
     connect();
 
     return () => {
+      closedByCleanup = true;
+
       if (eventSource) {
         eventSource.close();
-        eventSource = null;
       }
-      if (reconnectTimeout) {
+
+      if (reconnectTimeout !== null) {
         clearTimeout(reconnectTimeout);
       }
     };
-  }, [championshipId, onUpdate]);
+  }, [championshipId, onUpdate, enabled]);
 };

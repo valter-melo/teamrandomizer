@@ -46,7 +46,7 @@ export const GroupMatches: React.FC<Props> = ({ matches, championshipId, groupNa
     <Card
       title={groupName}
       style={styles.card}
-      headStyle={styles.cardTitle}
+      styles={{ header: styles.cardTitle }}
     >
       {matches.map((match) => (
         <div key={match.matchId} style={styles.matchRow}>
