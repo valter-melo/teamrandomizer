@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Card, Button, Tag, message } from 'antd';
+import { PlayCircleOutlined } from '@ant-design/icons';
+import styled from 'styled-components';
 import type { MatchDetails } from '../types';
 import { ScoreboardModal } from './ScoreboardModal';
 
@@ -8,6 +10,75 @@ interface Props {
   championshipId: string;
   onMatchPlayed?: () => void;
 }
+
+// Estilos customizados com styled-components para maior controle
+const StyledCard = styled(Card)`
+  background-color: #1a1a1a !important;
+  border: 1px solid #333 !important;
+  margin-bottom: 24px;
+  .ant-card-head {
+    background-color: #0d0d0d;
+    border-bottom: 1px solid #2bd96b;
+  }
+  .ant-card-head-title {
+    font-size: 36px;
+    font-weight: bold;
+    color: #2bd96b;
+  }
+`;
+
+const MatchContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #262626;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  border-left: 6px solid #2bd96b;
+`;
+
+const TeamsDisplay = styled.div`
+  font-size: 32px;
+  font-weight: 600;
+  color: #ffffff;
+  span {
+    color: #2bd96b;
+    margin: 0 12px;
+  }
+`;
+
+const ScoreDisplay = styled(Tag)`
+  font-size: 28px !important;
+  padding: 12px 24px !important;
+  border-radius: 8px;
+  background-color: #2bd96b !important;
+  color: #1a1a1a !important;
+  border: none;
+  font-weight: bold;
+`;
+
+const PlayButton = styled(Button)`
+  font-size: 24px !important;
+  padding: 12px 30px !important;
+  height: auto !important;
+  background-color: #2bd96b !important;
+  border-color: #2bd96b !important;
+  color: #1a1a1a !important;
+  font-weight: bold;
+  &:hover {
+    background-color: #1faa4e !important;
+    border-color: #1faa4e !important;
+  }
+`;
+
+const stageOrder = ['QUARTER', 'SEMI', 'FINAL', 'THIRD_PLACE'];
+const stageNames: Record<string, string> = {
+  QUARTER: 'Quartas de Final',
+  SEMI: 'Semifinal',
+  FINAL: 'Final',
+  THIRD_PLACE: 'Disputa de 3º Lugar',
+};
 
 export const KnockoutBracket: React.FC<Props> = ({ matches, championshipId, onMatchPlayed }) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -22,14 +93,6 @@ export const KnockoutBracket: React.FC<Props> = ({ matches, championshipId, onMa
     setModalVisible(true);
   };
 
-  const stageOrder = ['QUARTER', 'SEMI', 'FINAL', 'THIRD_PLACE'];
-  const stageNames: Record<string, string> = {
-    QUARTER: 'Quartas de Final',
-    SEMI: 'Semifinal',
-    FINAL: 'Final',
-    THIRD_PLACE: 'Disputa de 3º Lugar',
-  };
-
   const grouped = matches.reduce((acc, match) => {
     const stage = match.stage || 'UNKNOWN';
     if (!acc[stage]) acc[stage] = [];
@@ -38,26 +101,35 @@ export const KnockoutBracket: React.FC<Props> = ({ matches, championshipId, onMa
   }, {} as Record<string, MatchDetails[]>);
 
   return (
-    <div>      
+    <div>
       {stageOrder.map(stage => {
-        console.log('stageOrder', stageOrder)
         const stageMatches = grouped[stage];
         if (!stageMatches || stageMatches.length === 0) return null;
+
         return (
-          <Card key={stage} title={stageNames[stage]} style={{ marginBottom: 16 }}>
+          <StyledCard key={stage} title={stageNames[stage]}>
             {stageMatches.map(match => (
-              <div key={match.matchId} style={{ marginBottom: 12, padding: 8, border: '1px solid #f0f0f0', borderRadius: 4 }}>
-                <div>Time {match.homeTeamIndex} vs Time {match.awayTeamIndex}</div>
+              <MatchContainer key={match.matchId}>
+                <TeamsDisplay>
+                  Time {match.homeTeamIndex} <span>vs</span> Time {match.awayTeamIndex}
+                </TeamsDisplay>
                 <div>
                   {match.played ? (
-                    <Tag color="green">{match.homeScore} x {match.awayScore}</Tag>
+                    <ScoreDisplay>
+                      {match.homeScore} x {match.awayScore}
+                    </ScoreDisplay>
                   ) : (
-                    <Button size="small" type="primary" onClick={() => handlePlay(match)}>Jogar</Button>
+                    <PlayButton
+                      icon={<PlayCircleOutlined style={{ fontSize: 28, marginRight: 8 }} />}
+                      onClick={() => handlePlay(match)}
+                    >
+                      Jogar
+                    </PlayButton>
                   )}
                 </div>
-              </div>
+              </MatchContainer>
             ))}
-          </Card>
+          </StyledCard>
         );
       })}
 

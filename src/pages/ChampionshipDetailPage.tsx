@@ -34,7 +34,7 @@ const ChampionshipDetailsPage: React.FC = () => {
     refetchSession();
   }, [refetch, refetchSession]);
 
-  useMatchUpdates(id ?? '', handleMatchUpdate, true);
+  useMatchUpdates(id ?? '', handleMatchUpdate);
 
   if (isLoading) return <Spin />;
   if (error) return <Alert message="Erro ao carregar detalhes" type="error" />;
@@ -171,13 +171,13 @@ const ChampionshipDetailsPage: React.FC = () => {
       label: 'Mata-Mata',
       children: (
         <>
-          {knockoutMatches.length === 0 && isGroupStageComplete() && isActive && (
+          {knockoutMatches.length === 0 && isGroupStageComplete() && (
             <Button onClick={handleNextStage} loading={isGeneratingNext} style={{ marginBottom: 16 }}>
               Gerar Fase Eliminatória
             </Button>
           )}
 
-          {knockoutMatches.length > 0 && canGenerateNextStage() && isActive && (
+          {knockoutMatches.length > 0 && canGenerateNextStage() && championship.status !== 'FINISHED' && (
             <Button onClick={handleNextStage} loading={isGeneratingNext} style={{ marginBottom: 16 }}>
               {getNextStageButtonText()}
             </Button>

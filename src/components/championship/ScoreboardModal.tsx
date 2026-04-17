@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, InputNumber, Space, Typography, message, Row, Col, Card, Tooltip } from 'antd';
-import { SettingOutlined, PlusOutlined, MinusOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { Modal, Button, InputNumber, Space, Typography, message, Row, Col, Card, Tooltip, Radio } from 'antd';
+import {
+  SettingOutlined,
+  PlusOutlined,
+  MinusOutlined,
+  CloseCircleOutlined,
+  WarningOutlined,
+} from '@ant-design/icons';
 import { http } from '../../api/http';
 import type { Team } from '../types';
 
@@ -36,8 +42,12 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
   const [saving, setSaving] = useState(false);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [resultModalVisible, setResultModalVisible] = useState(false);
-  const [pointsToWin, setPointsToWin] = useState(12);
+  const [pointsToWin, setPointsToWin] = useState(10);
   const [minAdvantage, setMinAdvantage] = useState(2);
+
+  // Estados para WO
+  const [woModalVisible, setWoModalVisible] = useState(false);
+  const [selectedWoWinner, setSelectedWoWinner] = useState<'home' | 'away' | null>(null);
 
   useEffect(() => {
     if (visible && generationSessionId) {
@@ -73,7 +83,6 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
     }
   }, [homeScore, awayScore, pointsToWin, minAdvantage]);
 
-  // Abrir modal de resultado quando houver vencedor
   useEffect(() => {
     if (winner) {
       setResultModalVisible(true);
@@ -108,6 +117,7 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
         matchId,
         homeScore,
         awayScore,
+        walkover: false,
       });
       message.success('Resultado registrado com sucesso!');
       onSuccess();
@@ -116,6 +126,33 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
       message.error('Erro ao registrar resultado');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleRegisterWO = async () => {
+    if (!selectedWoWinner) {
+      message.error('Selecione o time vencedor');
+      return;
+    }
+    setSaving(true);
+    try {
+      const winnerTeamIndex = selectedWoWinner === 'home' ? homeTeamIndex : awayTeamIndex;
+      await http.post(`/championships/${championshipId}/matches/result`, {
+        matchId,
+        homeScore: 0,
+        awayScore: 0,
+        walkover: true,
+        winnerTeamIndex,
+        woWinnerPoints: pointsToWin,   // <-- envia os pontos configurados
+      });
+      message.success(`WO registrado! Vitória por ${pointsToWin} x 0.`);
+      onSuccess();
+      onClose();
+    } catch (err) {
+      message.error('Erro ao registrar WO');
+    } finally {
+      setSaving(false);
+      setWoModalVisible(false);
     }
   };
 
@@ -129,16 +166,15 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
       style={{ top: 0, maxWidth: '100vw', height: '100vh', padding: 0, overflow: 'hidden' }}
       styles={{
         body: {
-          height: 'calc(100vh - 55px)', 
-          padding: 16, 
-          overflow: 'auto', 
-          position: 'relative'
+          height: 'calc(100vh - 55px)',
+          padding: 16,
+          overflow: 'auto',
+          position: 'relative',
         },
-      }}      
+      }}
       closeIcon={<CloseCircleOutlined style={{ fontSize: 20, color: 'white' }} />}
     >
       <div style={{ position: 'relative', minHeight: '100%' }}>
-        {/* Logo centralizada */}
         <img
           src="/BoraVer.svg"
           alt="BoraVer"
@@ -159,17 +195,50 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
           <div style={{ textAlign: 'center', padding: 20, fontSize: 40 }}>Carregando times...</div>
         ) : (
           <>
-            <div style={{ textAlign: 'left', marginBottom: 16, position: 'relative', zIndex: 1 }}>
+            <div
+              style={{
+                textAlign: 'left',
+                marginBottom: 16,
+                position: 'relative',
+                zIndex: 1,
+                display: 'flex',
+                gap: 8,
+              }}
+            >
               <Tooltip title="Configurar regras">
                 <Button icon={<SettingOutlined />} onClick={() => setSettingsVisible(true)} />
               </Tooltip>
+              <Tooltip title="Registrar WO (Walkover)">
+                <Button
+                  icon={<WarningOutlined />}
+                  onClick={() => setWoModalVisible(true)}
+                  danger
+                >
+                  Registrar WO
+                </Button>
+              </Tooltip>
             </div>
-            <Row gutter={[16, 32]} justify="center" align="middle" style={{ minHeight: '70vh', position: 'relative', zIndex: 1 }}>
+            <Row
+              gutter={[16, 32]}
+              justify="center"
+              align="middle"
+              style={{ minHeight: '70vh', position: 'relative', zIndex: 1 }}
+            >
               <Col xs={24} md={10} style={{ textAlign: 'center' }}>
-                <Card variant='borderless' style={{ backgroundColor: '#f0f2f5', padding: '8px 0' }}>
-                  <Title level={3} style={styles.title}>Time {homeTeamIndex}</Title>
+                <Card variant="borderless" style={{ backgroundColor: '#f0f2f5', padding: '8px 0' }}>
+                  <Title level={3} style={styles.title}>
+                    Time {homeTeamIndex}
+                  </Title>
                   {homeTeam && (
-                    <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '4px' }}>
+                    <div
+                      style={{
+                        marginTop: 4,
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        justifyContent: 'center',
+                        gap: '4px',
+                      }}
+                    >
                       {homeTeam.players.map((p, idx) => (
                         <span key={p.id} style={styles.players}>
                           {p.name}
@@ -180,11 +249,10 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
                   )}
                   <div style={{ ...styles.score, margin: '8px 0' }}>{homeScore}</div>
                   <Space size="middle">
-                    <Button 
-                      size="large" 
-                      icon={<MinusOutlined />} 
-                      onClick={() => 
-                      decrement('home')} 
+                    <Button
+                      size="large"
+                      icon={<MinusOutlined />}
+                      onClick={() => decrement('home')}
                       style={styles.decrementButton}
                     />
                     <Button
@@ -202,10 +270,20 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
                 <Text style={{ fontSize: 68 }}>VS</Text>
               </Col>
               <Col xs={24} md={10} style={{ textAlign: 'center' }}>
-                <Card variant='borderless' style={{ backgroundColor: '#f0f2f5', padding: '8px 0' }}>
-                  <Title level={3} style={styles.title}>Time {awayTeamIndex}</Title>
+                <Card variant="borderless" style={{ backgroundColor: '#f0f2f5', padding: '8px 0' }}>
+                  <Title level={3} style={styles.title}>
+                    Time {awayTeamIndex}
+                  </Title>
                   {awayTeam && (
-                    <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '4px' }}>
+                    <div
+                      style={{
+                        marginTop: 4,
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        justifyContent: 'center',
+                        gap: '4px',
+                      }}
+                    >
                       {awayTeam.players.map((p, idx) => (
                         <span key={p.id} style={styles.players}>
                           {p.name}
@@ -216,10 +294,10 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
                   )}
                   <div style={{ ...styles.score, margin: '8px 0' }}>{awayScore}</div>
                   <Space size="middle">
-                    <Button 
-                      size="large" 
-                      icon={<MinusOutlined />} 
-                      onClick={() => decrement('away')} 
+                    <Button
+                      size="large"
+                      icon={<MinusOutlined />}
+                      onClick={() => decrement('away')}
                       style={styles.decrementButton}
                     />
                     <Button
@@ -250,7 +328,9 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
               Vencedor: {winner === 'home' ? `Time ${homeTeamIndex}` : `Time ${awayTeamIndex}`}
             </Title>
             <Space size="large" style={{ marginTop: 24 }}>
-              <Button size="large" onClick={resetMatch}>Reiniciar</Button>
+              <Button size="large" onClick={resetMatch}>
+                Reiniciar
+              </Button>
               <Button size="large" type="primary" onClick={handleSave} loading={saving}>
                 Salvar
               </Button>
@@ -263,7 +343,11 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
           title="Configurar Regras"
           open={settingsVisible}
           onCancel={() => setSettingsVisible(false)}
-          footer={[<Button key="ok" type="primary" onClick={() => setSettingsVisible(false)}>OK</Button>]}
+          footer={[
+            <Button key="ok" type="primary" onClick={() => setSettingsVisible(false)}>
+              OK
+            </Button>,
+          ]}
         >
           <div style={{ marginBottom: 16 }}>
             <label>Pontos para vencer: </label>
@@ -272,6 +356,42 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
           <div>
             <label>Vantagem mínima: </label>
             <InputNumber min={1} value={minAdvantage} onChange={val => setMinAdvantage(val || 1)} />
+          </div>
+        </Modal>
+
+        {/* Modal de WO */}
+        <Modal
+          title="Registrar Walkover (WO)"
+          open={woModalVisible}
+          onCancel={() => setWoModalVisible(false)}
+          footer={[
+            <Button key="cancel" onClick={() => setWoModalVisible(false)}>
+              Cancelar
+            </Button>,
+            <Button key="submit" type="primary" danger onClick={handleRegisterWO} loading={saving}>
+              Confirmar WO
+            </Button>,
+          ]}
+          centered
+        >
+          <div style={{ marginBottom: 16 }}>
+            <Text>
+              Selecione o time que <strong>compareceu</strong> e vencerá por WO:
+            </Text>
+          </div>
+          <Radio.Group
+            onChange={e => setSelectedWoWinner(e.target.value)}
+            value={selectedWoWinner}
+            style={{ width: '100%' }}
+          >
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Radio value="home">Time {homeTeamIndex} (mandante)</Radio>
+              <Radio value="away">Time {awayTeamIndex} (visitante)</Radio>
+            </Space>
+          </Radio.Group>
+          <div style={{ marginTop: 16, fontSize: 12, color: '#666' }}>
+            O placar será registrado como {pointsToWin} x 0 (visualmente). O time vencedor receberá 3
+            pontos; o perdedor, 0 pontos.
           </div>
         </Modal>
       </div>
