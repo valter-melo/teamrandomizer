@@ -1,61 +1,45 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { API_BASE_URL } from '../api/config';
-
 
 export const useMatchUpdates = (
   championshipId: string,
   onUpdate: (data: any) => void,
   enabled: boolean = true
 ) => {
+  const onUpdateRef = useRef(onUpdate);
+
   useEffect(() => {
-    let eventSource: EventSource | null = null;
-    let reconnectTimeout: number | null = null;
-    let closedByCleanup = false;
+    onUpdateRef.current = onUpdate;
+  }, [onUpdate]);
 
-    const connect = () => {
-      eventSource = new EventSource(`${API_BASE_URL}/championships/${championshipId}/stream`);
+  useEffect(() => {
+    if (!enabled || !championshipId) {
+      return;
+    }
 
-      eventSource.addEventListener('matchUpdate', (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          onUpdate(data);
-        } catch (e) {
-          console.error('Erro ao processar evento SSE', e);
-        }
-      });
+    const eventSource = new EventSource(
+      `${API_BASE_URL}/championships/${championshipId}/stream`
+    );
 
-      eventSource.onerror = (err) => {
-        console.error('SSE error', err);
+    eventSource.addEventListener('connected', (event) => {
+      console.log('SSE connected', event);
+    });
 
-        if (eventSource) {
-          eventSource.close();
-          eventSource = null;
-        }
+    eventSource.addEventListener('matchUpdate', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        onUpdateRef.current(data);
+      } catch (e) {
+        console.error('Erro ao processar evento SSE', e);
+      }
+    });
 
-        if (!closedByCleanup) {
-          if (reconnectTimeout !== null) {
-            clearTimeout(reconnectTimeout);
-          }
-
-          reconnectTimeout = window.setTimeout(() => {
-            connect();
-          }, 5000);
-        }
-      };
+    eventSource.onerror = (err) => {
+      console.error('SSE error', err);
     };
-
-    connect();
 
     return () => {
-      closedByCleanup = true;
-
-      if (eventSource) {
-        eventSource.close();
-      }
-
-      if (reconnectTimeout !== null) {
-        clearTimeout(reconnectTimeout);
-      }
+      eventSource.close();
     };
-  }, [championshipId, onUpdate, enabled]);
+  }, [championshipId, enabled]);
 };

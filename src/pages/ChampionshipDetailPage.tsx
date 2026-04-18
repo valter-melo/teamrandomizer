@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, Button, Spin, Alert, message, Card, Modal } from 'antd';
 import { CloseCircleOutlined, FullscreenOutlined } from '@ant-design/icons';
@@ -29,12 +29,28 @@ const ChampionshipDetailsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('groups');
   const [fullscreenGroups, setFullscreenGroups] = useState(false);
 
+  const refetchTimeoutRef = useRef<number | null>(null);
+
   const handleMatchUpdate = useCallback(() => {
-    refetch();
-    refetchSession();
+    if (refetchTimeoutRef.current !== null) {
+      clearTimeout(refetchTimeoutRef.current);
+    }
+
+    refetchTimeoutRef.current = window.setTimeout(() => {
+      refetch();
+      refetchSession();
+    }, 300);
   }, [refetch, refetchSession]);
 
-  useMatchUpdates(id ?? '', handleMatchUpdate);
+  useEffect(() => {
+    return () => {
+      if (refetchTimeoutRef.current !== null) {
+        clearTimeout(refetchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useMatchUpdates(id ?? '', handleMatchUpdate, !!id);
 
   if (isLoading) return <Spin />;
   if (error) return <Alert message="Erro ao carregar detalhes" type="error" />;
