@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Tabs } from "antd";
 import type { TabsProps } from "antd";
 
@@ -8,7 +8,6 @@ import DbTeamGenerator from "../features/db/DbTeamGenerator";
 import { PotSelection } from "../components/PotSelection";
 
 import AppButton from "../components/AppButton";
-import { http } from "../api/http";
 
 import "../styles/team-generator.css";
 

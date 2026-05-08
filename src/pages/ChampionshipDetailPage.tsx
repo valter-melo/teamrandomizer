@@ -24,7 +24,7 @@ const ChampionshipDetailsPage: React.FC = () => {
   } = useChampionships(id);
 
   const { data, isLoading, error, refetch } = useDetails();
-  const { isActive, refetch: refetchSession } = useGameSession();
+  const { refetch: refetchSession } = useGameSession();
 
   const [activeTab, setActiveTab] = useState('groups');
   const [fullscreenGroups, setFullscreenGroups] = useState(false);

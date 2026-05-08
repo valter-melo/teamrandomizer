@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Checkbox, Input, InputNumber, Spin, Typography, message, Tag } from "antd";
 import type { CheckboxChangeEvent } from "antd/es/checkbox";
-import { ArrowLeftOutlined, HistoryOutlined } from "@ant-design/icons";
+import { HistoryOutlined } from "@ant-design/icons";
 import { http } from "../../api/http";
 import "../../styles/team-generator.css";
 
@@ -169,10 +169,6 @@ export default function DbTeamGenerator() {
 
   const goBackToPlayers = useCallback(() => {
     setStep("players");
-  }, []);
-
-  const goBackToSkills = useCallback(() => {
-    setStep("skills");
   }, []);
 
   const generate = useCallback(async () => {
