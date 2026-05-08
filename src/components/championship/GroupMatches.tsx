@@ -43,32 +43,23 @@ export const GroupMatches: React.FC<Props> = ({ matches, championshipId, groupNa
   };
 
   return (
-    <Card
-      title={groupName}
-      style={styles.card}
-      styles={{ header: styles.cardTitle }}
-    >
+    <Card title={groupName} style={styles.card} styles={{ header: styles.cardTitle }}>
       {matches.map((match) => (
         <div key={match.matchId} style={styles.matchRow}>
           <div style={styles.matchRound}>Rodada {match.round}</div>
           <div style={styles.matchTeams}>
             <span style={match.played && match.winnerTeamIndex === match.homeTeamIndex ? styles.winner : styles.team}>
-              Time {match.homeTeamIndex}
+              {match.homeTeamName || `Time ${match.homeTeamIndex}`}
             </span>
             <span style={styles.matchScore}>
               {match.played ? `${match.homeScore} x ${match.awayScore}` : 'vs'}
             </span>
             <span style={match.played && match.winnerTeamIndex === match.awayTeamIndex ? styles.winner : styles.team}>
-              Time {match.awayTeamIndex}
+              {match.awayTeamName || `Time ${match.awayTeamIndex}`}
             </span>
           </div>
           {!match.played && (
-            <Button
-              size="large"
-              type="primary"
-              onClick={() => handlePlay(match)}
-              style={styles.playButton}
-            >
+            <Button size="large" type="primary" onClick={() => handlePlay(match)} style={styles.playButton}>
               Jogar
             </Button>
           )}
@@ -77,18 +68,15 @@ export const GroupMatches: React.FC<Props> = ({ matches, championshipId, groupNa
       {selectedMatch && (
         <ScoreboardModal
           visible={modalVisible}
-          onClose={() => {
-            setModalVisible(false);
-            setSelectedMatch(null);
-          }}
+          onClose={() => { setModalVisible(false); setSelectedMatch(null); }}
           championshipId={championshipId}
           matchId={selectedMatch.matchId}
           homeTeamIndex={selectedMatch.homeTeamIndex}
           awayTeamIndex={selectedMatch.awayTeamIndex}
           generationSessionId={selectedMatch.generationSessionId}
-          onSuccess={() => {
-            if (onMatchPlayed) onMatchPlayed();
-          }}
+          homeTeamName={selectedMatch.homeTeamName}   // ← ADICIONE
+          awayTeamName={selectedMatch.awayTeamName}   // ← ADICIONE
+          onSuccess={() => onMatchPlayed && onMatchPlayed()}
         />
       )}
     </Card>

@@ -10,7 +10,7 @@ import { KnockoutBracket } from '../components/championship/KnockoutBracket';
 import { useMatchUpdates } from '../hooks/useMatchUpdates';
 
 const getGroupLetter = (index: number): string => {
-  return String.fromCharCode(64 + index);
+  return String.fromCharCode(64 + index); // 1 -> A, 2 -> B, etc.
 };
 
 const ChampionshipDetailsPage: React.FC = () => {
@@ -20,7 +20,7 @@ const ChampionshipDetailsPage: React.FC = () => {
     generateNextStage,
     isGeneratingNext,
     generateThirdPlace,
-    isGeneratingThirdPlace
+    isGeneratingThirdPlace,
   } = useChampionships(id);
 
   const { data, isLoading, error, refetch } = useDetails();
@@ -31,11 +31,11 @@ const ChampionshipDetailsPage: React.FC = () => {
 
   const refetchTimeoutRef = useRef<number | null>(null);
 
+  // Debounce para evitar múltiplas recargas durante rajadas de eventos SSE
   const handleMatchUpdate = useCallback(() => {
     if (refetchTimeoutRef.current !== null) {
       clearTimeout(refetchTimeoutRef.current);
     }
-
     refetchTimeoutRef.current = window.setTimeout(() => {
       refetch();
       refetchSession();
@@ -50,6 +50,7 @@ const ChampionshipDetailsPage: React.FC = () => {
     };
   }, []);
 
+  // Conexão SSE (apenas quando a sessão está ativa)
   useMatchUpdates(id ?? '', handleMatchUpdate, !!id);
 
   if (isLoading) return <Spin />;
@@ -60,7 +61,7 @@ const ChampionshipDetailsPage: React.FC = () => {
 
   const isGroupStageComplete = () => {
     const groups = Object.keys(matchesByGroup);
-    return groups.length > 0 && groups.every(g => matchesByGroup[parseInt(g)].every(m => m.played));
+    return groups.length > 0 && groups.every((g) => matchesByGroup[parseInt(g)].every((m) => m.played));
   };
 
   const handleNextStage = async () => {
@@ -85,17 +86,17 @@ const ChampionshipDetailsPage: React.FC = () => {
 
   const getCurrentKnockoutStage = () => {
     if (knockoutMatches.length === 0) return null;
-    if (knockoutMatches.some(m => m.stage === 'QUARTER')) return 'QUARTER';
-    if (knockoutMatches.some(m => m.stage === 'SEMI')) return 'SEMI';
-    if (knockoutMatches.some(m => m.stage === 'FINAL')) return 'FINAL';
+    if (knockoutMatches.some((m) => m.stage === 'QUARTER')) return 'QUARTER';
+    if (knockoutMatches.some((m) => m.stage === 'SEMI')) return 'SEMI';
+    if (knockoutMatches.some((m) => m.stage === 'FINAL')) return 'FINAL';
     return null;
   };
 
   const isCurrentStageComplete = () => {
     const stage = getCurrentKnockoutStage();
     if (!stage) return false;
-    const stageMatches = knockoutMatches.filter(m => m.stage === stage);
-    return stageMatches.length > 0 && stageMatches.every(m => m.played);
+    const stageMatches = knockoutMatches.filter((m) => m.stage === stage);
+    return stageMatches.length > 0 && stageMatches.every((m) => m.played);
   };
 
   const canGenerateNextStage = () => {
@@ -112,6 +113,7 @@ const ChampionshipDetailsPage: React.FC = () => {
     return 'Gerar Próxima Fase';
   };
 
+  // Grelha de classificação (usada tanto na aba Grupos quanto no modal de tela cheia)
   const renderGroupsGrid = () => {
     const groups = Object.entries(standingsByGroup);
     const qualifiedCount = championship.qualifiedPerGroup ?? 0;
@@ -129,7 +131,7 @@ const ChampionshipDetailsPage: React.FC = () => {
         {groups.map(([groupIdx, standings]) => {
           const groupIndex = parseInt(groupIdx);
           const groupMatches = matchesByGroup[groupIndex] || [];
-          const isGroupComplete = groupMatches.length > 0 && groupMatches.every(m => m.played);
+          const isGroupComplete = groupMatches.length > 0 && groupMatches.every((m) => m.played);
 
           return (
             <GroupStandings
@@ -145,9 +147,9 @@ const ChampionshipDetailsPage: React.FC = () => {
     );
   };
 
+  // Partidas da fase de grupos
   const renderMatches = () => {
     const groups = Object.entries(matchesByGroup);
-
     if (groups.length === 0) {
       return (
         <Card>
@@ -171,6 +173,7 @@ const ChampionshipDetailsPage: React.FC = () => {
     );
   };
 
+  // Abas
   const tabItems = [
     {
       key: 'groups',
@@ -187,12 +190,14 @@ const ChampionshipDetailsPage: React.FC = () => {
       label: 'Mata-Mata',
       children: (
         <>
+          {/* Gerar primeira fase eliminatória */}
           {knockoutMatches.length === 0 && isGroupStageComplete() && (
             <Button onClick={handleNextStage} loading={isGeneratingNext} style={{ marginBottom: 16 }}>
               Gerar Fase Eliminatória
             </Button>
           )}
 
+          {/* Gerar próxima fase (semifinais ou final) */}
           {knockoutMatches.length > 0 && canGenerateNextStage() && championship.status !== 'FINISHED' && (
             <Button onClick={handleNextStage} loading={isGeneratingNext} style={{ marginBottom: 16 }}>
               {getNextStageButtonText()}
@@ -207,10 +212,14 @@ const ChampionshipDetailsPage: React.FC = () => {
                 onMatchPlayed={refetch}
               />
 
-              {knockoutMatches.some(m => m.stage === 'SEMI' && m.played) &&
-                !knockoutMatches.some(m => m.stage === 'THIRD_PLACE') &&
-                isActive && (
-                  <Button onClick={handleThirdPlace} loading={isGeneratingThirdPlace} style={{ marginTop: 16 }}>
+              {/* Disputa de 3º lugar (sempre visível após semifinais, sem depender de isActive) */}
+              {knockoutMatches.some((m) => m.stage === 'SEMI' && m.played) &&
+                !knockoutMatches.some((m) => m.stage === 'THIRD_PLACE') && (
+                  <Button
+                    onClick={handleThirdPlace}
+                    loading={isGeneratingThirdPlace}
+                    style={{ marginTop: 16 }}
+                  >
                     Gerar Disputa de 3º Lugar
                   </Button>
                 )}
@@ -236,6 +245,7 @@ const ChampionshipDetailsPage: React.FC = () => {
 
       <Tabs activeKey={activeTab} items={tabItems} onChange={setActiveTab} />
 
+      {/* Modal de tela cheia */}
       <Modal
         title={
           <div

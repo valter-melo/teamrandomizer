@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Checkbox, Input, InputNumber, Spin, Typography, message, Tag } from "antd";
 import type { CheckboxChangeEvent } from "antd/es/checkbox";
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import { ArrowLeftOutlined, HistoryOutlined } from "@ant-design/icons";
 import { http } from "../../api/http";
 import "../../styles/team-generator.css";
 
@@ -56,6 +56,7 @@ export default function DbTeamGenerator() {
   const [playersLoading, setPlayersLoading] = useState(false);
   const [skillsLoading, setSkillsLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [recovering, setRecovering] = useState(false); 
 
   const [players, setPlayers] = useState<Player[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
@@ -67,9 +68,8 @@ export default function DbTeamGenerator() {
   const [skillQuery, setSkillQuery] = useState("");
 
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<UUID[]>([]);
-  const [selectedSkillMap, setSelectedSkillMap] = useState<Record<UUID, number>>({}); // skillId -> weight
+  const [selectedSkillMap, setSelectedSkillMap] = useState<Record<UUID, number>>({}); 
 
-  // sempre disponíveis (e no step skills ficam do lado)
   const [sexBalanceEnabled, setSexBalanceEnabled] = useState(true);
   const [maxMaleDiff, setMaxMaleDiff] = useState(1);
   const [multM, setMultM] = useState(1.0);
@@ -194,8 +194,7 @@ export default function DbTeamGenerator() {
     setResult(null);
 
     try {
-      console.log(payload);
-      const { data } = await http.post<GenerateDbResponse>("/teams/generate/db", payload);      
+      const { data } = await http.post<GenerateDbResponse>("/teams/generate/db", payload);
       setResult(data);
       setStep("result");
       message.success("Times gerados com sucesso!");
@@ -217,6 +216,21 @@ export default function DbTeamGenerator() {
     multM,
     multF,
   ]);
+
+  // NOVA FUNÇÃO: recuperar última sessão
+  const handleRecoverLatest = useCallback(async () => {
+    setRecovering(true);
+    try {
+      const { data } = await http.get<GenerateDbResponse>("/teams/latest-session");
+      setResult(data);
+      setStep("result");
+      message.success("Última geração recuperada!");
+    } catch (e: any) {
+      message.error(e?.response?.data?.message ?? "Nenhuma sessão anterior encontrada.");
+    } finally {
+      setRecovering(false);
+    }
+  }, []);
 
   const resetAll = useCallback(() => {
     setStep("players");
@@ -242,6 +256,19 @@ export default function DbTeamGenerator() {
         <span className="config-title"></span>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {/* BOTÃO DE RECUPERAR ÚLTIMA GERAÇÃO */}
+          {step !== "result" && (
+            <button
+              type="button"
+              className="action-btn-compact save"
+              onClick={handleRecoverLatest}
+              disabled={recovering}
+              title="Carregar a última sessão de times gerados"
+            >
+              <HistoryOutlined /> {recovering ? "Carregando..." : "Recuperar última geração"}
+            </button>
+          )}
+
           <button
             type="button"
             className="action-btn-compact save"
@@ -515,9 +542,9 @@ export default function DbTeamGenerator() {
           {result?.teams?.length ? <span className="teams-count-badge">{result.teams.length} times</span> : null}
 
           <div className="action-buttons-compact">
-            <button type="button" className="action-btn-compact copy" onClick={goBackToSkills} title="Voltar para skills">
+            {/* <button type="button" className="action-btn-compact copy" onClick={goBackToSkills} title="Voltar para skills">
               <ArrowLeftOutlined /> Voltar
-            </button>
+            </button> */}
 
             <button type="button" className="action-btn-compact reset" onClick={resetAll} title="Novo sorteio">
               Novo sorteio

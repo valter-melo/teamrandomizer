@@ -6,11 +6,10 @@ import type { StandingEntry } from '../types';
 interface Props {
   standings: StandingEntry[];
   groupName: string;
-  qualifiedCount: number;     // número de times que se classificam
-  isGroupComplete: boolean;   // se todas as partidas do grupo foram jogadas
+  qualifiedCount: number;
+  isGroupComplete: boolean;
 }
 
-// Tabela estilizada
 const StyledTable = styled.table`
   width: 100%;
   border-collapse: collapse;
@@ -40,7 +39,6 @@ const StyledTable = styled.table`
   }
 `;
 
-// Linha com destaque para classificados
 const HighlightedRow = styled.tr`
   background-color: rgba(43, 217, 107, 0.2);
   font-weight: bold;
@@ -54,14 +52,14 @@ const HighlightedRow = styled.tr`
 
 export const GroupStandings: React.FC<Props> = ({ standings, groupName, qualifiedCount, isGroupComplete }) => {
   const columns = [
-    { key: 'team', label: 'Time', render: (val: StandingEntry) => `Time ${val.teamIndex}` },
+    { key: 'team', label: 'Time', render: (val: StandingEntry) => val.teamName || `Time ${val.teamIndex}` },
     { key: 'points', label: 'P', render: (val: StandingEntry) => val.points },
     { key: 'played', label: 'J', render: (val: StandingEntry) => val.played },
     { key: 'wins', label: 'V', render: (val: StandingEntry) => val.wins },
     { key: 'losses', label: 'D', render: (val: StandingEntry) => val.losses },
+    { key: 'goalsDança', label: 'SP', render: (val: StandingEntry) => val.goalsDifference },
     { key: 'goalsFor', label: 'PP', render: (val: StandingEntry) => val.goalsFor },
     { key: 'goalsAgainst', label: 'PC', render: (val: StandingEntry) => val.goalsAgainst },
-    { key: 'goalsDifference', label: 'SP', render: (val: StandingEntry) => val.goalsDifference },
   ];
 
   return (

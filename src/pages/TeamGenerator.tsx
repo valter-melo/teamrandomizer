@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useState } from "react";
-import { Tabs, message } from "antd";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Tabs } from "antd";
 import type { TabsProps } from "antd";
 
 import FileUpload from "../components/FileUpload";
@@ -24,8 +24,7 @@ interface TeamTxt {
   jogadores: string[];
 }
 
-type TabKey = "upload" | "database" | "potes" | "history"; // adicionado "potes"
-type PotPlayersMap = { [pot: number]: string[] };
+type TabKey = "upload" | "database" | "potes";
 
 const DEFAULT_MAX_TEAMS = 8;
 
@@ -35,8 +34,8 @@ function clamp(n: number, min: number, max: number) {
 
 export default function TeamGenerator() {
   const [activeTab, setActiveTab] = useState<TabKey>("upload");
-  const [, setLoading] = useState(false);
 
+  // TXT upload & generation states
   const [playersTxt, setPlayersTxt] = useState<PlayerColumns>({
     coluna1: [],
     coluna2: [],
@@ -48,11 +47,7 @@ export default function TeamGenerator() {
   const [key, setKey] = useState(0);
   const [maxTeamsTxt, setMaxTeamsTxt] = useState<number>(DEFAULT_MAX_TEAMS);
 
-  const [, setDatabasePlayersMap] = useState<PotPlayersMap>({ 1: [], 2: [], 3: [], 4: [] });
-
-  const [, setHistory] = useState<any[]>([]);
-  const [historyLoaded, setHistoryLoaded] = useState(false);
-
+  // Parse players from TXT
   const parsePlayers = useCallback((text: string): PlayerColumns => {
     const lines = text.split("\n");
     let currentColumn: keyof PlayerColumns | null = null;
@@ -113,7 +108,6 @@ export default function TeamGenerator() {
       const parsed = parsePlayers(content);
 
       const columns = Object.keys(parsed) as Array<keyof PlayerColumns>;
-
       const issues: string[] = [];
       columns.forEach((col) => {
         const count = parsed[col].length;
@@ -206,24 +200,8 @@ export default function TeamGenerator() {
     setFileName("");
     setMaxTeamsTxt(DEFAULT_MAX_TEAMS);
     setKey((prev) => prev + 1);
-    setDatabasePlayersMap({ 1: [], 2: [], 3: [], 4: [] });
     setActiveTab("upload");
   }, []);
-
-  const apiLoadHistoryOnce = useCallback(async () => {
-    if (historyLoaded) return;
-    setLoading(true);
-    try {
-      const { data } = await http.get<any[]>("/history/sessions");
-      console.log(data);
-      setHistory(data);
-      setHistoryLoaded(true);
-    } catch (e: any) {
-      message.error(e?.response?.data?.message ?? "Erro ao carregar histórico");
-    } finally {
-      setLoading(false);
-    }
-  }, [historyLoaded]);
 
   const hasPlayersTxt = useMemo(() => Object.values(playersTxt).some((col) => col.length > 0), [playersTxt]);
   const hasTeamsTxt = teamsTxt.length > 0;
@@ -289,26 +267,18 @@ export default function TeamGenerator() {
     );
   };
 
-  // Atualizar as tabs para incluir "potes"
   const tabsItems: TabsProps["items"] = [
     { key: "upload", label: "Upload TXT" },
     { key: "database", label: "Banco de Dados" },
-    { key: "potes", label: "Potes" }, // nova aba
+    { key: "potes", label: "Potes" },
   ];
 
-  const onTabChange = useCallback(
-    async (k: string) => {
-      const next = k as TabKey;
-      setActiveTab(next);
-      if (next === "history") await apiLoadHistoryOnce(); // se você tiver uma aba history, senão ignore
-    },
-    [apiLoadHistoryOnce]
-  );
+  const onTabChange = useCallback((k: string) => {
+    setActiveTab(k as TabKey);
+  }, []);
 
   return (
     <div className="team-generator-compact">
-
-      {/* Tabs */}
       <div className="main-tabs">
         <div style={{ padding: "0 20px", marginTop: "20px" }}>
           <Tabs items={tabsItems} activeKey={activeTab} onChange={onTabChange} />
@@ -317,7 +287,6 @@ export default function TeamGenerator() {
 
       {activeTab === "upload" && (
         <div className="main-content">
-          {/* conteúdo existente para upload */}
           <div className="controls-column ui-scroll">
             <div className="upload-section-compact ui-card">
               <FileUpload key={key} onFileUpload={handleFileUpload} />
@@ -425,7 +394,7 @@ export default function TeamGenerator() {
 
       {activeTab === "database" && <DbTeamGenerator />}
 
-      {activeTab === "potes" && <PotSelection />} {/* nova aba */}
+      {activeTab === "potes" && <PotSelection />}
     </div>
   );
 }

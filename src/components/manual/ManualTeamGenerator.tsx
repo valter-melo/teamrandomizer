@@ -1,10 +1,9 @@
-// src/components/manual/ManualTeamGenerator.tsx
 import React, { useState, useEffect } from 'react';
 import { Button, Card, InputNumber, Input, Row, Col, message, List, Modal, Form, Radio, Select, Typography } from 'antd';
 import { usePlayers } from '../../hooks/usePlayers';
 import { useManualTeams } from '../../hooks/useManualTeams';
 import { useNavigate } from 'react-router-dom';
-import './ManualTeamGenerator.css'; // Importa o CSS para customizar o Select
+import './ManualTeamGenerator.css';
 
 const { Title } = Typography;
 
@@ -13,12 +12,11 @@ export const ManualTeamGenerator: React.FC = () => {
   const { saveManualTeams, isSaving } = useManualTeams();
   const navigate = useNavigate();
 
-  // Configuração dos times
   const [teamCount, setTeamCount] = useState(2);
   const [playersPerTeam, setPlayersPerTeam] = useState(4);
   const [teams, setTeams] = useState<{ [key: number]: string[] }>({});
+  const [teamNames, setTeamNames] = useState<{ [key: number]: string }>({}); // NOVO
 
-  // Configuração do campeonato (modal)
   const [modalVisible, setModalVisible] = useState(false);
   const [championshipName, setChampionshipName] = useState('');
   const [groupsCount, setGroupsCount] = useState(2);
@@ -26,16 +24,19 @@ export const ManualTeamGenerator: React.FC = () => {
   const [matchesType, setMatchesType] = useState<'SINGLE' | 'HOME_AND_AWAY'>('SINGLE');
   const [qualifiedPerGroup, setQualifiedPerGroup] = useState(2);
 
-  // Inicializa times e grupos padrão
+  // Inicializa times, nomes e grupos padrão
   useEffect(() => {
     const initialTeams: { [key: number]: string[] } = {};
     const initialGroups: { [key: number]: number } = {};
+    const initialNames: { [key: number]: string } = {}; // NOVO
     for (let i = 1; i <= teamCount; i++) {
       initialTeams[i] = [];
       initialGroups[i] = 1;
+      initialNames[i] = ''; // inicia vazio, placeholder será "Time X"
     }
     setTeams(initialTeams);
     setTeamGroups(initialGroups);
+    setTeamNames(initialNames);
   }, [teamCount]);
 
   const addPlayerToTeam = (teamIndex: number, playerId: string) => {
@@ -55,7 +56,6 @@ export const ManualTeamGenerator: React.FC = () => {
   const isComplete = totalSelected === needed;
 
   const handleOpenModal = () => {
-    console.log('handleOpenModal called', { isComplete, totalSelected, needed });
     if (!isComplete) {
       message.error(`Selecione exatamente ${needed} jogadores (${totalSelected} selecionados)`);
       return;
@@ -78,7 +78,10 @@ export const ManualTeamGenerator: React.FC = () => {
         playerIds,
         groupId: teamGroups[parseInt(idx)] || 1,
       })),
-
+      teamNames: Object.entries(teamNames).reduce((acc, [idx, name]) => {
+        if (name.trim()) acc[parseInt(idx)] = name.trim();
+        return acc;
+      }, {} as Record<number, string>), // NOVO – envia apenas nomes não vazios
     };
     try {
       const result = await saveManualTeams(payload);
@@ -95,7 +98,7 @@ export const ManualTeamGenerator: React.FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <Title level={2}>Montagem Manual de Times</Title>
+      <Title level={2}>Criação de Campeonato</Title>
       <Row gutter={24}>
         <Col span={8}>
           <Card title="Configuração">
@@ -151,6 +154,13 @@ export const ManualTeamGenerator: React.FC = () => {
           <Card title="Times">
             {Object.entries(teams).map(([idx, playerIds]) => (
               <Card key={idx} type="inner" title={`Time ${idx}`} style={{ marginBottom: 16 }}>
+                {/* Input para nome do time */}
+                <Input
+                  placeholder={`Nome do Time`}
+                  value={teamNames[parseInt(idx)]}
+                  onChange={e => setTeamNames(prev => ({ ...prev, [parseInt(idx)]: e.target.value }))}
+                  style={{ marginBottom: 8 }}
+                />
                 <List
                   dataSource={playerIds}
                   renderItem={playerId => {
@@ -175,7 +185,7 @@ export const ManualTeamGenerator: React.FC = () => {
 
       <Modal
         title="Configurar Campeonato"
-        open={modalVisible}  // <-- substituído 'visible' por 'open' para Ant Design 5+
+        open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
         width={600}
@@ -190,7 +200,9 @@ export const ManualTeamGenerator: React.FC = () => {
           <Form.Item label="Alocar Times aos Grupos">
             {Array.from({ length: teamCount }, (_, i) => i + 1).map(teamIdx => (
               <div key={teamIdx} style={{ marginBottom: 8, display: 'flex', alignItems: 'center' }}>
-                <span style={{ width: 80 }}>Time {teamIdx}</span>
+                <span style={{ width: 80 }}>
+                  {teamNames[teamIdx]?.trim() || `Time ${teamIdx}`}
+                </span>
                 <Select
                   className="group-select"
                   classNames={{ popup: { root: 'group-select-dropdown' } }}

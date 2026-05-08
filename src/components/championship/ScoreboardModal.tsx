@@ -20,6 +20,8 @@ interface ScoreboardModalProps {
   homeTeamIndex: number;
   awayTeamIndex: number;
   generationSessionId?: string;
+  homeTeamName?: string;   // NOVA PROP
+  awayTeamName?: string;   // NOVA PROP
   onSuccess: () => void;
 }
 
@@ -31,6 +33,8 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
   homeTeamIndex,
   awayTeamIndex,
   generationSessionId,
+  homeTeamName,
+  awayTeamName,
   onSuccess,
 }) => {
   const [loading, setLoading] = useState(false);
@@ -42,7 +46,7 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
   const [saving, setSaving] = useState(false);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [resultModalVisible, setResultModalVisible] = useState(false);
-  const [pointsToWin, setPointsToWin] = useState(10);
+  const [pointsToWin, setPointsToWin] = useState(12);
   const [minAdvantage, setMinAdvantage] = useState(2);
 
   // Estados para WO
@@ -143,7 +147,7 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
         awayScore: 0,
         walkover: true,
         winnerTeamIndex,
-        woWinnerPoints: pointsToWin,   // <-- envia os pontos configurados
+        woWinnerPoints: pointsToWin,
       });
       message.success(`WO registrado! Vitória por ${pointsToWin} x 0.`);
       onSuccess();
@@ -155,6 +159,10 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
       setWoModalVisible(false);
     }
   };
+
+  // Função auxiliar para obter o nome do time
+  const getHomeName = () => homeTeamName || `Time ${homeTeamIndex}`;
+  const getAwayName = () => awayTeamName || `Time ${awayTeamIndex}`;
 
   return (
     <Modal
@@ -227,7 +235,7 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
               <Col xs={24} md={10} style={{ textAlign: 'center' }}>
                 <Card variant="borderless" style={{ backgroundColor: '#f0f2f5', padding: '8px 0' }}>
                   <Title level={3} style={styles.title}>
-                    Time {homeTeamIndex}
+                    {getHomeName()}
                   </Title>
                   {homeTeam && (
                     <div
@@ -272,7 +280,7 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
               <Col xs={24} md={10} style={{ textAlign: 'center' }}>
                 <Card variant="borderless" style={{ backgroundColor: '#f0f2f5', padding: '8px 0' }}>
                   <Title level={3} style={styles.title}>
-                    Time {awayTeamIndex}
+                    {getAwayName()}
                   </Title>
                   {awayTeam && (
                     <div
@@ -325,7 +333,7 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
         >
           <div style={{ textAlign: 'center' }}>
             <Title level={3} style={{ color: '#2bd96b' }}>
-              Vencedor: {winner === 'home' ? `Time ${homeTeamIndex}` : `Time ${awayTeamIndex}`}
+              Vencedor: {winner === 'home' ? getHomeName() : getAwayName()}
             </Title>
             <Space size="large" style={{ marginTop: 24 }}>
               <Button size="large" onClick={resetMatch}>
@@ -385,8 +393,8 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
             style={{ width: '100%' }}
           >
             <Space direction="vertical" style={{ width: '100%' }}>
-              <Radio value="home">Time {homeTeamIndex} (mandante)</Radio>
-              <Radio value="away">Time {awayTeamIndex} (visitante)</Radio>
+              <Radio value="home">{getHomeName()} (mandante)</Radio>
+              <Radio value="away">{getAwayName()} (visitante)</Radio>
             </Space>
           </Radio.Group>
           <div style={{ marginTop: 16, fontSize: 12, color: '#666' }}>

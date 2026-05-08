@@ -111,7 +111,7 @@ export const KnockoutBracket: React.FC<Props> = ({ matches, championshipId, onMa
             {stageMatches.map(match => (
               <MatchContainer key={match.matchId}>
                 <TeamsDisplay>
-                  Time {match.homeTeamIndex} <span>vs</span> Time {match.awayTeamIndex}
+                  {match.homeTeamName || `Time ${match.homeTeamIndex}`} <span>vs</span> {match.awayTeamName || `Time ${match.awayTeamIndex}`}
                 </TeamsDisplay>
                 <div>
                   {match.played ? (
@@ -148,6 +148,8 @@ export const KnockoutBracket: React.FC<Props> = ({ matches, championshipId, onMa
           onSuccess={() => {
             if (onMatchPlayed) onMatchPlayed();
           }}
+          homeTeamName={selectedMatch.homeTeamName}
+          awayTeamName={selectedMatch.awayTeamName}
         />
       )}
     </div>

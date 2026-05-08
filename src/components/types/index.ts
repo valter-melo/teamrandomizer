@@ -79,20 +79,23 @@ export type StandingEntry = {
   goalsFor: number;
   goalsAgainst: number;
   goalsDifference: number;
+  teamName?: string;
 }
 
-export type MatchDetails = {
+export interface MatchDetails {
   matchId: string;
-  groupIndex?: number;
+  groupIndex: number | null;
   round: number;
   homeTeamIndex: number;
   awayTeamIndex: number;
-  homeScore?: number;
-  awayScore?: number;
+  homeScore: number;
+  awayScore: number;
   played: boolean;
-  winnerTeamIndex?: number;
+  winnerTeamIndex: number | null;
   generationSessionId?: string;
   stage?: string;
+  homeTeamName?: string;
+  awayTeamName?: string;
 }
 
 export type CreateChampionshipRequest = {
