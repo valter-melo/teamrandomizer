@@ -13,7 +13,7 @@ export default function Skills() {
     try {
       setItems(await listSkills());
     } catch (e: any) {
-      message.error(e?.response?.data?.message ?? "Erro ao listar skills");
+      message.error(e?.response?.data?.error ?? "Erro ao listar skills");
     } finally {
       setLoading(false);
     }
@@ -29,7 +29,7 @@ export default function Skills() {
       message.success("Skill criada");
       await refresh();
     } catch (e: any) {
-      message.error(e?.response?.data?.message ?? "Erro ao criar skill");
+      message.error(e?.response?.data?.error ?? "Erro ao criar skill");
     }
   }
 

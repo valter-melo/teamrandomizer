@@ -32,7 +32,7 @@ function clamp(n: number, min: number, max: number) {
 }
 
 export default function TeamGenerator() {
-  const [activeTab, setActiveTab] = useState<TabKey>("upload");
+  const [activeTab, setActiveTab] = useState<TabKey>("database");
 
   // TXT upload & generation states
   const [playersTxt, setPlayersTxt] = useState<PlayerColumns>({
@@ -267,9 +267,9 @@ export default function TeamGenerator() {
   };
 
   const tabsItems: TabsProps["items"] = [
-    { key: "upload", label: "Upload TXT" },
-    { key: "database", label: "Banco de Dados" },
+    { key: "database", label: "Sorteio" },
     { key: "potes", label: "Potes" },
+    { key: "upload", label: "Upload TXT" },
   ];
 
   const onTabChange = useCallback((k: string) => {

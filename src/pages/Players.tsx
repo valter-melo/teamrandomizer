@@ -1,26 +1,22 @@
-import { Card, Form, Input, Radio, Space, Table, message, Tag } from "antd";
+import { Card, Form, Input, Radio, Table, message, Tag, Modal, Popconfirm, Space } from "antd";
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { createPlayer, listPlayers } from "../api/players";
+import { createPlayer, listPlayers, updatePlayer, deletePlayer } from "../api/players";
 import type { Player } from "../api/players";
 import AppButton from "../components/AppButton";
 
-// ✅ modal
+// Modal de ratings
 import PlayerRatingsModal from "../features/players/PlayerRatingsModal";
 
-// ✅ busca ratings atuais
+// Busca ratings atuais
 import { getCurrentRatings } from "../api/ratings";
 
 type AvgMap = Record<string, { avg: number; count: number }>;
 
 function computeAvg(ratings: Record<string, number>) {
   const values = Object.values(ratings);
-
-  // Se você quiser considerar apenas >0 (recomendado pra “já foi avaliado?”)
   const used = values.filter((v) => v > 0);
-
   const count = used.length;
   if (count === 0) return { avg: 0, count: 0 };
-
   const sum = used.reduce((a, b) => a + b, 0);
   return { avg: sum / count, count };
 }
@@ -29,15 +25,21 @@ export default function Players() {
   const [items, setItems] = useState<Player[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // médias
+  // Médias
   const [avgByPlayerId, setAvgByPlayerId] = useState<AvgMap>({});
   const [avgLoading, setAvgLoading] = useState(false);
 
-  // modal state
+  // Modal de ratings
   const [ratingsOpen, setRatingsOpen] = useState(false);
   const [ratingsPlayerId, setRatingsPlayerId] = useState<string | null>(null);
   const [ratingsPlayerName, setRatingsPlayerName] = useState<string | undefined>(undefined);
 
+  // Modal de edição
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [editForm] = Form.useForm();
+
+  // Carregar jogadores
   const refreshPlayers = useCallback(async () => {
     setLoading(true);
     try {
@@ -52,12 +54,11 @@ export default function Players() {
     }
   }, []);
 
+  // Carregar médias
   const loadAverages = useCallback(async (players: Player[]) => {
     if (players.length === 0) return;
-
     setAvgLoading(true);
     try {
-      // Busca ratings atuais de todos e calcula média
       const results = await Promise.all(
         players.map(async (p) => {
           try {
@@ -65,55 +66,49 @@ export default function Players() {
             const { avg, count } = computeAvg(cur);
             return [p.id, { avg, count }] as const;
           } catch {
-            // se der erro em um, não quebra tudo
             return [p.id, { avg: 0, count: 0 }] as const;
           }
         })
       );
-
-      setAvgByPlayerId((prev) => {
-        const next = { ...prev };
-        for (const [id, val] of results) next[id] = val;
-        return next;
-      });
+      setAvgByPlayerId((prev) => ({ ...prev, ...Object.fromEntries(results) }));
     } finally {
       setAvgLoading(false);
     }
   }, []);
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     const list = await refreshPlayers();
     await loadAverages(list);
-  }
+  }, [refreshPlayers, loadAverages]);
 
   useEffect(() => {
     refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function onCreate(values: any) {
+  // Criar jogador
+  const handleCreate = async (values: any) => {
     try {
       await createPlayer(values);
       message.success("Jogador criado");
       await refresh();
     } catch (e: any) {
-      message.error(e?.response?.data?.message ?? "Erro ao criar jogador");
+      message.error(e?.response?.data?.error ?? "Erro ao criar jogador");
     }
-  }
+  };
 
-  function openRatings(p: Player) {
+  // Abrir modal de ratings
+  const openRatings = (p: Player) => {
     setRatingsPlayerId(p.id);
     setRatingsPlayerName(p.name);
     setRatingsOpen(true);
-  }
+  };
 
-  function closeRatings() {
+  const closeRatings = () => {
     setRatingsOpen(false);
     setRatingsPlayerId(null);
     setRatingsPlayerName(undefined);
-  }
+  };
 
-  // Atualiza só a média do jogador editado
   const reloadOneAverage = useCallback(async (playerId: string) => {
     try {
       const cur = await getCurrentRatings(playerId);
@@ -124,38 +119,88 @@ export default function Players() {
     }
   }, []);
 
+  // Editar jogador
+  const openEdit = (player: Player) => {
+    setEditingPlayer(player);
+    editForm.setFieldsValue({ name: player.name, sex: player.sex });
+    setEditModalOpen(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!editingPlayer) return;
+    try {
+      const values = await editForm.validateFields();
+      await updatePlayer(editingPlayer.id, values);
+      message.success("Jogador atualizado");
+      setEditModalOpen(false);
+      await refresh();
+    } catch (e: any) {
+      message.error(e?.response?.data?.message ?? "Erro ao atualizar");
+    }
+  };
+
+  // Excluir jogador
+  const handleDelete = async (id: string) => {
+    try {
+      await deletePlayer(id);
+      message.success("Jogador excluído");
+      await refresh();
+    } catch (e: any) {
+      message.error(e?.response?.data?.message ?? "Erro ao excluir");
+    }
+  };
+
   const columns = useMemo(
     () => [
-      { title: "Nome", dataIndex: "name", width: 400 },
-      { title: "Sexo", dataIndex: "sex", width: 100 },
+      { title: "Nome", dataIndex: "name", width: 300 },
+      { title: "Sexo", dataIndex: "sex", width: 80 },
       {
         title: "Média Rating",
         key: "avg",
-        width: 140,
+        width: 120,
         render: (_: any, p: Player) => {
           const info = avgByPlayerId[p.id];
           if (avgLoading && !info) return <span style={{ opacity: 0.7 }}>...</span>;
-
-          if (!info || info.count === 0) {
-            return <Tag color="default">Sem rating</Tag>;
-          }
-
-          return (
-            <span style={{ fontWeight: 900 }}>
-              {info.avg.toFixed(1)}{" "}
-            </span>
-          );
+          if (!info || info.count === 0) return <Tag color="default">Sem rating</Tag>;
+          return <span style={{ fontWeight: 900 }}>{info.avg.toFixed(1)}</span>;
         },
       },
       {
         title: "Ações",
-        width: 160,
+        width: 220,
         render: (_: any, p: Player) => (
-          <AppButton tone="copy" onClick={() => openRatings(p)}>
-            Ratings
-          </AppButton>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <AppButton
+              tone="copy"
+              onClick={() => openRatings(p)}
+              style={{ width: 80, height: 32, lineHeight: "32px", padding: 0, transition: "none" }}
+            >
+              Ratings
+            </AppButton>
+            <AppButton
+              tone="save"
+              onClick={() => openEdit(p)}
+              style={{ width: 70, height: 32, lineHeight: "32px", padding: 0, transition: "none" }}
+            >
+              Editar
+            </AppButton>
+            <Popconfirm
+              title="Excluir jogador?"
+              description="Esta ação é irreversível."
+              onConfirm={() => handleDelete(p.id)}
+              okText="Sim"
+              cancelText="Cancelar"
+            >
+              <AppButton
+                tone="reset"
+                style={{ width: 70, height: 32, lineHeight: "32px", padding: 0, transition: "none" }}
+              >
+                Excluir
+              </AppButton>
+            </Popconfirm>
+          </div>
         ),
-      },
+      }
     ],
     [avgByPlayerId, avgLoading]
   );
@@ -164,7 +209,7 @@ export default function Players() {
     <>
       <Space direction="vertical" style={{ width: "100%" }} size={16}>
         <Card title="Novo Jogador">
-          <Form layout="inline" onFinish={onCreate} initialValues={{ sex: "M" }}>
+          <Form layout="inline" onFinish={handleCreate} initialValues={{ sex: "M" }}>
             <Form.Item name="name" rules={[{ required: true }]} label="Nome">
               <Input style={{ width: 280 }} />
             </Form.Item>
@@ -197,6 +242,29 @@ export default function Players() {
         </Card>
       </Space>
 
+      {/* Modal de edição */}
+      <Modal
+        title="Editar Jogador"
+        open={editModalOpen}
+        onCancel={() => setEditModalOpen(false)}
+        onOk={handleUpdate}
+        okText="Salvar"
+        cancelText="Cancelar"
+      >
+        <Form form={editForm} layout="vertical">
+          <Form.Item name="name" label="Nome" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="sex" label="Sexo" rules={[{ required: true }]}>
+            <Radio.Group>
+              <Radio value="M">M</Radio>
+              <Radio value="F">F</Radio>
+            </Radio.Group>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Modal de ratings – já existente */}
       <PlayerRatingsModal
         open={ratingsOpen}
         playerId={ratingsPlayerId}

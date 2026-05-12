@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Card, Button, message } from 'antd';
 import type { MatchDetails } from '../types';
 import { ScoreboardModal } from './ScoreboardModal';
+import { PlayCircleOutlined } from '@ant-design/icons';
+import styled from 'styled-components';
 
 interface Props {
   matches: MatchDetails[];
@@ -42,6 +44,19 @@ export const GroupMatches: React.FC<Props> = ({ matches, championshipId, groupNa
     playButton: { fontSize: '20px', height: 'auto', padding: '8px 24px', color: '#000' },
   };
 
+  const PlayButton = styled(Button)`
+    font-size: 24px !important;
+    padding: 12px 30px !important;
+    height: auto !important;
+    background-color: #2bd96b !important;
+    border-color: #2bd96b !important;
+    color: #1a1a1a !important;
+    font-weight: bold;
+    &:hover {
+      background-color: #1faa4e !important;
+      border-color: #1faa4e !important;
+    }
+  `;
   return (
     <Card title={groupName} style={styles.card} styles={{ header: styles.cardTitle }}>
       {matches.map((match) => (
@@ -59,9 +74,12 @@ export const GroupMatches: React.FC<Props> = ({ matches, championshipId, groupNa
             </span>
           </div>
           {!match.played && (
-            <Button size="large" type="primary" onClick={() => handlePlay(match)} style={styles.playButton}>
-              Jogar
-            </Button>
+            <PlayButton
+              icon={<PlayCircleOutlined style={{ fontSize: 28, marginRight: 8 }} />}
+              onClick={() => handlePlay(match)}
+            >
+              Iniciar Jogo
+            </PlayButton>
           )}
         </div>
       ))}

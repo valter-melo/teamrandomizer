@@ -123,7 +123,7 @@ export const KnockoutBracket: React.FC<Props> = ({ matches, championshipId, onMa
                       icon={<PlayCircleOutlined style={{ fontSize: 28, marginRight: 8 }} />}
                       onClick={() => handlePlay(match)}
                     >
-                      Jogar
+                      Iniciar Jogo
                     </PlayButton>
                   )}
                 </div>

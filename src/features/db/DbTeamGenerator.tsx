@@ -532,7 +532,7 @@ export default function DbTeamGenerator() {
   const ResultStep = (
     <div className="results-section ui-card" style={{ height: "calc(100dvh - 230px)" }}>
       <div className="results-header">
-        <h2>Times Gerados (Banco)</h2>
+        <h2>Times Gerados</h2>
 
         <div className="results-stats">
           {result?.teams?.length ? <span className="teams-count-badge">{result.teams.length} times</span> : null}
