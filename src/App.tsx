@@ -1,4 +1,5 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useState, useEffect } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "antd";
 import Nav from "./components/Nav";
@@ -14,6 +15,9 @@ import TeamGenerator from "./pages/TeamGenerator";
 import ChampionshipsPage from "./pages/ChampionshipsPage";
 import ChampionshipDetailPage from "./pages/ChampionshipDetailPage";
 import ManualTeamPage from "./pages/ManualTeamPage";
+import FriendlySessionsPage from "./pages/FriendlySessionsPage";
+import FriendlySessionDetailPage from "./pages/FriendlySessionDetailPage";
+import PlayerPerformancePage from "./pages/PlayerPerformancePage";
 
 const { Content } = Layout;
 
@@ -27,11 +31,27 @@ const queryClient = new QueryClient({
 });
 
 export default function App() {
+  const [collapsed, setCollapsed] = useState(
+    () => localStorage.getItem("nav:collapsed") === "1"
+  );
+
+  useEffect(() => {
+    localStorage.setItem("nav:collapsed", collapsed ? "1" : "0");
+  }, [collapsed]);
+
+  const toggleCollapsed = () => setCollapsed((c) => !c);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Layout style={{ minHeight: "100vh" }}>
-        <Nav />
-        <Layout>
+        <Nav collapsed={collapsed} onToggle={toggleCollapsed} />
+        <Layout
+          style={{
+            marginLeft: collapsed ? 72 : 220,
+            transition: "margin-left 0.2s",
+            minHeight: "100vh",
+          }}
+        >
           <Content style={{ padding: 24 }}>
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -44,6 +64,14 @@ export default function App() {
                 element={
                   <RequireAuth>
                     <Dashboard />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/performance"
+                element={
+                  <RequireAuth>
+                    <PlayerPerformancePage />
                   </RequireAuth>
                 }
               />
@@ -79,6 +107,23 @@ export default function App() {
                   </RequireAuth>
                 }
               />
+              <Route
+                path="/friendly-sessions"
+                element={
+                  <RequireAuth>
+                    <FriendlySessionsPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/friendly-sessions/:sessionId"
+                element={
+                  <RequireAuth>
+                    <FriendlySessionDetailPage />
+                  </RequireAuth>
+                }
+              />
+
               <Route
                 path="/championships"
                 element={

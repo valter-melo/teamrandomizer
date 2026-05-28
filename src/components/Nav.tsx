@@ -1,5 +1,4 @@
-// src/layout/Nav.tsx
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Layout, Menu, Tooltip } from "antd";
 import {
   TrophyOutlined,
@@ -10,26 +9,25 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   TeamOutlined,
-  ScheduleOutlined,    // novo
-  EditOutlined,         // novo
+  ScheduleOutlined,
+  EditOutlined,
+  BarChartOutlined,
 } from "@ant-design/icons";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { authStore } from "../auth/store";
 
 const { Sider } = Layout;
 
-export default function Nav() {
+interface NavProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
+
+export default function Nav({ collapsed, onToggle }: NavProps) {
   const nav = useNavigate();
   const loc = useLocation();
   const { slug } = useParams();
   const token = authStore.getToken();
-
-  // estado do menu (recolhido/expandido)
-  const [collapsed, setCollapsed] = useState(() => localStorage.getItem("nav:collapsed") === "1");
-
-  useEffect(() => {
-    localStorage.setItem("nav:collapsed", collapsed ? "1" : "0");
-  }, [collapsed]);
 
   const base = slug ? `/t/${slug}` : "";
 
@@ -38,11 +36,12 @@ export default function Nav() {
       token
         ? [
             { key: `${base}/dashboard`, icon: <TrophyOutlined />, label: "Dashboard" },
+            { key: `${base}/performance`, icon: <BarChartOutlined />, label: "Desempenho" },
             { key: `${base}/skills`, icon: <StarOutlined />, label: "Skills" },
             { key: `${base}/players`, icon: <UserOutlined />, label: "Jogadores" },
             { key: `${base}/generator`, icon: <TeamOutlined />, label: "Gerar Times" },
+            { key: "/manual-teams", icon: <EditOutlined />, label: "Criar Campeonato" },
             { key: "/championships", icon: <ScheduleOutlined />, label: "Campeonatos" },
-            { key: "/manual-teams", icon: <EditOutlined />, label: "Montagem Manual" }, 
             { key: `${base}/logout`, icon: <LogoutOutlined />, label: "Sair" },
           ]
         : [
@@ -52,7 +51,6 @@ export default function Nav() {
     [token, base]
   );
 
-  // Seleção “inteligente” (prefixo do pathname)
   const selectedKey = useMemo(() => {
     return (
       items
@@ -63,8 +61,6 @@ export default function Nav() {
     );
   }, [items, loc.pathname]);
 
-  const toggle = () => setCollapsed((c) => !c);
-
   return (
     <Sider
       width={220}
@@ -72,6 +68,15 @@ export default function Nav() {
       collapsed={collapsed}
       trigger={null}
       className="nav-sider"
+      style={{
+        position: "fixed",
+        left: 0,
+        top: 0,
+        bottom: 0,
+        height: "100vh",
+        overflow: "auto",
+        zIndex: 10,
+      }}
     >
       {/* BRAND */}
       <div className={`nav-brand ${collapsed ? "collapsed" : ""}`}>
@@ -107,7 +112,7 @@ export default function Nav() {
           <button
             type="button"
             className="action-btn-compact generate nav-toggle-btn"
-            onClick={toggle}
+            onClick={onToggle}
             aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
           >
             {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}

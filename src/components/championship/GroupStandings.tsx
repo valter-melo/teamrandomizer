@@ -57,9 +57,9 @@ export const GroupStandings: React.FC<Props> = ({ standings, groupName, qualifie
     { key: 'played', label: 'J', render: (val: StandingEntry) => val.played },
     { key: 'wins', label: 'V', render: (val: StandingEntry) => val.wins },
     { key: 'losses', label: 'D', render: (val: StandingEntry) => val.losses },
-    { key: 'goalsDança', label: 'SP', render: (val: StandingEntry) => val.goalsDifference },
     { key: 'goalsFor', label: 'PP', render: (val: StandingEntry) => val.goalsFor },
     { key: 'goalsAgainst', label: 'PC', render: (val: StandingEntry) => val.goalsAgainst },
+    { key: 'goalsAverage', label: 'SP', render: (val: StandingEntry) => val.goalsDifference },
   ];
 
   return (

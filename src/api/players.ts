@@ -1,21 +1,46 @@
 import { http } from "./http";
 
-export type Player = { id: string; name: string; sex: "M" | "F"; active: boolean };
+export interface Player {
+  id: string;
+  name: string;
+  sex: string;
+  active: boolean;
+  email?: string;
+  phone?: string;
+  birthDate?: string;
+}
 
-export async function listPlayers() {
+export const listPlayers = async (): Promise<Player[]> => {
   const { data } = await http.get<Player[]>("/players");
   return data;
-}
+};
 
-export async function createPlayer(payload: { name: string; sex: "M" | "F" }) {
-  const { data } = await http.post<Player>("/players", payload);
+export const createPlayer = async (player: {
+  name: string;
+  sex: string;
+  email?: string;
+  phone?: string;
+  birthDate?: string;
+}) => {
+  const { data } = await http.post<Player>("/players", player);
   return data;
-}
+};
 
-export async function updatePlayer(id: string, data: { name: string; sex: string }) {
-  return http.put(`/players/${id}`, data).then(res => res.data);
-}
+export const updatePlayer = async (
+  id: string,
+  updates: {
+    name?: string;
+    sex?: string;
+    email?: string;
+    phone?: string;
+    birthDate?: string;
+    active?: boolean;
+  }
+) => {
+  const { data } = await http.put<Player>(`/players/${id}`, updates);
+  return data;
+};
 
-export async function deletePlayer(id: string) {
-  return http.delete(`/players/${id}`);
-}
+export const deletePlayer = async (id: string) => {
+  await http.delete(`/players/${id}`);
+};

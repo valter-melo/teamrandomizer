@@ -40,3 +40,36 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Estilo do input do Select */
+.ant-select-selection-item {
+  color: #fff !important;
+}
+.ant-select-selection-placeholder {
+  color: #aaa !important;
+}
+
+/* Dropdown (popup) */
+.ant-select-dropdown {
+  background-color: #1a1a1a !important;
+  border: 1px solid #333 !important;
+}
+.ant-select-item-option-content {
+  color: #fff !important;
+}
+.ant-select-item-option {
+  background-color: #1a1a1a !important;
+}
+.ant-select-item-option-active,
+.ant-select-item-option-selected {
+  background-color: #2bd96b33 !important;
+}
+
+.export-hidden-area {
+  position: fixed;
+  left: -99999px;
+  top: 0;
+  width: 1080px;
+  pointer-events: none;
+  opacity: 1;
+}

@@ -24,7 +24,6 @@
 /* Inputs */
 .ant-input,
 .ant-input-affix-wrapper,
-.ant-select-selector,
 .ant-input-password {
   background: var(--surface-2) !important;
   border-color: var(--border-2) !important;
@@ -32,7 +31,78 @@
   border-radius: var(--r-sm) !important;
 }
 
-.ant-input::placeholder { color: rgba(255,255,255,.45) !important; }
+.ant-input::placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* Select - campo principal */
+.ant-select .ant-select-selector {
+  background: var(--surface-2) !important;
+  border-color: var(--border-2) !important;
+  color: #fff !important;
+  border-radius: var(--r-sm) !important;
+}
+
+/* Texto selecionado dentro do Select */
+.ant-select .ant-select-selector .ant-select-selection-item {
+  color: #fff !important;
+}
+
+/* Placeholder do Select */
+.ant-select .ant-select-selector .ant-select-selection-placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* Texto do input quando o Select tem search */
+.ant-select .ant-select-selection-search-input {
+  color: #fff !important;
+}
+
+/* Seta do Select */
+.ant-select .ant-select-arrow {
+  color: #fff !important;
+}
+
+/* Select focado/aberto */
+.ant-select-focused .ant-select-selector,
+.ant-select-open .ant-select-selector {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px rgba(43, 217, 107, 0.2) !important;
+}
+
+/* Dropdown do Select */
+.ant-select-dropdown {
+  background-color: #1a1a1a !important;
+  border: 1px solid #333 !important;
+  border-radius: var(--r-sm) !important;
+}
+
+/* Opções do dropdown */
+.ant-select-dropdown .ant-select-item-option {
+  background-color: #1a1a1a !important;
+  color: #fff !important;
+}
+
+/* Texto das opções */
+.ant-select-dropdown .ant-select-item-option-content {
+  color: #fff !important;
+}
+
+/* Opção ao passar o mouse */
+.ant-select-dropdown .ant-select-item-option-active {
+  background-color: rgba(43, 217, 107, 0.2) !important;
+}
+
+/* Opção selecionada */
+.ant-select-dropdown .ant-select-item-option-selected {
+  background-color: rgba(43, 217, 107, 0.28) !important;
+  color: #fff !important;
+}
+
+/* Texto da opção selecionada */
+.ant-select-dropdown .ant-select-item-option-selected .ant-select-item-option-content {
+  color: #fff !important;
+}
 
 /* Table */
 .ant-table,
@@ -56,14 +126,14 @@
 .ant-table-tbody > tr > td {
   background: var(--surface) !important;
   color: var(--text) !important;
-  border-bottom: 1px solid rgba(255,255,255,.06) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
 
 .ant-table-tbody > tr:hover > td {
   background: var(--surface-3) !important;
 }
 
-/* Menu (sider) */
+/* Menu lateral */
 .ant-menu {
   background: transparent !important;
 }
@@ -73,11 +143,11 @@
 }
 
 .ant-menu-item-selected {
-  background: rgba(43,217,107,0.12) !important;
+  background: rgba(43, 217, 107, 0.12) !important;
   color: var(--primary) !important;
 }
 
-/* Botões no padrão do seu CSS */
+/* Botões */
 .btn-generate.ant-btn,
 .btn-generate.ant-btn-primary {
   background: var(--primary) !important;
@@ -111,10 +181,92 @@
   border-radius: var(--r-sm) !important;
 }
 
-/* Dropzone estilo seu tracejado */
+/* Dropzone estilo tracejado */
 .dropzone {
-  border: 2px dashed rgba(43,217,107,0.65);
+  border: 2px dashed rgba(43, 217, 107, 0.65);
   border-radius: var(--r-md);
-  background: rgba(43,217,107,0.04);
+  background: rgba(43, 217, 107, 0.04);
   padding: 16px;
+}
+
+/* =========================================================
+   ANT DESIGN SELECT - DARK THEME FIX
+   Coloque este bloco no FINAL do CSS global
+========================================================= */
+
+/* Campo do Select */
+.ant-select:not(.ant-select-customize-input) .ant-select-selector {
+  background-color: var(--surface-2) !important;
+  border-color: var(--border-2) !important;
+  border-radius: var(--r-sm) !important;
+  color: #ffffff !important;
+}
+
+/* Texto selecionado */
+.ant-select-single .ant-select-selector .ant-select-selection-item,
+.ant-select-multiple .ant-select-selection-item {
+  color: #ffffff !important;
+}
+
+/* Placeholder */
+.ant-select-single .ant-select-selector .ant-select-selection-placeholder {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+/* Remove possível opacidade que deixa o placeholder escuro */
+.ant-select .ant-select-selection-placeholder {
+  opacity: 1 !important;
+}
+
+/* Input interno quando o Select tem showSearch */
+.ant-select-single .ant-select-selector .ant-select-selection-search-input {
+  color: #ffffff !important;
+}
+
+/* Seta */
+.ant-select .ant-select-arrow {
+  color: #ffffff !important;
+}
+
+/* Select em foco / aberto */
+.ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector,
+.ant-select-open:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px rgba(43, 217, 107, 0.2) !important;
+}
+
+/* Dropdown */
+.ant-select-dropdown {
+  background-color: #1a1a1a !important;
+  border: 1px solid #333333 !important;
+  border-radius: var(--r-sm) !important;
+}
+
+/* Itens do dropdown */
+.ant-select-dropdown .ant-select-item {
+  color: #ffffff !important;
+}
+
+.ant-select-dropdown .ant-select-item-option {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+.ant-select-dropdown .ant-select-item-option-content {
+  color: #ffffff !important;
+}
+
+/* Hover */
+.ant-select-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background-color: rgba(43, 217, 107, 0.2) !important;
+}
+
+/* Selecionado */
+.ant-select-dropdown .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: rgba(43, 217, 107, 0.28) !important;
+  color: #ffffff !important;
+}
+
+.ant-select-dropdown .ant-select-item-option-selected .ant-select-item-option-content {
+  color: #ffffff !important;
 }

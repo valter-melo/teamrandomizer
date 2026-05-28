@@ -5,6 +5,7 @@ import type { Skill } from "../../api/skills";
 import { getCurrentRatings, upsertRatings } from "../../api/ratings";
 import RatingStars from "../../components/RatingStars";
 import AppButton from "../../components/AppButton";
+import { CloseOutlined } from "@ant-design/icons";
 
 type Row = Skill & { rating: number };
 
@@ -80,6 +81,7 @@ export default function PlayerRatingsModal({
       centered
       footer={null}
       destroyOnClose
+      closeIcon={<CloseOutlined style={{ color: '#2bd96b' }} />}
     >
       <Space direction="vertical" style={{ width: "100%" }} size={12}>
         <Card

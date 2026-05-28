@@ -1,14 +1,12 @@
-import { Card, Form, Input, Radio, Table, message, Tag, Modal, Popconfirm, Space } from "antd";
+import { Card, Form, Input, Radio, Table, message, Tag, Modal, Popconfirm, Space, DatePicker } from "antd";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { createPlayer, listPlayers, updatePlayer, deletePlayer } from "../api/players";
 import type { Player } from "../api/players";
 import AppButton from "../components/AppButton";
-
-// Modal de ratings
 import PlayerRatingsModal from "../features/players/PlayerRatingsModal";
-
-// Busca ratings atuais
 import { getCurrentRatings } from "../api/ratings";
+import { CloseOutlined } from "@ant-design/icons";
+import dayjs, { Dayjs } from "dayjs";
 
 type AvgMap = Record<string, { avg: number; count: number }>;
 
@@ -25,21 +23,17 @@ export default function Players() {
   const [items, setItems] = useState<Player[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Médias
   const [avgByPlayerId, setAvgByPlayerId] = useState<AvgMap>({});
   const [avgLoading, setAvgLoading] = useState(false);
 
-  // Modal de ratings
   const [ratingsOpen, setRatingsOpen] = useState(false);
   const [ratingsPlayerId, setRatingsPlayerId] = useState<string | null>(null);
   const [ratingsPlayerName, setRatingsPlayerName] = useState<string | undefined>(undefined);
 
-  // Modal de edição
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [editForm] = Form.useForm();
 
-  // Carregar jogadores
   const refreshPlayers = useCallback(async () => {
     setLoading(true);
     try {
@@ -54,7 +48,6 @@ export default function Players() {
     }
   }, []);
 
-  // Carregar médias
   const loadAverages = useCallback(async (players: Player[]) => {
     if (players.length === 0) return;
     setAvgLoading(true);
@@ -85,18 +78,26 @@ export default function Players() {
     refresh();
   }, []);
 
-  // Criar jogador
   const handleCreate = async (values: any) => {
     try {
-      await createPlayer(values);
+      // Converte dayjs para string ISO
+      const birthDate = values.birthDate
+        ? (values.birthDate as Dayjs).format("YYYY-MM-DD")
+        : undefined;
+      await createPlayer({
+        name: values.name,
+        sex: values.sex,
+        email: values.email || undefined,
+        phone: values.phone || undefined,
+        birthDate,
+      });
       message.success("Jogador criado");
       await refresh();
     } catch (e: any) {
-      message.error(e?.response?.data?.error ?? "Erro ao criar jogador");
+      message.error(e?.response?.data?.message ?? "Erro ao criar jogador");
     }
   };
 
-  // Abrir modal de ratings
   const openRatings = (p: Player) => {
     setRatingsPlayerId(p.id);
     setRatingsPlayerName(p.name);
@@ -119,10 +120,15 @@ export default function Players() {
     }
   }, []);
 
-  // Editar jogador
   const openEdit = (player: Player) => {
     setEditingPlayer(player);
-    editForm.setFieldsValue({ name: player.name, sex: player.sex });
+    editForm.setFieldsValue({
+      name: player.name,
+      sex: player.sex,
+      email: player.email ?? "",
+      phone: player.phone ?? "",
+      birthDate: player.birthDate ? dayjs(player.birthDate) : null,
+    });
     setEditModalOpen(true);
   };
 
@@ -130,7 +136,16 @@ export default function Players() {
     if (!editingPlayer) return;
     try {
       const values = await editForm.validateFields();
-      await updatePlayer(editingPlayer.id, values);
+      const birthDate = values.birthDate
+        ? (values.birthDate as Dayjs).format("YYYY-MM-DD")
+        : undefined;
+      await updatePlayer(editingPlayer.id, {
+        name: values.name,
+        sex: values.sex,
+        email: values.email || undefined,
+        phone: values.phone || undefined,
+        birthDate,
+      });
       message.success("Jogador atualizado");
       setEditModalOpen(false);
       await refresh();
@@ -139,7 +154,6 @@ export default function Players() {
     }
   };
 
-  // Excluir jogador
   const handleDelete = async (id: string) => {
     try {
       await deletePlayer(id);
@@ -200,7 +214,7 @@ export default function Players() {
             </Popconfirm>
           </div>
         ),
-      }
+      },
     ],
     [avgByPlayerId, avgLoading]
   );
@@ -211,7 +225,7 @@ export default function Players() {
         <Card title="Novo Jogador">
           <Form layout="inline" onFinish={handleCreate} initialValues={{ sex: "M" }}>
             <Form.Item name="name" rules={[{ required: true }]} label="Nome">
-              <Input style={{ width: 280 }} />
+              <Input style={{ width: 200 }} />
             </Form.Item>
             <Form.Item name="sex" label="Sexo" rules={[{ required: true }]}>
               <Radio.Group>
@@ -219,9 +233,16 @@ export default function Players() {
                 <Radio.Button value="F">F</Radio.Button>
               </Radio.Group>
             </Form.Item>
-            <AppButton tone="generate" htmlType="submit">
-              Adicionar
-            </AppButton>
+            <Form.Item name="email" label="E-mail">
+              <Input type="email" style={{ width: 220 }} />
+            </Form.Item>
+            <Form.Item name="phone" label="Celular">
+              <Input style={{ width: 160 }} />
+            </Form.Item>
+            <Form.Item name="birthDate" label="Nascimento">
+              <DatePicker format="DD/MM/YYYY" placeholder="dd/mm/aaaa" />
+            </Form.Item>
+            <AppButton tone="generate" htmlType="submit">Adicionar</AppButton>
           </Form>
         </Card>
 
@@ -242,7 +263,6 @@ export default function Players() {
         </Card>
       </Space>
 
-      {/* Modal de edição */}
       <Modal
         title="Editar Jogador"
         open={editModalOpen}
@@ -250,6 +270,7 @@ export default function Players() {
         onOk={handleUpdate}
         okText="Salvar"
         cancelText="Cancelar"
+        closeIcon={<CloseOutlined style={{ color: '#2bd96b' }} />}
       >
         <Form form={editForm} layout="vertical">
           <Form.Item name="name" label="Nome" rules={[{ required: true }]}>
@@ -261,10 +282,18 @@ export default function Players() {
               <Radio value="F">F</Radio>
             </Radio.Group>
           </Form.Item>
+          <Form.Item name="email" label="E-mail">
+            <Input type="email" />
+          </Form.Item>
+          <Form.Item name="phone" label="Celular">
+            <Input />
+          </Form.Item>
+          <Form.Item name="birthDate" label="Nascimento">
+            <DatePicker format="DD/MM/YYYY" />
+          </Form.Item>
         </Form>
       </Modal>
 
-      {/* Modal de ratings – já existente */}
       <PlayerRatingsModal
         open={ratingsOpen}
         playerId={ratingsPlayerId}

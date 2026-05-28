@@ -1,12 +1,37 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Checkbox, Input, InputNumber, Spin, Typography, message, Tag } from "antd";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import type { DragEvent } from "react";
+import {
+  Checkbox,
+  Input,
+  InputNumber,
+  Spin,
+  Typography,
+  message,
+  Tag,
+  Button,
+  Modal,
+} from "antd";
 import type { CheckboxChangeEvent } from "antd/es/checkbox";
-import { HistoryOutlined } from "@ant-design/icons";
+import {
+  HistoryOutlined,
+  PlayCircleOutlined,
+  SwapOutlined,  
+} from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+
 import { http } from "../../api/http";
 import "../../styles/team-generator.css";
+import { CourtSetupModal } from "../../components/CourtPosterImage/CourtSetupModal";
 
 const { Text } = Typography;
 
+// ========== Tipos ==========
 type UUID = string;
 
 type Player = {
@@ -31,32 +56,69 @@ type GenerateDbRequest = {
   sexMultiplier?: Record<"M" | "F", number>;
 };
 
+type RawTeamPlayer = {
+  id?: UUID;
+  playerId?: UUID;
+  player_id?: UUID;
+  athleteId?: UUID;
+  athlete_id?: UUID;
+  name?: string;
+  sex?: "M" | "F";
+  score?: number;
+  player?: {
+    id?: UUID;
+    name?: string;
+    sex?: "M" | "F";
+  };
+};
+
+type TeamPlayer = {
+  playerId: UUID;
+  name: string;
+  sex: "M" | "F";
+  score: number;
+};
+
+type RawTeam = {
+  teamIndex: number;
+  sumScore: number;
+  players: RawTeamPlayer[];
+};
+
+type Team = {
+  teamIndex: number;
+  sumScore: number;
+  players: TeamPlayer[];
+};
+
+type GenerateDbApiResponse = {
+  sessionId: UUID;
+  teams: RawTeam[];
+};
+
 type GenerateDbResponse = {
   sessionId: UUID;
-  teams: Array<{
-    teamIndex: number;
-    sumScore: number;
-    players: Array<{
-      playerId: UUID;
-      name: string;
-      sex: "M" | "F";
-      score: number;
-    }>;
-  }>;
+  teams: Team[];
 };
 
 type StepKey = "players" | "skills" | "result";
+
+type DragPlayerData = {
+  playerId: string;
+  fromTeamIndex: number;
+};
 
 const DEFAULT_TEAM_COUNT = 8;
 const DEFAULT_PLAYERS_PER_TEAM = 4;
 
 export default function DbTeamGenerator() {
+  // ---------- estados ----------
   const [step, setStep] = useState<StepKey>("players");
 
   const [playersLoading, setPlayersLoading] = useState(false);
   const [skillsLoading, setSkillsLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [recovering, setRecovering] = useState(false); 
+  const [recovering, setRecovering] = useState(false);
 
   const [players, setPlayers] = useState<Player[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
@@ -68,7 +130,7 @@ export default function DbTeamGenerator() {
   const [skillQuery, setSkillQuery] = useState("");
 
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<UUID[]>([]);
-  const [selectedSkillMap, setSelectedSkillMap] = useState<Record<UUID, number>>({}); 
+  const [selectedSkillMap, setSelectedSkillMap] = useState<Record<UUID, number>>({});
 
   const [sexBalanceEnabled, setSexBalanceEnabled] = useState(true);
   const [maxMaleDiff, setMaxMaleDiff] = useState(1);
@@ -76,9 +138,18 @@ export default function DbTeamGenerator() {
   const [multF, setMultF] = useState(0.92);
 
   const [result, setResult] = useState<GenerateDbResponse | null>(null);
+  const [teams, setTeams] = useState<Team[]>([]);
+
+  const [courtModalOpen, setCourtModalOpen] = useState(false);
+  const [dragOverTeamIndex, setDragOverTeamIndex] = useState<number | null>(null);
+  const [adjustModalOpen, setAdjustModalOpen] = useState(false); // <-- NOVO
+
+  const dragDataRef = useRef<DragPlayerData | null>(null);
+  const navigate = useNavigate();
 
   const needed = teamCount * playersPerTeam;
 
+  // ---------- dados derivados ----------
   const activePlayers = useMemo(() => players.filter((p) => p.active), [players]);
   const activeSkills = useMemo(() => skills.filter((s) => s.active), [skills]);
 
@@ -91,7 +162,7 @@ export default function DbTeamGenerator() {
   const filteredSkills = useMemo(() => {
     const q = skillQuery.trim().toLowerCase();
     if (!q) return activeSkills;
-    return activeSkills.filter((s) => `${s.name}`.toLowerCase().includes(q));
+    return activeSkills.filter((s) => s.name.toLowerCase().includes(q));
   }, [activeSkills, skillQuery]);
 
   const selectedSkills = useMemo(
@@ -102,6 +173,64 @@ export default function DbTeamGenerator() {
   const canGoNext = selectedPlayerIds.length >= needed;
   const canGenerate = canGoNext && selectedSkills.length > 0;
 
+  // ---------- helpers de normalização ----------
+  const findPlayerByName = useCallback(
+    (name?: string) => {
+      if (!name) return undefined;
+      const normalized = name.trim().toLowerCase();
+      return players.find((p) => p.name.trim().toLowerCase() === normalized);
+    },
+    [players]
+  );
+
+  const getRawTeamPlayerId = useCallback((player: RawTeamPlayer) => {
+    return (
+      player.playerId ??
+      player.id ??
+      player.player_id ??
+      player.athleteId ??
+      player.athlete_id ??
+      player.player?.id ??
+      ""
+    );
+  }, []);
+
+  const normalizeTeamPlayer = useCallback(
+    (rawPlayer: RawTeamPlayer): TeamPlayer => {
+      const rawName = rawPlayer.name ?? rawPlayer.player?.name ?? "";
+      const fallback = findPlayerByName(rawName);
+      const playerId = getRawTeamPlayerId(rawPlayer) || fallback?.id || "";
+      const name = rawPlayer.name ?? rawPlayer.player?.name ?? fallback?.name ?? "Jogador sem nome";
+      const sex = rawPlayer.sex ?? rawPlayer.player?.sex ?? fallback?.sex ?? "M";
+      const score = Number(rawPlayer.score ?? 0);
+      return { playerId, name, sex, score };
+    },
+    [findPlayerByName, getRawTeamPlayerId]
+  );
+
+  const recalculateTeamScore = useCallback(
+    (players: TeamPlayer[]) => players.reduce((sum, p) => sum + p.score, 0),
+    []
+  );
+
+  const normalizeTeams = useCallback(
+    (rawTeams: RawTeam[]): Team[] =>
+      rawTeams.map((team) => {
+        const players = team.players.map(normalizeTeamPlayer);
+        return { teamIndex: team.teamIndex, players, sumScore: recalculateTeamScore(players) };
+      }),
+    [normalizeTeamPlayer, recalculateTeamScore]
+  );
+
+  const normalizeResponse = useCallback(
+    (data: GenerateDbApiResponse): GenerateDbResponse => ({
+      sessionId: data.sessionId,
+      teams: normalizeTeams(data.teams ?? []),
+    }),
+    [normalizeTeams]
+  );
+
+  // ---------- carregamento de dados ----------
   const loadPlayers = useCallback(async () => {
     setPlayersLoading(true);
     try {
@@ -136,12 +265,14 @@ export default function DbTeamGenerator() {
     refreshAll();
   }, [refreshAll]);
 
+  useEffect(() => {
+    if (result?.teams) setTeams(result.teams);
+  }, [result]);
+
+  // ---------- handlers de seleção ----------
   const togglePlayer = useCallback((playerId: UUID, checked: boolean) => {
     setSelectedPlayerIds((prev) => {
-      if (checked) {
-        if (prev.includes(playerId)) return prev;
-        return [...prev, playerId];
-      }
+      if (checked) return prev.includes(playerId) ? prev : [...prev, playerId];
       return prev.filter((id) => id !== playerId);
     });
   }, []);
@@ -155,10 +286,12 @@ export default function DbTeamGenerator() {
     });
   }, []);
 
-  const setSkillWeight = useCallback((skillId: UUID, w: number) => {
-    setSelectedSkillMap((prev) => ({ ...prev, [skillId]: w }));
-  }, []);
+  const setSkillWeight = useCallback(
+    (skillId: UUID, weight: number) => setSelectedSkillMap((prev) => ({ ...prev, [skillId]: weight })),
+    []
+  );
 
+  // ---------- navegação entre steps ----------
   const goNext = useCallback(() => {
     if (!canGoNext) {
       message.warning(`Selecione pelo menos ${needed} jogadores.`);
@@ -167,16 +300,14 @@ export default function DbTeamGenerator() {
     setStep("skills");
   }, [canGoNext, needed]);
 
-  const goBackToPlayers = useCallback(() => {
-    setStep("players");
-  }, []);
+  const goBackToPlayers = useCallback(() => setStep("players"), []);
 
+  // ---------- geração de times ----------
   const generate = useCallback(async () => {
     if (!canGenerate) {
       message.warning("Selecione jogadores suficientes e pelo menos 1 skill.");
       return;
     }
-
     const payload: GenerateDbRequest = {
       teamCount,
       playersPerTeam,
@@ -185,13 +316,14 @@ export default function DbTeamGenerator() {
       sexBalance: { enabled: sexBalanceEnabled, maxMaleDiff },
       sexMultiplier: { M: multM, F: multF },
     };
-
     setGenerating(true);
     setResult(null);
-
+    setTeams([]);
     try {
-      const { data } = await http.post<GenerateDbResponse>("/teams/generate/db", payload);
-      setResult(data);
+      const { data } = await http.post<GenerateDbApiResponse>("/teams/generate/db", payload);
+      const normalized = normalizeResponse(data);
+      setResult(normalized);
+      setTeams(normalized.teams);
       setStep("result");
       message.success("Times gerados com sucesso!");
     } catch (e: any) {
@@ -201,58 +333,236 @@ export default function DbTeamGenerator() {
       setGenerating(false);
     }
   }, [
-    canGenerate,
-    needed,
-    teamCount,
-    playersPerTeam,
-    selectedPlayerIds,
-    selectedSkills,
-    sexBalanceEnabled,
-    maxMaleDiff,
-    multM,
-    multF,
+    canGenerate, teamCount, playersPerTeam, selectedPlayerIds, needed,
+    selectedSkills, sexBalanceEnabled, maxMaleDiff, multM, multF,
+    normalizeResponse,
   ]);
 
-  // NOVA FUNÇÃO: recuperar última sessão
   const handleRecoverLatest = useCallback(async () => {
     setRecovering(true);
     try {
-      const { data } = await http.get<GenerateDbResponse>("/teams/latest-session");
-      setResult(data);
+      const { data } = await http.get<GenerateDbApiResponse>("/teams/latest-session");
+      const normalized = normalizeResponse(data);
+      setResult(normalized);
+      setTeams(normalized.teams);
       setStep("result");
       message.success("Última geração recuperada!");
     } catch (e: any) {
+      console.error(e);
       message.error(e?.response?.data?.message ?? "Nenhuma sessão anterior encontrada.");
     } finally {
       setRecovering(false);
     }
-  }, []);
+  }, [normalizeResponse]);
 
   const resetAll = useCallback(() => {
     setStep("players");
     setSelectedPlayerIds([]);
     setSelectedSkillMap({});
     setResult(null);
+    setTeams([]);
     setPlayerQuery("");
     setSkillQuery("");
     setTeamCount(DEFAULT_TEAM_COUNT);
     setPlayersPerTeam(DEFAULT_PLAYERS_PER_TEAM);
+    setDragOverTeamIndex(null);
+    dragDataRef.current = null;
   }, []);
 
+  // ==================== DRAG & DROP ====================
+  const prepareDragPlayer = useCallback((playerId: string, fromTeamIndex: number) => {
+    if (!playerId) return;
+    dragDataRef.current = { playerId, fromTeamIndex };
+  }, []);
+
+  const movePlayerLocally = useCallback(
+    (playerId: string, fromTeamIndex: number, toTeamIndex: number) => {
+      const previous = teams.map((t) => ({ ...t, players: [...t.players] }));
+      const newTeams = teams.map((t) => ({ ...t, players: [...t.players] }));
+      const fromTeam = newTeams.find((t) => t.teamIndex === fromTeamIndex);
+      const toTeam = newTeams.find((t) => t.teamIndex === toTeamIndex);
+      if (!fromTeam || !toTeam) return { didMove: false, previousTeams: previous };
+      const idx = fromTeam.players.findIndex((p) => p.playerId === playerId);
+      if (idx === -1) return { didMove: false, previousTeams: previous };
+      const [moved] = fromTeam.players.splice(idx, 1);
+      toTeam.players.push(moved);
+      fromTeam.sumScore = recalculateTeamScore(fromTeam.players);
+      toTeam.sumScore = recalculateTeamScore(toTeam.players);
+      setTeams(newTeams);
+      return { didMove: true, previousTeams: previous };
+    },
+    [teams, recalculateTeamScore]
+  );
+
+  const handleDropPlayer = useCallback(
+    async (playerId: string, fromTeamIndex: number, toTeamIndex: number) => {
+      if (!playerId || fromTeamIndex === toTeamIndex) return;
+      if (!result?.sessionId) return;
+      const { previousTeams, didMove } = movePlayerLocally(playerId, fromTeamIndex, toTeamIndex);
+      if (!didMove) return;
+      try {
+        await http.put(`/teams/session/${result.sessionId}/move-player`, {
+          playerId, fromTeamIndex, toTeamIndex,
+        });
+      } catch (err: any) {
+        message.error(err?.response?.data?.message ?? "Erro ao mover jogador. Revertendo...");
+        setTeams(previousTeams);
+      }
+    },
+    [result?.sessionId, movePlayerLocally]
+  );
+
+  const onDragStart = useCallback(
+    (e: DragEvent<HTMLDivElement>, playerId: string, fromTeamIndex: number) => {
+      if (!playerId) { e.preventDefault(); return; }
+      const payload: DragPlayerData = { playerId, fromTeamIndex };
+      dragDataRef.current = payload;
+      e.dataTransfer.effectAllowed = "move";
+      try {
+        e.dataTransfer.setData("text/plain", JSON.stringify(payload));
+      } catch (err) {
+        console.warn("dataTransfer falhou", err);
+      }
+      e.currentTarget.classList.add("is-dragging");
+    },
+    []
+  );
+
+  const onDragEnd = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.currentTarget.classList.remove("is-dragging");
+    setDragOverTeamIndex(null);
+    setTimeout(() => { dragDataRef.current = null; }, 100);
+  }, []);
+
+  const onDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const onDragEnter = useCallback((e: DragEvent<HTMLDivElement>, teamIndex: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverTeamIndex(teamIndex);
+  }, []);
+
+  const onDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
+    const related = e.relatedTarget as Node | null;
+    if (related && e.currentTarget.contains(related)) return;
+    setDragOverTeamIndex(null);
+  }, []);
+
+  const onDropOnTeam = useCallback(
+    (e: DragEvent<HTMLDivElement>, toTeamIndex: number) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragOverTeamIndex(null);
+      let data: Partial<DragPlayerData> | null = null;
+      try {
+        const raw = e.dataTransfer.getData("text/plain");
+        if (raw) data = JSON.parse(raw);
+      } catch (err) {
+        console.warn("Erro ao ler dataTransfer", err);
+      }
+      if (!data?.playerId || typeof data.fromTeamIndex !== "number") {
+        data = dragDataRef.current;
+      }
+      if (!data?.playerId || typeof data.fromTeamIndex !== "number") return;
+      handleDropPlayer(data.playerId, data.fromTeamIndex, toTeamIndex);
+    },
+    [handleDropPlayer]
+  );
+
+  // ---------- sessão com quadras ----------
+  const handleStartSession = useCallback(
+    async (courts: { name: string; teamIndices: number[] }[]) => {
+      if (!result?.sessionId) return;
+      try {
+        await http.post("/game-sessions/start-with-courts", {
+          generationSessionId: result.sessionId,
+          courts,
+        });
+        message.success("Sessão iniciada com sucesso!");
+        setCourtModalOpen(false);
+        navigate(`/friendly-sessions/${result.sessionId}`);
+      } catch (err: any) {
+        console.error(err);
+        message.error(err?.response?.data?.message ?? "Erro ao iniciar sessão");
+      }
+    },
+    [result?.sessionId, navigate]
+  );
+
+  // ---------- renderização dos times (reutilizada) ----------
+  const renderTeamsGrid = (compact: boolean) => (
+    <div
+      className="tg-teams-grid ui-scroll"
+      style={{
+        gridTemplateColumns: compact
+          ? "repeat(auto-fill, minmax(240px, 1fr))"
+          : "repeat(auto-fill, minmax(280px, 1fr))",
+        gap: compact ? 12 : 20,
+      }}
+    >
+      {teams.map((team) => {
+        const isDragOver = dragOverTeamIndex === team.teamIndex;
+        return (
+          <div
+            key={team.teamIndex}
+            className={`tg-team-card ${isDragOver ? "is-drag-over" : ""}`}
+            onDragOver={onDragOver}
+            onDragEnter={(e) => onDragEnter(e, team.teamIndex)}
+            onDragLeave={onDragLeave}
+            onDrop={(e) => onDropOnTeam(e, team.teamIndex)}
+          >
+            <div className="tg-team-name">
+              Time {team.teamIndex}{" "}
+              <span style={{ fontSize: 12, color: "var(--text-2)", fontWeight: 900 }}>
+                • {team.sumScore.toFixed(1)}
+              </span>
+            </div>
+            <div className="tg-team-players">
+              {team.players.map((p, idx) => {
+                const canDrag = Boolean(p.playerId);
+                return (
+                  <div
+                    key={p.playerId || `${team.teamIndex}-${p.name}-${idx}`}
+                    className="tg-team-player"
+                    draggable={canDrag}
+                    onPointerDown={() => canDrag && prepareDragPlayer(p.playerId, team.teamIndex)}
+                    onDragStart={(e) => onDragStart(e, p.playerId, team.teamIndex)}
+                    onDragEnd={onDragEnd}
+                    style={{
+                      cursor: canDrag ? "grab" : "not-allowed",
+                      opacity: canDrag ? 1 : 0.55,
+                    }}
+                    title={canDrag ? "Arraste para outro time" : "Jogador sem ID"}
+                  >
+                    <span className="tg-player-name" title={p.name}>
+                      {p.name}
+                    </span>
+                    <span style={{ fontWeight: 900, color: "var(--text-2)", fontSize: 12 }}>
+                      {p.sex} • {p.score.toFixed(1)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  // ==================== UI ====================
   const selectedPlayersCount = selectedPlayerIds.length;
   const selectedSkillsCount = selectedSkills.length;
-
-  // =========================
-  // UI blocks
-  // =========================
 
   const TopBar = (
     <div className="ui-card" style={{ padding: 15 }}>
       <div className="config-header-compact">
         <span className="config-title"></span>
-
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {/* BOTÃO DE RECUPERAR ÚLTIMA GERAÇÃO */}
           {step !== "result" && (
             <button
               type="button"
@@ -264,195 +574,103 @@ export default function DbTeamGenerator() {
               <HistoryOutlined /> {recovering ? "Carregando..." : "Recuperar última geração"}
             </button>
           )}
-
-          <button
-            type="button"
-            className="action-btn-compact save"
-            onClick={refreshAll}
-            disabled={playersLoading || skillsLoading}
-            title="Recarregar dados"
-          >
+          <button type="button" className="action-btn-compact save" onClick={refreshAll} disabled={playersLoading || skillsLoading} title="Recarregar dados">
             Recarregar
           </button>
-
           <button type="button" className="action-btn-compact reset" onClick={resetAll} title="Reiniciar">
             Limpar
           </button>
         </div>
       </div>
-
       <div className="config-controls-compact">
         <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
           <div className="input-group-compact">
             <label>Times:</label>
             <InputNumber min={1} value={teamCount} onChange={(v) => setTeamCount(Number(v || 1))} style={{ width: 160 }} />
           </div>
-
           <div className="input-group-compact">
             <label>Jogadores por time:</label>
-            <InputNumber
-              min={2}
-              value={playersPerTeam}
-              onChange={(v) => setPlayersPerTeam(Number(v || 2))}
-              style={{ width: 160 }}
-            />
+            <InputNumber min={2} value={playersPerTeam} onChange={(v) => setPlayersPerTeam(Number(v || 2))} style={{ width: 160 }} />
           </div>
         </div>
-
         <div className="config-info-compact" style={{ marginTop: 10 }}>
           Precisa de <b>{needed}</b> jogadores • Selecionados: <b>{selectedPlayersCount}</b>
-          {step !== "players" && (
-            <>
-              {" "}
-              • Skills selecionadas: <b>{selectedSkillsCount}</b>
-            </>
-          )}
+          {step !== "players" && <> • Skills selecionadas: <b>{selectedSkillsCount}</b></>}
         </div>
       </div>
     </div>
   );
 
-  // =========================
-  // STEP: PLAYERS (FULL)
-  // =========================
   const PlayersStep = (
     <div className="ui-card" style={{ padding: 15 }}>
       <div className="players-header-compact">
         <h3>1) Selecionar Jogadores</h3>
         <span className="players-count ui-badge">{selectedPlayersCount}</span>
       </div>
-
-      <button
-        type="button"
-        className="action-btn-compact generate"
-        onClick={goNext}
-        disabled={!canGoNext}
-        title={!canGoNext ? `Selecione ${needed} jogadores` : "Ir para skills"}
-        style={{marginBottom: 10}}
-      >
+      <button type="button" className="action-btn-compact generate" onClick={goNext} disabled={!canGoNext} title={!canGoNext ? `Selecione ${needed} jogadores` : "Ir para skills"} style={{ marginBottom: 10 }}>
         Próximo: Skills
       </button>
-      
-      <Input
-        placeholder="Buscar jogador..."
-        value={playerQuery}
-        onChange={(e) => setPlayerQuery(e.target.value)}
-        style={{ marginBottom: 12 }}
-      />
-
+      <Input placeholder="Buscar jogador..." value={playerQuery} onChange={(e) => setPlayerQuery(e.target.value)} style={{ marginBottom: 12 }} />
       {playersLoading ? (
-        <div style={{ padding: 16 }}>
-          <Spin />
-        </div>
+        <div style={{ padding: 16 }}><Spin /></div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: "58vh", overflow: "auto" }}>
+        <div
+          className="players-selection-grid ui-scroll"
+          style={{
+            maxHeight: "58vh",
+            overflow: "auto",
+          }}
+        >
           {filteredPlayers.map((p) => {
             const checked = selectedPlayerIds.includes(p.id);
             return (
-              <label
-                key={p.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 10,
-                  padding: "10px 12px",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--r-sm)",
-                  background: "var(--surface-2)",
-                  cursor: "pointer",
-                }}
-              >
+              <label key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 12px", border: "1px solid var(--border)", borderRadius: "var(--r-sm)", background: "var(--surface-2)", cursor: "pointer" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <Checkbox checked={checked} onChange={(e: CheckboxChangeEvent) => togglePlayer(p.id, e.target.checked)} />
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     <span style={{ fontWeight: 900, color: "#fff" }}>{p.name}</span>
-                    <span style={{ fontSize: 12, color: "var(--text-2)", fontWeight: 800 }}>Sexo: {p.sex}</span>
                   </div>
                 </div>
-
-                <Tag color={p.sex === "M" ? "blue" : "magenta"} style={{ fontWeight: 900 }}>
-                  {p.sex}
-                </Tag>
+                <Tag color={p.sex === "M" ? "blue" : "magenta"} style={{ fontWeight: 900 }}>{p.sex}</Tag>
               </label>
             );
           })}
-
-          {filteredPlayers.length === 0 && (
-            <div style={{ padding: 12, color: "var(--text-2)", fontWeight: 800 }}>Nenhum jogador encontrado.</div>
-          )}
+          {filteredPlayers.length === 0 && <div style={{ padding: 12, color: "var(--text-2)", fontWeight: 800 }}>Nenhum jogador encontrado.</div>}
         </div>
       )}
-
       <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-        <Text style={{ color: "var(--text-2)", fontWeight: 800 }}>
-          Selecionados: {selectedPlayersCount} / {needed}
-        </Text>
+        <Text style={{ color: "var(--text-2)", fontWeight: 800 }}>Selecionados: {selectedPlayersCount} / {needed}</Text>
       </div>
     </div>
   );
 
-  // =========================
-  // STEP: SKILLS (FULL + lateral config)
-  // =========================
   const SkillsStep = (
     <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20 }}>
-      {/* Skills list */}
       <div className="ui-card" style={{ padding: 15 }}>
         <div className="players-header-compact">
           <h3>2) Selecionar Skills</h3>
           <span className="players-count ui-badge">{selectedSkillsCount}</span>
         </div>
-
-        <Input
-          placeholder="Buscar skill..."
-          value={skillQuery}
-          onChange={(e) => setSkillQuery(e.target.value)}
-          style={{ marginBottom: 12 }}
-        />
-
+        <Input placeholder="Buscar skill..." value={skillQuery} onChange={(e) => setSkillQuery(e.target.value)} style={{ marginBottom: 12 }} />
         {skillsLoading ? (
-          <div style={{ padding: 16 }}>
-            <Spin />
-          </div>
+          <div style={{ padding: 16 }}><Spin /></div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: "52vh", overflow: "auto" }}>
             {filteredSkills.map((s) => {
               const checked = selectedSkillMap[s.id] != null;
               const weight = selectedSkillMap[s.id] ?? 1;
-
               return (
-                <div
-                  key={s.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 10,
-                    padding: "10px 12px",
-                    border: "1px solid var(--border)",
-                    borderRadius: "var(--r-sm)",
-                    background: "var(--surface-2)",
-                  }}
-                >
+                <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 12px", border: "1px solid var(--border)", borderRadius: "var(--r-sm)", background: "var(--surface-2)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <Checkbox checked={checked} onChange={(e) => toggleSkill(s.id, e.target.checked)} />
                     <div style={{ display: "flex", flexDirection: "column" }}>
                       <span style={{ fontWeight: 900, color: "#fff" }}>{s.name}</span>
                     </div>
                   </div>
-
                   {checked ? (
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <Text style={{ color: "var(--text-2)", fontWeight: 900 }}>Peso</Text>
-                      <InputNumber
-                        min={0}
-                        max={10}
-                        step={0.5}
-                        value={weight}
-                        onChange={(v) => setSkillWeight(s.id, Number(v ?? 1))}
-                        style={{ width: 90 }}
-                      />
+                      <InputNumber min={0} max={10} step={0.5} value={weight} onChange={(v) => setSkillWeight(s.id, Number(v ?? 1))} style={{ width: 90 }} />
                     </div>
                   ) : (
                     <Text style={{ color: "var(--text-2)", fontWeight: 800 }}>—</Text>
@@ -460,166 +678,140 @@ export default function DbTeamGenerator() {
                 </div>
               );
             })}
-
-            {filteredSkills.length === 0 && (
-              <div style={{ padding: 12, color: "var(--text-2)", fontWeight: 800 }}>Nenhuma skill encontrada.</div>
-            )}
+            {filteredSkills.length === 0 && <div style={{ padding: 12, color: "var(--text-2)", fontWeight: 800 }}>Nenhuma skill encontrada.</div>}
           </div>
         )}
-
         <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-          <button type="button" className="action-btn-compact copy" onClick={goBackToPlayers} title="Voltar">
-            Voltar
-          </button>
-
-          <button
-            type="button"
-            className="action-btn-compact generate"
-            onClick={generate}
-            disabled={!canGenerate || generating}
-            title={!canGenerate ? "Selecione pelo menos 1 skill" : "Gerar times"}
-          >
+          <button type="button" className="action-btn-compact copy" onClick={goBackToPlayers} title="Voltar">Voltar</button>
+          <button type="button" className="action-btn-compact generate" onClick={generate} disabled={!canGenerate || generating} title={!canGenerate ? "Selecione pelo menos 1 skill" : "Gerar times"}>
             {generating ? "Gerando..." : "Gerar Times"}
           </button>
         </div>
       </div>
-
-      {/* Sex weights (side) */}
       <div className="ui-card" style={{ padding: 15, height: "fit-content" }}>
         <div className="players-header-compact" style={{ marginBottom: 10 }}>
           <h3>⚖️ Pesos e Regras</h3>
           <span className="players-count ui-badge">M/F</span>
         </div>
-
         <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
             <Text style={{ color: "#fff", fontWeight: 900 }}>Times mistos</Text>
-            <Tag color={sexBalanceEnabled ? "green" : "red"} style={{ fontWeight: 900 }}>
-              {sexBalanceEnabled ? "Ativo" : "Inativo"}
-            </Tag>
+            <Tag color={sexBalanceEnabled ? "green" : "red"} style={{ fontWeight: 900 }}>{sexBalanceEnabled ? "Ativo" : "Inativo"}</Tag>
           </div>
-
           <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
-            <Checkbox checked={sexBalanceEnabled} onChange={(e) => setSexBalanceEnabled(e.target.checked)}>
-              Balancear quantidade de homens por time
-            </Checkbox>
-
+            <Checkbox checked={sexBalanceEnabled} onChange={(e) => setSexBalanceEnabled(e.target.checked)}>Balancear quantidade de homens por time</Checkbox>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <Text style={{ color: "#fff", fontWeight: 900 }}>Dif. máxima de homens:</Text>
               <InputNumber min={0} max={10} value={maxMaleDiff} onChange={(v) => setMaxMaleDiff(Number(v ?? 1))} />
             </div>
-
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <Text style={{ color: "#fff", fontWeight: 900 }}>Multiplicador M:</Text>
               <InputNumber min={0.5} max={2} step={0.01} value={multM} onChange={(v) => setMultM(Number(v ?? 1))} />
-
               <Text style={{ color: "#fff", fontWeight: 900 }}>Multiplicador F:</Text>
               <InputNumber min={0.5} max={2} step={0.01} value={multF} onChange={(v) => setMultF(Number(v ?? 0.92))} />
             </div>
-
-            <div className="config-info-compact" style={{ marginTop: 10 }}>
-              Dica: ajuste os multiplicadores para compensar diferença de nível entre M/F.
-            </div>
+            <div className="config-info-compact" style={{ marginTop: 10 }}>Dica: ajuste os multiplicadores para compensar diferença de nível entre M/F.</div>
           </div>
         </div>
       </div>
     </div>
   );
 
-  // =========================
-  // STEP: RESULT (FULL)
-  // =========================
   const ResultStep = (
     <div className="results-section ui-card" style={{ height: "calc(100dvh - 230px)" }}>
       <div className="results-header">
         <h2>Times Gerados</h2>
-
         <div className="results-stats">
-          {result?.teams?.length ? <span className="teams-count-badge">{result.teams.length} times</span> : null}
-
+          {teams.length ? <span className="teams-count-badge">{teams.length} times</span> : null}
           <div className="action-buttons-compact">
-            {/* <button type="button" className="action-btn-compact copy" onClick={goBackToSkills} title="Voltar para skills">
-              <ArrowLeftOutlined /> Voltar
-            </button> */}
-
-            <button type="button" className="action-btn-compact reset" onClick={resetAll} title="Novo sorteio">
-              Novo sorteio
-            </button>
+            <button type="button" className="action-btn-compact reset" onClick={resetAll} title="Novo sorteio">Novo sorteio</button>
           </div>
         </div>
       </div>
-
       {generating ? (
-        <div className="empty-state">
-          <Spin />
-          <div style={{ marginTop: 10, color: "var(--text-2)", fontWeight: 800 }}>Calculando balanceamento...</div>
-        </div>
-      ) : result?.teams?.length ? (
+        <div className="empty-state"><Spin /><div style={{ marginTop: 10, color: "var(--text-2)", fontWeight: 800 }}>Calculando balanceamento...</div></div>
+      ) : teams.length ? (
         <>
           <div className="teams-summary" style={{ justifyContent: "space-between" }}>
-            <span style={{ color: "var(--primary)", fontWeight: 900 }}>
-              Session: <span style={{ color: "#fff" }}>{result.sessionId}</span>
-            </span>
-
-            <button
-              type="button"
-              className="reshuffle-btn"
-              onClick={generate}
-              title="Reembaralhar com as mesmas seleções"
-              disabled={!canGenerate || generating}
-            >
-              Reembaralhar
-            </button>
+            <span style={{ color: "var(--primary)", fontWeight: 900 }}>Session: <span style={{ color: "#fff" }}>{result?.sessionId}</span></span>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="button" className="reshuffle-btn" onClick={generate} title="Reembaralhar com as mesmas seleções" disabled={!canGenerate || generating}>Reembaralhar</button>
+              <Button type="default" icon={<SwapOutlined />} onClick={() => setAdjustModalOpen(true)}>Ajustar Times</Button>
+              <Button type="primary" icon={<PlayCircleOutlined />} onClick={() => setCourtModalOpen(true)}>Iniciar Sessão</Button>
+            </div>
           </div>
-
-          <div className="tg-teams-grid ui-scroll">
-            {result.teams.map((team) => (
-              <div key={team.teamIndex} className="tg-team-card">
-                <div className="tg-team-name">
-                  Time {team.teamIndex}{" "}
-                  <span style={{ fontSize: 12, color: "var(--text-2)", fontWeight: 900 }}>
-                    • {team.sumScore.toFixed(1)}
-                  </span>
-                </div>
-
-                <div className="tg-team-players">
-                  {team.players.map((p) => (
-                    <div key={p.playerId} className="tg-team-player">
-                      <span className="tg-player-name" title={p.name}>
-                        {p.name}
-                      </span>
-                      <span style={{ fontWeight: 900, color: "var(--text-2)", fontSize: 12 }}>
-                        {p.sex} • {p.score.toFixed(1)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          {renderTeamsGrid(true)}
         </>
       ) : (
-        <div className="empty-state">
-          <div className="empty-icon">🧠</div>
-          <h3>Nenhum time gerado</h3>
-          <p>Volte e gere novamente.</p>
-        </div>
+        <div className="empty-state"><div className="empty-icon">🧠</div><h3>Nenhum time gerado</h3><p>Volte e gere novamente.</p></div>
       )}
     </div>
   );
 
-  // =========================
-  // Layout FULL SCREEN (sem coluna fixa)
-  // =========================
   return (
     <div className="main-content" style={{ gridTemplateColumns: "1fr" }}>
       <div className="controls-column ui-scroll" style={{ overflow: "auto" }}>
         {TopBar}
-
         {step === "players" && PlayersStep}
         {step === "skills" && SkillsStep}
         {step === "result" && ResultStep}
       </div>
+      {result?.sessionId && (
+        <CourtSetupModal
+          open={courtModalOpen}
+          sessionId={result.sessionId}
+          teams={teams.map((team) => ({
+            teamIndex: team.teamIndex,
+            name: `Time ${team.teamIndex}`,
+            players: team.players.map((player, playerIndex) => ({
+              id:
+                player.playerId ||
+                `${team.teamIndex}-${player.name}-${playerIndex}`,
+              name: player.name,
+            })),
+          }))}
+          onCancel={() => setCourtModalOpen(false)}
+          onConfirm={handleStartSession}
+        />
+      )}
+      {/* Modal de ajuste em tela cheia */}
+      <Modal
+        title={
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ color: "#2bd96b", fontSize: 28 }}>Ajustar Times</span>
+            <div style={{ display: "flex", gap: 8 }}>
+              <Button type="primary" onClick={() => setAdjustModalOpen(false)}>
+                Concluído
+              </Button>
+              <Button onClick={() => setAdjustModalOpen(false)}>
+                Fechar
+              </Button>
+            </div>
+          </div>
+        }
+        open={adjustModalOpen}
+        onCancel={() => setAdjustModalOpen(false)}
+        footer={null}
+        closable={false}
+        width="100vw"
+        style={{ top: 0, maxWidth: "100vw", height: "100vh", padding: 0, overflow: "hidden" }}
+        styles={{
+          body: {
+            height: "calc(100vh - 86px)",  // altura restante abaixo do cabeçalho
+            padding: 24,
+            overflow: "auto",
+            backgroundColor: "#0d0d0d",
+          },
+        }}
+      >
+        {teams.length > 0 ? (
+          renderTeamsGrid(false)
+        ) : (
+          <div style={{ textAlign: "center", padding: 40, color: "#aaa" }}>
+            Nenhum time disponível para ajuste.
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

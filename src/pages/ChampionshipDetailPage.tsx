@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, Button, Spin, Alert, message, Card, Modal } from 'antd';
-import { CloseCircleOutlined, FullscreenOutlined } from '@ant-design/icons';
+import { CloseOutlined, FullscreenOutlined } from '@ant-design/icons';
 import { useChampionships } from '../hooks/useChampionships';
 import { useGameSession } from '../hooks/useGameSession';
 import { GroupStandings } from '../components/championship/GroupStandings';
@@ -274,7 +274,7 @@ const ChampionshipDetailsPage: React.FC = () => {
             position: 'relative',
           },
         }}
-        closeIcon={<CloseCircleOutlined style={{ fontSize: 20, color: 'white' }} />}
+        closeIcon={<CloseOutlined style={{ color: '#2bd96b' }} />}
       >
         {renderGroupsGrid()}
       </Modal>
