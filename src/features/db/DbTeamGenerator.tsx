@@ -16,6 +16,7 @@ import {
   Tag,
   Button,
   Modal,
+  Select,
 } from "antd";
 import type { CheckboxChangeEvent } from "antd/es/checkbox";
 import {
@@ -27,11 +28,10 @@ import { useNavigate } from "react-router-dom";
 
 import { http } from "../../api/http";
 import "../../styles/team-generator.css";
-import { CourtSetupModal } from "../../components/CourtPosterImage/CourtSetupModal";
+import { CourtSetupModal } from "../../components/game/CourtSetupModal";
 
 const { Text } = Typography;
 
-// ========== Tipos ==========
 type UUID = string;
 
 type Player = {
@@ -54,6 +54,7 @@ type GenerateDbRequest = {
   selectedSkills: Array<{ skillId: UUID; weight: number }>;
   sexBalance?: { enabled: boolean; maxMaleDiff: number };
   sexMultiplier?: Record<"M" | "F", number>;
+  requiredPositions?: UUID[];
 };
 
 type RawTeamPlayer = {
@@ -112,7 +113,6 @@ const DEFAULT_TEAM_COUNT = 8;
 const DEFAULT_PLAYERS_PER_TEAM = 4;
 
 export default function DbTeamGenerator() {
-  // ---------- estados ----------
   const [step, setStep] = useState<StepKey>("players");
 
   const [playersLoading, setPlayersLoading] = useState(false);
@@ -137,19 +137,22 @@ export default function DbTeamGenerator() {
   const [multM, setMultM] = useState(1.0);
   const [multF, setMultF] = useState(0.92);
 
+  const [balancePositions, setBalancePositions] = useState(false);
+  const [requiredPositions, setRequiredPositions] = useState<UUID[]>([]);
+  const [availablePositions, setAvailablePositions] = useState<{ id: UUID; name: string }[]>([]);
+
   const [result, setResult] = useState<GenerateDbResponse | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
 
   const [courtModalOpen, setCourtModalOpen] = useState(false);
   const [dragOverTeamIndex, setDragOverTeamIndex] = useState<number | null>(null);
-  const [adjustModalOpen, setAdjustModalOpen] = useState(false); // <-- NOVO
+  const [adjustModalOpen, setAdjustModalOpen] = useState(false);
 
   const dragDataRef = useRef<DragPlayerData | null>(null);
   const navigate = useNavigate();
 
   const needed = teamCount * playersPerTeam;
 
-  // ---------- dados derivados ----------
   const activePlayers = useMemo(() => players.filter((p) => p.active), [players]);
   const activeSkills = useMemo(() => skills.filter((s) => s.active), [skills]);
 
@@ -173,7 +176,6 @@ export default function DbTeamGenerator() {
   const canGoNext = selectedPlayerIds.length >= needed;
   const canGenerate = canGoNext && selectedSkills.length > 0;
 
-  // ---------- helpers de normalização ----------
   const findPlayerByName = useCallback(
     (name?: string) => {
       if (!name) return undefined;
@@ -230,7 +232,6 @@ export default function DbTeamGenerator() {
     [normalizeTeams]
   );
 
-  // ---------- carregamento de dados ----------
   const loadPlayers = useCallback(async () => {
     setPlayersLoading(true);
     try {
@@ -262,6 +263,12 @@ export default function DbTeamGenerator() {
   }, [loadPlayers, loadSkills]);
 
   useEffect(() => {
+    http.get('/positions')
+      .then(res => setAvailablePositions(res.data))
+      .catch(() => message.error("Erro ao carregar posições"));
+  }, []);
+
+  useEffect(() => {
     refreshAll();
   }, [refreshAll]);
 
@@ -269,13 +276,22 @@ export default function DbTeamGenerator() {
     if (result?.teams) setTeams(result.teams);
   }, [result]);
 
-  // ---------- handlers de seleção ----------
-  const togglePlayer = useCallback((playerId: UUID, checked: boolean) => {
-    setSelectedPlayerIds((prev) => {
-      if (checked) return prev.includes(playerId) ? prev : [...prev, playerId];
-      return prev.filter((id) => id !== playerId);
-    });
-  }, []);
+  const togglePlayer = useCallback(
+    (playerId: UUID, checked: boolean) => {
+      setSelectedPlayerIds((prev) => {
+        if (checked) {
+          // Se já atingiu o limite, não permite adicionar mais
+          if (prev.length >= needed) {
+            message.warning(`Você já selecionou ${needed} jogadores.`);
+            return prev;
+          }
+          return prev.includes(playerId) ? prev : [...prev, playerId];
+        }
+        return prev.filter((id) => id !== playerId);
+      });
+    },
+    [needed]
+  );
 
   const toggleSkill = useCallback((skillId: UUID, checked: boolean) => {
     setSelectedSkillMap((prev) => {
@@ -315,6 +331,7 @@ export default function DbTeamGenerator() {
       selectedSkills,
       sexBalance: { enabled: sexBalanceEnabled, maxMaleDiff },
       sexMultiplier: { M: multM, F: multF },
+      requiredPositions: balancePositions ? requiredPositions : [],   // <- ENVIA POSIÇÕES
     };
     setGenerating(true);
     setResult(null);
@@ -335,7 +352,7 @@ export default function DbTeamGenerator() {
   }, [
     canGenerate, teamCount, playersPerTeam, selectedPlayerIds, needed,
     selectedSkills, sexBalanceEnabled, maxMaleDiff, multM, multF,
-    normalizeResponse,
+    balancePositions, requiredPositions, normalizeResponse,
   ]);
 
   const handleRecoverLatest = useCallback(async () => {
@@ -366,6 +383,8 @@ export default function DbTeamGenerator() {
     setTeamCount(DEFAULT_TEAM_COUNT);
     setPlayersPerTeam(DEFAULT_PLAYERS_PER_TEAM);
     setDragOverTeamIndex(null);
+    setBalancePositions(false);
+    setRequiredPositions([]);
     dragDataRef.current = null;
   }, []);
 
@@ -559,9 +578,21 @@ export default function DbTeamGenerator() {
   const selectedSkillsCount = selectedSkills.length;
 
   const TopBar = (
-    <div className="ui-card" style={{ padding: 15 }}>
-      <div className="config-header-compact">
-        <span className="config-title"></span>
+    <div className="ui-card">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+        {/* Lado esquerdo: inputs de configuração */}
+        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
+          <div className="input-group-compact" style={{ margin: 0 }}>
+            <label style={{ marginRight: 6 }}>Times:</label>
+            <InputNumber min={1} value={teamCount} onChange={(v) => setTeamCount(Number(v || 1))} style={{ width: 100 }} />
+          </div>
+          <div className="input-group-compact" style={{ margin: 0 }}>
+            <label style={{ marginRight: 6 }}>Jogadores/time:</label>
+            <InputNumber min={2} value={playersPerTeam} onChange={(v) => setPlayersPerTeam(Number(v || 2))} style={{ width: 120 }} />
+          </div>
+        </div>
+
+        {/* Lado direito: botões de ação */}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {step !== "result" && (
             <button
@@ -574,29 +605,16 @@ export default function DbTeamGenerator() {
               <HistoryOutlined /> {recovering ? "Carregando..." : "Recuperar última geração"}
             </button>
           )}
-          <button type="button" className="action-btn-compact save" onClick={refreshAll} disabled={playersLoading || skillsLoading} title="Recarregar dados">
-            Recarregar
-          </button>
           <button type="button" className="action-btn-compact reset" onClick={resetAll} title="Reiniciar">
             Limpar
           </button>
         </div>
       </div>
-      <div className="config-controls-compact">
-        <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-          <div className="input-group-compact">
-            <label>Times:</label>
-            <InputNumber min={1} value={teamCount} onChange={(v) => setTeamCount(Number(v || 1))} style={{ width: 160 }} />
-          </div>
-          <div className="input-group-compact">
-            <label>Jogadores por time:</label>
-            <InputNumber min={2} value={playersPerTeam} onChange={(v) => setPlayersPerTeam(Number(v || 2))} style={{ width: 160 }} />
-          </div>
-        </div>
-        <div className="config-info-compact" style={{ marginTop: 10 }}>
-          Precisa de <b>{needed}</b> jogadores • Selecionados: <b>{selectedPlayersCount}</b>
-          {step !== "players" && <> • Skills selecionadas: <b>{selectedSkillsCount}</b></>}
-        </div>
+
+      {/* Linha informativa */}
+      <div className="config-info-compact" style={{ marginTop: 10 }}>
+        Precisa de <b>{needed}</b> jogadores • Selecionados: <b>{selectedPlayersCount}</b>
+        {step !== "players" && <> • Skills selecionadas: <b>{selectedSkillsCount}</b></>}
       </div>
     </div>
   );
@@ -607,39 +625,84 @@ export default function DbTeamGenerator() {
         <h3>1) Selecionar Jogadores</h3>
         <span className="players-count ui-badge">{selectedPlayersCount}</span>
       </div>
-      <button type="button" className="action-btn-compact generate" onClick={goNext} disabled={!canGoNext} title={!canGoNext ? `Selecione ${needed} jogadores` : "Ir para skills"} style={{ marginBottom: 10 }}>
+      <button
+        type="button"
+        className="action-btn-compact generate"
+        onClick={goNext}
+        disabled={!canGoNext}
+        title={!canGoNext ? `Selecione ${needed} jogadores` : "Ir para skills"}
+        style={{ marginBottom: 10 }}
+      >
         Próximo: Skills
       </button>
-      <Input placeholder="Buscar jogador..." value={playerQuery} onChange={(e) => setPlayerQuery(e.target.value)} style={{ marginBottom: 12 }} />
+      <Input
+        placeholder="Buscar jogador..."
+        value={playerQuery}
+        onChange={(e) => setPlayerQuery(e.target.value)}
+        style={{ marginBottom: 12 }}
+      />
       {playersLoading ? (
         <div style={{ padding: 16 }}><Spin /></div>
       ) : (
         <div
           className="players-selection-grid ui-scroll"
-          style={{
-            maxHeight: "58vh",
-            overflow: "auto",
-          }}
+          style={{ maxHeight: "58vh", overflow: "auto" }}
         >
           {filteredPlayers.map((p) => {
             const checked = selectedPlayerIds.includes(p.id);
+            const isDisabled = !checked && selectedPlayerIds.length >= needed;
+
             return (
-              <label key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 12px", border: "1px solid var(--border)", borderRadius: "var(--r-sm)", background: "var(--surface-2)", cursor: "pointer" }}>
+              <label
+                key={p.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 10,
+                  padding: "10px 12px",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--r-sm)",
+                  background: "var(--surface-2)",
+                  cursor: isDisabled ? "not-allowed" : "pointer",
+                  opacity: isDisabled ? 0.5 : 1,
+                }}
+              >
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <Checkbox checked={checked} onChange={(e: CheckboxChangeEvent) => togglePlayer(p.id, e.target.checked)} />
+                  <Checkbox
+                    checked={checked}
+                    disabled={isDisabled}
+                    onChange={(e: CheckboxChangeEvent) => togglePlayer(p.id, e.target.checked)}
+                  />
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     <span style={{ fontWeight: 900, color: "#fff" }}>{p.name}</span>
                   </div>
                 </div>
-                <Tag color={p.sex === "M" ? "blue" : "magenta"} style={{ fontWeight: 900 }}>{p.sex}</Tag>
+                <Tag color={p.sex === "M" ? "blue" : "magenta"} style={{ fontWeight: 900 }}>
+                  {p.sex}
+                </Tag>
               </label>
             );
           })}
-          {filteredPlayers.length === 0 && <div style={{ padding: 12, color: "var(--text-2)", fontWeight: 800 }}>Nenhum jogador encontrado.</div>}
+          {filteredPlayers.length === 0 && (
+            <div style={{ padding: 12, color: "var(--text-2)", fontWeight: 800 }}>
+              Nenhum jogador encontrado.
+            </div>
+          )}
         </div>
       )}
-      <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-        <Text style={{ color: "var(--text-2)", fontWeight: 800 }}>Selecionados: {selectedPlayersCount} / {needed}</Text>
+      <div
+        style={{
+          marginTop: 12,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 10,
+        }}
+      >
+        <Text style={{ color: "var(--text-2)", fontWeight: 800 }}>
+          Selecionados: {selectedPlayersCount} / {needed}
+        </Text>
       </div>
     </div>
   );
@@ -710,6 +773,32 @@ export default function DbTeamGenerator() {
               <Text style={{ color: "#fff", fontWeight: 900 }}>Multiplicador F:</Text>
               <InputNumber min={0.5} max={2} step={0.01} value={multF} onChange={(v) => setMultF(Number(v ?? 0.92))} />
             </div>
+            {/* ---- NOVO BLOCO DE POSIÇÕES ---- */}
+            <div style={{ borderTop: "1px solid var(--border)", marginTop: 12, paddingTop: 12 }}>
+              <Checkbox
+                checked={balancePositions}
+                onChange={(e) => setBalancePositions(e.target.checked)}
+              >
+                Garantir posições obrigatórias
+              </Checkbox>
+              {balancePositions && (
+                <div style={{ marginTop: 8 }}>
+                  <Text style={{ color: "#fff", fontWeight: 900 }}>Posições obrigatórias:</Text>
+                  <Select
+                    mode="multiple"
+                    placeholder="Selecione as posições"
+                    value={requiredPositions}
+                    onChange={setRequiredPositions}
+                    style={{ width: "100%" }}
+                  >
+                    {availablePositions.map(p => (
+                      <Select.Option key={p.id} value={p.id}>{p.name}</Select.Option>
+                    ))}
+                  </Select>
+                </div>
+              )}
+            </div>
+            {/* ----------------------------- */}
             <div className="config-info-compact" style={{ marginTop: 10 }}>Dica: ajuste os multiplicadores para compensar diferença de nível entre M/F.</div>
           </div>
         </div>
@@ -797,7 +886,7 @@ export default function DbTeamGenerator() {
         style={{ top: 0, maxWidth: "100vw", height: "100vh", padding: 0, overflow: "hidden" }}
         styles={{
           body: {
-            height: "calc(100vh - 86px)",  // altura restante abaixo do cabeçalho
+            height: "calc(100vh - 86px)",
             padding: 24,
             overflow: "auto",
             backgroundColor: "#0d0d0d",

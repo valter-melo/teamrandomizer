@@ -18,6 +18,7 @@ import ManualTeamPage from "./pages/ManualTeamPage";
 import FriendlySessionsPage from "./pages/FriendlySessionsPage";
 import FriendlySessionDetailPage from "./pages/FriendlySessionDetailPage";
 import PlayerPerformancePage from "./pages/PlayerPerformancePage";
+import PositionsPage from "./pages/PositionsPage";
 
 const { Content } = Layout;
 
@@ -83,6 +84,14 @@ export default function App() {
                   </RequireAuth>
                 }
               />
+              <Route
+                path="/positions"
+                element={
+                  <RequireAuth>
+                    <PositionsPage />
+                  </RequireAuth>
+                }
+              />              
               <Route
                 path="/players"
                 element={

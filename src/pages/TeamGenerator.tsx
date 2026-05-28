@@ -322,8 +322,8 @@ export default function TeamGenerator() {
   }, []);
 
   return (
-    <div className="team-generator-compact" style={{ padding: "24px" }}>
-      <div className="main-tabs" style={{ marginBottom: 24 }}>
+    <div className="team-generator-compact">
+      <div className="main-tabs">
         <Tabs
           activeKey={activeTab}
           onChange={onTabChange}

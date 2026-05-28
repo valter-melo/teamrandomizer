@@ -52,6 +52,7 @@
 .main-tabs {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
+  border-radius: 8px;
 }
 
 .tabs-container {
@@ -92,8 +93,8 @@
 .main-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  padding: 20px;
+  gap: 10px;
+  padding: 10px;
   overflow: hidden;
 }
 

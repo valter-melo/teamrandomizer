@@ -13,6 +13,8 @@ import {
   EditOutlined,
   BarChartOutlined,
 } from "@ant-design/icons";
+import { FaVolleyballBall  } from "@react-icons/all-files/fa/FaVolleyballBall";
+
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { authStore } from "../auth/store";
 
@@ -38,6 +40,7 @@ export default function Nav({ collapsed, onToggle }: NavProps) {
             { key: `${base}/dashboard`, icon: <TrophyOutlined />, label: "Dashboard" },
             { key: `${base}/performance`, icon: <BarChartOutlined />, label: "Desempenho" },
             { key: `${base}/skills`, icon: <StarOutlined />, label: "Skills" },
+            { key: `${base}/positions`, icon: <FaVolleyballBall />, label: "Posições" },
             { key: `${base}/players`, icon: <UserOutlined />, label: "Jogadores" },
             { key: `${base}/generator`, icon: <TeamOutlined />, label: "Gerar Times" },
             { key: "/manual-teams", icon: <EditOutlined />, label: "Criar Campeonato" },
