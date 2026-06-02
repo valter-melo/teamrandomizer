@@ -127,7 +127,7 @@ export default function Dashboard() {
       {/* Saudação */}
       <div style={{ marginBottom: 32 }}>
         <Title level={2} style={{ color: '#2bd96b', marginBottom: 8 }}>
-          Seja bem vindo(a), {auth.tenantSlug?.toUpperCase()}
+          Seja bem vindo(a), {auth.userName?.toUpperCase()}
         </Title>
         <Text style={{ color: '#aaa', fontSize: 16 }}>
           Resumo geral da sua organização esportiva

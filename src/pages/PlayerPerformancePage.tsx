@@ -119,7 +119,6 @@ export default function PlayerPerformancePage() {
         return point;
       });
 
-      console.log('Evolution Data:', chartData);   // <-- adicione para depuração
       setEvolutionSkills(skillsArray);
       setEvolutionData(chartData);
       setEvolutionModalOpen(true);

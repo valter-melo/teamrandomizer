@@ -18,6 +18,7 @@ export default function Login() {
         userId: res.userId,
         role: res.role,
         tenantSlug: values.tenantSlug,
+        userName: res.userName, 
       });
 
       message.success("Bem-vindo!");

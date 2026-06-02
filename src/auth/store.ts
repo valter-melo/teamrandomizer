@@ -4,6 +4,7 @@ export type AuthState = {
   tenantSlug?: string | null; // ✅ opcional
   userId: string | null;
   role: string | null;
+  userName?: string | null; // ✅ opcional
 };
 
 export const authStore = {
@@ -12,7 +13,7 @@ export const authStore = {
   },
   get(): AuthState {
     const raw = localStorage.getItem("auth");
-    return raw ? (JSON.parse(raw) as AuthState) : { token: null, tenantId: null, tenantSlug: null, userId: null, role: null };
+    return raw ? (JSON.parse(raw) as AuthState) : { token: null, tenantId: null, tenantSlug: null, userId: null, role: null, userName: null };
   },
   getToken() {
     return this.get().token;

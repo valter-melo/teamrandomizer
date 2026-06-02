@@ -13,7 +13,7 @@ import {
   EditOutlined,
   BarChartOutlined,
 } from "@ant-design/icons";
-import { FaVolleyballBall  } from "@react-icons/all-files/fa/FaVolleyballBall";
+import { FaVolleyballBall } from "@react-icons/all-files/fa/FaVolleyballBall";
 
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { authStore } from "../auth/store";
@@ -30,6 +30,9 @@ export default function Nav({ collapsed, onToggle }: NavProps) {
   const loc = useLocation();
   const { slug } = useParams();
   const token = authStore.getToken();
+
+  const auth = authStore.get();
+  const groupName = auth.tenantSlug || slug || "Team Generator";
 
   const base = slug ? `/t/${slug}` : "";
 
@@ -87,8 +90,10 @@ export default function Nav({ collapsed, onToggle }: NavProps) {
 
         {!collapsed && (
           <div className="nav-brand-text">
-            <div className="nav-title">Bora Ver</div>
-            <div className="nav-subtitle">{slug ? `Grupo: ${slug}` : "Team Generator"}</div>
+            <div className="nav-title">R4NDO</div>
+            <div className="nav-subtitle">
+              {groupName.toUpperCase()}
+            </div>
           </div>
         )}
       </div>

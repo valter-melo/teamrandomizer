@@ -15,7 +15,6 @@ export default function SignupTenant() {
       message.success("Tenant criado com sucesso!");
       nav(res.token ? "/dashboard" : "/login");
     } catch (e: any) {
-      console.log(e);
       message.error(e?.response?.data?.message ?? "Falha ao criar tenant");
     }
   }

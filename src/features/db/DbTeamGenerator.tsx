@@ -28,7 +28,7 @@ import { useNavigate } from "react-router-dom";
 
 import { http } from "../../api/http";
 import "../../styles/team-generator.css";
-import { CourtSetupModal } from "../../components/game/CourtSetupModal";
+import { CourtSetupModal } from "../../components/CourtPosterImage/CourtSetupModal";
 
 const { Text } = Typography;
 
