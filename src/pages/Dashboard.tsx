@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Card, Row, Col, Typography, Statistic, Button, Spin, Tag, List, Modal, Table
+  Card, Row, Col, Typography, Statistic, Button, Spin, Tag, Modal, Table
 } from 'antd';
 import {
   TrophyOutlined,

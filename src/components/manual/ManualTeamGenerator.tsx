@@ -25,6 +25,11 @@ export const ManualTeamGenerator: React.FC = () => {
   const [matchesType, setMatchesType] = useState<'SINGLE' | 'HOME_AND_AWAY'>('SINGLE');
   const [qualifiedPerGroup, setQualifiedPerGroup] = useState(2);
 
+  // Novos estados para configuração de sets
+  const [setsToWin, setSetsToWin] = useState(2);        // 1 = melhor de 1, 2 = melhor de 3, 3 = melhor de 5
+  const [pointsPerSet, setPointsPerSet] = useState(25);
+  const [tieBreakPoints, setTieBreakPoints] = useState(15);
+
   useEffect(() => {
     const initialTeams: { [key: number]: string[] } = {};
     const initialGroups: { [key: number]: number } = {};
@@ -82,6 +87,10 @@ export const ManualTeamGenerator: React.FC = () => {
         if (name.trim()) acc[parseInt(idx)] = name.trim();
         return acc;
       }, {} as Record<number, string>),
+      // Novos campos de configuração de sets
+      setsToWin,
+      pointsPerSet,
+      tieBreakPoints,
     };
     try {
       const result = await saveManualTeams(payload);
@@ -235,6 +244,25 @@ export const ManualTeamGenerator: React.FC = () => {
               <Radio value="HOME_AND_AWAY">Ida e Volta</Radio>
             </Radio.Group>
           </Form.Item>
+          
+          {/* ========== NOVA SEÇÃO: CONFIGURAÇÃO DE SETS ========== */}
+          <Form.Item label="Sets para vencer" required>
+            <Select value={setsToWin} onChange={val => setSetsToWin(val)}>
+              <Select.Option value={1}>Melhor de 1 set</Select.Option>
+              <Select.Option value={2}>Melhor de 3 sets</Select.Option>
+              <Select.Option value={3}>Melhor de 5 sets</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item label="Pontos por set" required>
+            <InputNumber min={10} max={30} value={pointsPerSet} onChange={val => setPointsPerSet(val || 25)} />
+          </Form.Item>
+          {setsToWin > 1 && (
+            <Form.Item label="Pontos no tie-break (set decisivo)">
+              <InputNumber min={10} max={25} value={tieBreakPoints} onChange={val => setTieBreakPoints(val || 15)} />
+            </Form.Item>
+          )}
+          {/* ===================================================== */}
+          
           <Form.Item label="Classificados por grupo" required>
             <InputNumber min={1} value={qualifiedPerGroup} onChange={val => setQualifiedPerGroup(val || 1)} />
           </Form.Item>

@@ -80,6 +80,9 @@ export type StandingEntry = {
   goalsAgainst: number;
   goalsDifference: number;
   teamName?: string;
+  setsWon: number;
+  setsLost: number;
+  setsDifference: number;
 }
 
 export interface MatchDetails {
@@ -96,6 +99,11 @@ export interface MatchDetails {
   stage?: string;
   homeTeamName?: string;
   awayTeamName?: string;
+  setsToWin?: number;
+  pointsPerSet?: number;
+  tieBreakPoints?: number;  
+  homeSetsWon: number;
+  awaySetsWon: number;  
 }
 
 export type CreateChampionshipRequest = {

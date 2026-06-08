@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, InputNumber, Space, Typography, message, Row, Col, Card, Tooltip, Radio } from 'antd';
+import { Modal, Button, InputNumber, Space, Typography, message, Row, Col, Card, Tooltip, Radio, Tag } from 'antd';
 import {
   SettingOutlined,
   PlusOutlined,
@@ -25,6 +25,15 @@ interface ScoreboardModalProps {
   awayTeamName?: string;
   onSuccess: () => void;
   onSave?: (data: any) => Promise<void>;
+  setsToWin?: number;
+  pointsPerSet?: number;
+  tieBreakPoints?: number;
+}
+
+interface SetResult {
+  setNumber: number;
+  homeScore: number;
+  awayScore: number;
 }
 
 export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
@@ -39,79 +48,175 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
   awayTeamName,
   onSuccess,
   onSave,
+  setsToWin: initialSetsToWin = 2,
+  pointsPerSet: initialPointsPerSet = 25,
+  tieBreakPoints: initialTieBreakPoints = 15,
 }) => {
+  // Estados de carregamento
   const [loading, setLoading] = useState(false);
   const [homeTeam, setHomeTeam] = useState<Team | null>(null);
   const [awayTeam, setAwayTeam] = useState<Team | null>(null);
-  const [homeScore, setHomeScore] = useState(0);
-  const [awayScore, setAwayScore] = useState(0);
-  const [winner, setWinner] = useState<'home' | 'away' | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [settingsVisible, setSettingsVisible] = useState(false);
-  const [resultModalVisible, setResultModalVisible] = useState(false);
-  const [pointsToWin, setPointsToWin] = useState(12);
+
+  // Configurações da partida
+  const [setsToWin, setSetsToWin] = useState(initialSetsToWin);
+  const [editablePointsPerSet, setEditablePointsPerSet] = useState(initialPointsPerSet);
+  const [editableTieBreakPoints, setEditableTieBreakPoints] = useState(initialTieBreakPoints);
   const [minAdvantage, setMinAdvantage] = useState(2);
 
-  // Estados para WO
+  // Pontuação do set atual
+  const [homeScore, setHomeScore] = useState(0);
+  const [awayScore, setAwayScore] = useState(0);
+
+  // Controle de sets
+  const [currentSet, setCurrentSet] = useState(1);
+  const [sets, setSets] = useState<SetResult[]>([]);
+  const [homeSetsWon, setHomeSetsWon] = useState(0);
+  const [awaySetsWon, setAwaySetsWon] = useState(0);
+
+  // Estados de finalização
+  const [matchWinner, setMatchWinner] = useState<'home' | 'away' | null>(null);
+  const [setFinished, setSetFinished] = useState(false);
+  const [currentSetWinner, setCurrentSetWinner] = useState<'home' | 'away' | null>(null);
+  const [confirmSetModalOpen, setConfirmSetModalOpen] = useState(false);
+  const [resultModalVisible, setResultModalVisible] = useState(false);
+
+  // Salvamento
+  const [saving, setSaving] = useState(false);
+
+  // Configurações
+  const [settingsVisible, setSettingsVisible] = useState(false);
+
+  // WO
   const [woModalVisible, setWoModalVisible] = useState(false);
-  const [selectedWoWinner, setSelectedWoWinner] = useState<'home' | 'away' | null>(null);
+  const [selectedWoWinner, setSelectedWoWinner] = useState<string | null>(null);
 
-  // NOVO: controle de inversão dos lados
+  // Inversão de lados e drag
   const [swapped, setSwapped] = useState(false);
-
-  // Drag state
   const [dragOverLeft, setDragOverLeft] = useState(false);
   const [dragOverRight, setDragOverRight] = useState(false);
 
-  useEffect(() => {
-    if (visible && generationSessionId) {
-      const fetchTeams = async () => {
-        setLoading(true);
-        try {
-          const res = await http.get(`/teams/session/${generationSessionId}`);
-          const teams: Team[] = res.data;
-          const home = teams.find(t => t.teamIndex === homeTeamIndex);
-          const away = teams.find(t => t.teamIndex === awayTeamIndex);
-          setHomeTeam(home || null);
-          setAwayTeam(away || null);
-        } catch (err) {
-          message.error('Erro ao carregar dados dos times');
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchTeams();
+  // Determina a pontuação alvo do set atual
+  const getTargetPoints = () => {
+    // Melhor de 1 set: sempre pontuação normal
+    if (setsToWin === 1) return editablePointsPerSet;
+
+    // Melhor de 3 sets: tie-break apenas no set 3 (quando 1x1)
+    if (setsToWin === 2) {
+      const isTieBreak = homeSetsWon === 1 && awaySetsWon === 1;
+      return isTieBreak ? editableTieBreakPoints : editablePointsPerSet;
     }
-    // Reset ao abrir
+
+    // Melhor de 5 sets: tie-break apenas no set 5 (quando 2x2)
+    if (setsToWin === 3) {
+      const isTieBreak = homeSetsWon === 2 && awaySetsWon === 2;
+      return isTieBreak ? editableTieBreakPoints : editablePointsPerSet;
+    }
+
+    // Fallback (não deveria chegar aqui)
+    return editablePointsPerSet;
+  };
+
+  // Ao abrir o modal
+  useEffect(() => {
+    if (visible) {
+      // Carrega times
+      if (generationSessionId) {
+        setLoading(true);
+        http.get(`/teams/session/${generationSessionId}`)
+          .then(res => {
+            const teams: Team[] = res.data;
+            setHomeTeam(teams.find(t => t.teamIndex === homeTeamIndex) || null);
+            setAwayTeam(teams.find(t => t.teamIndex === awayTeamIndex) || null);
+          })
+          .catch(() => message.error('Erro ao carregar times'))
+          .finally(() => setLoading(false));
+      }
+
+      // Carrega configurações da partida se não vieram por props
+      if (championshipId && matchId) {
+        http.get(`/championships/${championshipId}/matches/${matchId}`)
+          .then(res => {
+            const m = res.data;
+            console.log('Configurações da partida:', m);
+            if (m.setsToWin) setSetsToWin(m.setsToWin);
+            if (m.pointsPerSet) setEditablePointsPerSet(m.pointsPerSet);
+            if (m.tieBreakPoints) setEditableTieBreakPoints(m.tieBreakPoints);
+          })
+          .catch(() => console.warn('Não foi possível carregar detalhes da partida'));
+      }
+
+      // Reset do jogo
+      resetAll();
+    }
+  }, [visible, championshipId, matchId, generationSessionId, homeTeamIndex, awayTeamIndex]);
+
+  // Reset de todos os estados
+  const resetAll = () => {
     setHomeScore(0);
     setAwayScore(0);
-    setWinner(null);
+    setCurrentSet(1);
+    setSets([]);
+    setHomeSetsWon(0);
+    setAwaySetsWon(0);
+    setMatchWinner(null);
+    setSetFinished(false);
+    setCurrentSetWinner(null);
+    setConfirmSetModalOpen(false);
     setSwapped(false);
-  }, [visible, generationSessionId, homeTeamIndex, awayTeamIndex]);
+  };
 
+  // Detecção de fim de set
   useEffect(() => {
-    if (homeScore >= pointsToWin || awayScore >= pointsToWin) {
-      const diff = Math.abs(homeScore - awayScore);
-      if (diff >= minAdvantage) {
-        setWinner(homeScore > awayScore ? 'home' : 'away');
-      } else {
-        setWinner(null);
-      }
-    } else {
-      setWinner(null);
+    if (matchWinner) return;
+    
+    const target = getTargetPoints();
+    if ((homeScore >= target || awayScore >= target) && Math.abs(homeScore - awayScore) >= minAdvantage) {
+      const homeWon = homeScore > awayScore;
+      setCurrentSetWinner(homeWon ? 'home' : 'away');
+      setSetFinished(true);
+      setConfirmSetModalOpen(true);
+    } else if (setFinished) {
+      setSetFinished(false);
+      setCurrentSetWinner(null);
+      setConfirmSetModalOpen(false);
     }
-  }, [homeScore, awayScore, pointsToWin, minAdvantage]);
+  }, [homeScore, awayScore, matchWinner, setFinished, minAdvantage]);
 
-  useEffect(() => {
-    if (winner) {
+  // Confirma o fim do set
+  const confirmSet = () => {
+    const homeWon = currentSetWinner === 'home';
+    const newSets = [...sets, { setNumber: currentSet, homeScore, awayScore }];
+    setSets(newSets);
+
+    const newHomeSets = homeWon ? homeSetsWon + 1 : homeSetsWon;
+    const newAwaySets = !homeWon ? awaySetsWon + 1 : awaySetsWon;
+    setHomeSetsWon(newHomeSets);
+    setAwaySetsWon(newAwaySets);
+
+    if (newHomeSets >= setsToWin || newAwaySets >= setsToWin) {
+      setMatchWinner(newHomeSets >= setsToWin ? 'home' : 'away');
       setResultModalVisible(true);
     } else {
-      setResultModalVisible(false);
+      setCurrentSet(prev => prev + 1);
+      setHomeScore(0);
+      setAwayScore(0);
     }
-  }, [winner]);
+    setSetFinished(false);
+    setCurrentSetWinner(null);
+    setConfirmSetModalOpen(false);
+  };
 
+  // Cancela confirmação do set
+  const cancelSetConfirmation = () => {
+    setSetFinished(false);
+    setCurrentSetWinner(null);
+    setConfirmSetModalOpen(false);
+    setTimeout(() => setConfirmSetModalOpen(false), 0);
+  };
+
+  // Incrementa/decrementa pontuação
   const increment = (team: 'home' | 'away') => {
-    if (winner) return;
+    // Removida a verificação que impedia o incremento
     if (team === 'home') setHomeScore(prev => prev + 1);
     else setAwayScore(prev => prev + 1);
   };
@@ -121,38 +226,39 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
     else if (team === 'away' && awayScore > 0) setAwayScore(prev => prev - 1);
   };
 
-  const resetMatch = () => {
-    setHomeScore(0);
-    setAwayScore(0);
-    setWinner(null);
-    setResultModalVisible(false);
-  };
-
+  // Salva resultado
   const handleSave = async () => {
-    if (!winner) return;
+    if (!matchWinner) return;
     setSaving(true);
     try {
+      const finalSets = [...sets, { setNumber: currentSet, homeScore, awayScore }];
+      const finalHomeSets = matchWinner === 'home' ? homeSetsWon + 1 : homeSetsWon;
+      const finalAwaySets = matchWinner === 'away' ? awaySetsWon + 1 : awaySetsWon;
+
       if (onSave) {
         await onSave({
           homeScore,
           awayScore,
           walkover: false,
-          winnerTeamIndex: winner === 'home' ? homeTeamIndex : awayTeamIndex,
+          winnerTeamIndex: matchWinner === 'home' ? homeTeamIndex : awayTeamIndex,
+          sets: finalSets,
+          homeSetsWon: finalHomeSets,
+          awaySetsWon: finalAwaySets,
         });
-        message.success('Result saved');
-        onSuccess();
-        onClose();
       } else {
         await http.post(`/championships/${championshipId}/matches/result`, {
           matchId,
           homeScore,
           awayScore,
           walkover: false,
+          sets: finalSets,
+          homeSetsWon: finalHomeSets,
+          awaySetsWon: finalAwaySets,
         });
-        message.success('Resultado registrado com sucesso!');
-        onSuccess();
-        onClose();
       }
+      message.success('Resultado registrado com sucesso!');
+      onSuccess();
+      onClose();
     } catch (err: any) {
       message.error(err?.response?.data?.message ?? 'Erro ao registrar resultado');
     } finally {
@@ -160,6 +266,7 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
     }
   };
 
+  // Registra WO
   const handleRegisterWO = async () => {
     if (!selectedWoWinner) {
       message.error('Selecione o time vencedor');
@@ -168,30 +275,26 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
     setSaving(true);
     try {
       const winnerTeamIndex = selectedWoWinner === 'home' ? homeTeamIndex : awayTeamIndex;
+      const payload = {
+        matchId,
+        homeScore: 0,
+        awayScore: 0,
+        walkover: true,
+        winnerTeamIndex,
+        woWinnerPoints: editablePointsPerSet,
+        sets: [],
+        homeSetsWon: selectedWoWinner === 'home' ? setsToWin : 0,
+        awaySetsWon: selectedWoWinner === 'away' ? setsToWin : 0,
+      };
+
       if (onSave) {
-        await onSave({
-          homeScore: 0,
-          awayScore: 0,
-          walkover: true,
-          winnerTeamIndex,
-          woWinnerPoints: pointsToWin,
-        });
-        message.success(`WO registered! ${pointsToWin} x 0`);
-        onSuccess();
-        onClose();
+        await onSave(payload);
       } else {
-        await http.post(`/championships/${championshipId}/matches/result`, {
-          matchId,
-          homeScore: 0,
-          awayScore: 0,
-          walkover: true,
-          winnerTeamIndex,
-          woWinnerPoints: pointsToWin,
-        });
-        message.success(`WO registrado! Vitória por ${pointsToWin} x 0.`);
-        onSuccess();
-        onClose();
+        await http.post(`/championships/${championshipId}/matches/result`, payload);
       }
+      message.success('WO registrado!');
+      onSuccess();
+      onClose();
     } catch (err: any) {
       message.error(err?.response?.data?.message ?? 'Erro ao registrar WO');
     } finally {
@@ -200,6 +303,7 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
     }
   };
 
+  // Nomes dos times
   const getHomeName = () => homeTeamName || `Time ${homeTeamIndex}`;
   const getAwayName = () => awayTeamName || `Time ${awayTeamIndex}`;
 
@@ -208,30 +312,24 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
     e.dataTransfer.setData('text/plain', side);
     e.dataTransfer.effectAllowed = 'move';
   };
-
   const handleDragOver = (e: React.DragEvent, side: 'left' | 'right') => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     if (side === 'left') setDragOverLeft(true);
     else setDragOverRight(true);
   };
-
   const handleDragLeave = (side: 'left' | 'right') => {
     if (side === 'left') setDragOverLeft(false);
     else setDragOverRight(false);
   };
-
   const handleDrop = (e: React.DragEvent, targetSide: 'left' | 'right') => {
     e.preventDefault();
     setDragOverLeft(false);
     setDragOverRight(false);
     const sourceSide = e.dataTransfer.getData('text/plain') as 'left' | 'right';
-    if (sourceSide !== targetSide) {
-      setSwapped(prev => !prev);
-    }
+    if (sourceSide !== targetSide) setSwapped(prev => !prev);
   };
 
-  // Determina qual time está em cada lado
   const leftTeam = swapped ? 'away' : 'home';
   const rightTeam = swapped ? 'home' : 'away';
 
@@ -258,51 +356,27 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
           transition: 'opacity 0.2s, border 0.2s',
         }}
       >
-        <Card
-          variant="borderless"
-          style={{
-            backgroundColor: '#f0f2f5',
-            padding: '8px 0',
-            border: dragOver ? '2px dashed #2bd96b' : undefined,
-          }}
-        >
-          <Title level={3} style={styles.title}>
-            {teamName}
-          </Title>
+        <Card variant="borderless" style={{ backgroundColor: '#f0f2f5', padding: '8px 0' }}>
+          <Title level={3} style={styles.title}>{teamName}</Title>
           {team && (
-            <div
-              style={{
-                marginTop: 4,
-                display: 'flex',
-                flexWrap: 'wrap',
-                justifyContent: 'center',
-                gap: '4px',
-              }}
-            >
+            <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '4px' }}>
               {team.players.map((p, idx) => (
                 <span key={p.id} style={styles.players}>
-                  {p.name}
-                  {idx < team.players.length - 1 && ' | '}
+                  {p.name}{idx < team.players.length - 1 && ' | '}
                 </span>
               ))}
             </div>
           )}
-          <div style={{ ...styles.score, margin: '8px 0' }}>{score}</div>
-          <Space size="middle">
-            <Button
-              size="large"
-              icon={<MinusOutlined />}
-              onClick={() => decrement(isHome ? 'home' : 'away')}
-              style={styles.decrementButton}
-            />
-            <Button
-              size="large"
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => increment(isHome ? 'home' : 'away')}
-              disabled={!!winner}
-              style={styles.incrementButton}
-            />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, marginTop: 8 }}>
+            <div style={styles.score}>{score}</div>
+            <div style={{ fontSize: 80, fontWeight: 'bold', color: '#2bd96b', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <span style={{ fontSize: 24, color: '#aaa' }}>Sets</span>
+              <span>{isHome ? homeSetsWon : awaySetsWon}</span>
+            </div>
+          </div>
+          <Space size="middle" style={{ marginTop: 16 }}>
+            <Button size="large" icon={<MinusOutlined />} onClick={() => decrement(isHome ? 'home' : 'away')} style={styles.decrementButton} />
+            <Button size="large" type="primary" icon={<PlusOutlined />} onClick={() => increment(isHome ? 'home' : 'away')} style={styles.incrementButton} />
           </Space>
         </Card>
       </div>
@@ -317,168 +391,83 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
       footer={null}
       width="100vw"
       style={{ top: 0, maxWidth: '100vw', height: '100vh', padding: 0, overflow: 'hidden' }}
-      styles={{
-        body: {
-          height: 'calc(100vh - 55px)',
-          padding: 16,
-          overflow: 'auto',
-          position: 'relative',
-        },
-      }}
+      styles={{ body: { height: 'calc(100vh - 55px)', padding: 16, overflow: 'auto', position: 'relative' } }}
       closeIcon={<CloseOutlined style={{ color: '#2bd96b' }} />}
     >
       <div style={{ position: 'relative', minHeight: '100%' }}>
-        <img
-          src="/BoraVer.svg"
-          alt="BoraVer"
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '220px',
-            height: 'auto',
-            opacity: 0.1,
-            pointerEvents: 'none',
-            zIndex: 0,
-          }}
-        />
+        <img src="/BoraVer.svg" alt="BoraVer" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '220px', height: 'auto', opacity: 0.1, pointerEvents: 'none', zIndex: 0 }} />
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: 20, fontSize: 40 }}>Carregando times...</div>
         ) : (
           <>
-            <div
-              style={{
-                textAlign: 'left',
-                marginBottom: 16,
-                position: 'relative',
-                zIndex: 1,
-                display: 'flex',
-                gap: 8,
-                alignItems: 'center',
-              }}
-            >
-              <Tooltip title="Configurar regras">
-                <Button icon={<SettingOutlined />} onClick={() => setSettingsVisible(true)} />
-              </Tooltip>
-              <Tooltip title="Registrar WO (Walkover)">
-                <Button
-                  icon={<WarningOutlined />}
-                  onClick={() => setWoModalVisible(true)}
-                  danger
-                >
-                  Registrar WO
-                </Button>
-              </Tooltip>
-              <Tooltip title="Inverter lados">
-                <Button
-                  icon={<SwapOutlined />}
-                  onClick={() => setSwapped(prev => !prev)}
-                  style={{ marginLeft: 'auto' }}
-                />
-              </Tooltip>
+            <div style={{ textAlign: 'left', marginBottom: 16, position: 'relative', zIndex: 1, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <Tooltip title="Configurar regras"><Button icon={<SettingOutlined />} onClick={() => setSettingsVisible(true)} /></Tooltip>
+              <Tooltip title="Registrar WO (Walkover)"><Button icon={<WarningOutlined />} onClick={() => setWoModalVisible(true)} danger>Registrar WO</Button></Tooltip>
+              <Tooltip title="Inverter lados"><Button icon={<SwapOutlined />} onClick={() => setSwapped(prev => !prev)} style={{ marginLeft: 'auto' }} /></Tooltip>
+              <Tag color="blue" style={{ fontSize: 18, padding: '6px 16px' }}>Set {currentSet} | {homeSetsWon} x {awaySetsWon}</Tag>
             </div>
-            <Row
-              gutter={[16, 32]}
-              justify="center"
-              align="middle"
-              style={{ minHeight: '70vh', position: 'relative', zIndex: 1 }}
-            >
-              <Col xs={24} md={10} style={{ textAlign: 'center' }}>
-                {renderTeamCard('left')}
-              </Col>
-              <Col xs={24} md={4} style={{ textAlign: 'center' }}>
-                <Text style={{ fontSize: 68 }}>VS</Text>
-              </Col>
-              <Col xs={24} md={10} style={{ textAlign: 'center' }}>
-                {renderTeamCard('right')}
-              </Col>
+            <Row gutter={[16, 32]} justify="center" align="middle" style={{ minHeight: '70vh', position: 'relative', zIndex: 1 }}>
+              <Col xs={24} md={10} style={{ textAlign: 'center' }}>{renderTeamCard('left')}</Col>
+              <Col xs={24} md={4} style={{ textAlign: 'center' }}><Text style={{ fontSize: 68 }}>VS</Text></Col>
+              <Col xs={24} md={10} style={{ textAlign: 'center' }}>{renderTeamCard('right')}</Col>
             </Row>
           </>
         )}
 
-        {/* Modal de resultado */}
+        {/* Modal de confirmação de set */}
         <Modal
-          title="Partida finalizada"
-          open={resultModalVisible}
-          onCancel={() => setResultModalVisible(false)}
-          footer={null}
+          title="Fim do Set"
+          open={confirmSetModalOpen}
+          onCancel={cancelSetConfirmation}
+          footer={[
+            <Button key="cancel" onClick={cancelSetConfirmation}>Continuar jogando</Button>,
+            <Button key="confirm" type="primary" onClick={confirmSet}>Confirmar set</Button>,
+          ]}
           centered
           closeIcon={<CloseOutlined style={{ color: '#2bd96b' }} />}
         >
           <div style={{ textAlign: 'center' }}>
-            <Title level={3} style={{ color: '#2bd96b' }}>
-              Vencedor: {winner === 'home' ? getHomeName() : getAwayName()}
+            <Title level={4} style={{ color: '#2bd96b' }}>
+              {currentSetWinner === 'home' ? getHomeName() : getAwayName()} venceu o set {currentSet}!
             </Title>
-            <Space size="large" style={{ marginTop: 24 }}>
-              <Button size="large" onClick={resetMatch}>
-                Reiniciar
-              </Button>
-              <Button size="large" type="primary" onClick={handleSave} loading={saving}>
-                Salvar
-              </Button>
-            </Space>
+            <Text style={{ fontSize: 18 }}>Placar do set: {homeScore} x {awayScore}</Text>
+            <br />
+            <Text style={{ fontSize: 16, color: '#aaa' }}>
+              {homeSetsWon + (currentSetWinner === 'home' ? 1 : 0)} x {awaySetsWon + (currentSetWinner === 'away' ? 1 : 0)} em sets
+            </Text>
+          </div>
+        </Modal>
+
+        {/* Modal de resultado final */}
+        <Modal title="Partida Finalizada" open={resultModalVisible} onCancel={() => setResultModalVisible(false)} footer={null} centered closeIcon={<CloseOutlined style={{ color: '#2bd96b' }} />}>
+          <div style={{ textAlign: 'center' }}>
+            <Title level={3} style={{ color: '#2bd96b' }}>Vencedor: {matchWinner === 'home' ? getHomeName() : getAwayName()}</Title>
+            <Text style={{ fontSize: 20 }}>
+              Sets: {matchWinner === 'home' ? homeSetsWon + 1 : homeSetsWon} x {matchWinner === 'away' ? awaySetsWon + 1 : awaySetsWon}
+            </Text>
+            <br />
+            <Button size="large" type="primary" onClick={handleSave} loading={saving} style={{ marginTop: 24 }}>Salvar Resultado</Button>
           </div>
         </Modal>
 
         {/* Modal de configuração de regras */}
-        <Modal
-          title="Configurar Regras"
-          open={settingsVisible}
-          onCancel={() => setSettingsVisible(false)}
-          footer={[
-            <Button key="ok" type="primary" onClick={() => setSettingsVisible(false)}>
-              OK
-            </Button>,
-          ]}
-          closeIcon={<CloseOutlined style={{ color: '#2bd96b' }} />}
-        >
-          <div style={{ marginBottom: 16 }}>
-            <label>Pontos para vencer: </label>
-            <InputNumber min={1} value={pointsToWin} onChange={val => setPointsToWin(val || 1)} />
-          </div>
-          <div>
-            <label>Vantagem mínima: </label>
-            <InputNumber min={1} value={minAdvantage} onChange={val => setMinAdvantage(val || 1)} />
-          </div>
+        <Modal title="Configurar Regras" open={settingsVisible} onCancel={() => setSettingsVisible(false)} footer={[<Button key="ok" type="primary" onClick={() => setSettingsVisible(false)}>OK</Button>]} closeIcon={<CloseOutlined style={{ color: '#2bd96b' }} />}>
+          <div style={{ marginBottom: 16 }}><label>Pontos por set: </label><InputNumber min={1} value={editablePointsPerSet} onChange={val => setEditablePointsPerSet(val || 1)} /></div>
+          {setsToWin > 1 && <div style={{ marginBottom: 16 }}><label>Pontos no tie-break: </label><InputNumber min={1} value={editableTieBreakPoints} onChange={val => setEditableTieBreakPoints(val || 1)} /></div>}
+          <div><label>Vantagem mínima: </label><InputNumber min={1} value={minAdvantage} onChange={val => setMinAdvantage(val || 1)} /></div>
         </Modal>
 
         {/* Modal de WO */}
-        <Modal
-          title="Registrar Walkover (WO)"
-          open={woModalVisible}
-          onCancel={() => setWoModalVisible(false)}
-          footer={[
-            <Button key="cancel" onClick={() => setWoModalVisible(false)}>
-              Cancelar
-            </Button>,
-            <Button key="submit" type="primary" danger onClick={handleRegisterWO} loading={saving}>
-              Confirmar WO
-            </Button>,
-          ]}
-          closeIcon={<CloseOutlined style={{ color: '#2bd96b' }} />}
-          centered
-        >
-          <div style={{ marginBottom: 16 }}>
-            <Text>
-              Selecione o time que <strong>compareceu</strong> e vencerá por WO:
-            </Text>
-          </div>
-          <Radio.Group
-            onChange={e => setSelectedWoWinner(e.target.value)}
-            value={selectedWoWinner}
-            style={{ width: '100%' }}
-          >
+        <Modal title="Registrar Walkover (WO)" open={woModalVisible} onCancel={() => setWoModalVisible(false)} footer={[<Button key="cancel" onClick={() => setWoModalVisible(false)}>Cancelar</Button>, <Button key="submit" type="primary" danger onClick={handleRegisterWO} loading={saving}>Confirmar WO</Button>]} closeIcon={<CloseOutlined style={{ color: '#2bd96b' }} />} centered>
+          <div style={{ marginBottom: 16 }}><Text>Selecione o time que <strong>compareceu</strong> e vencerá por WO:</Text></div>
+          <Radio.Group onChange={e => setSelectedWoWinner(e.target.value)} value={selectedWoWinner} style={{ width: '100%' }}>
             <Space direction="vertical" style={{ width: '100%' }}>
               <Radio value="home">{getHomeName()} (mandante)</Radio>
               <Radio value="away">{getAwayName()} (visitante)</Radio>
             </Space>
           </Radio.Group>
-          <div style={{ marginTop: 16, fontSize: 12, color: '#666' }}>
-            O placar será registrado como {pointsToWin} x 0 (visualmente). O time vencedor receberá 3
-            pontos; o perdedor, 0 pontos.
-          </div>
+          <div style={{ marginTop: 16, fontSize: 12, color: '#666' }}>O time vencedor receberá {setsToWin} sets de WO e 3 pontos na classificação.</div>
         </Modal>
       </div>
     </Modal>
@@ -488,7 +477,7 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
 const styles = {
   title: { fontSize: 50, fontWeight: 'bold', marginBottom: 8 },
   players: { fontSize: 25, fontWeight: 'bold', lineHeight: 1.2 },
-  score: { fontSize: 400, color: '#2bd96b', fontWeight: 'bold', lineHeight: 1 },
+  score: { fontSize: 280, color: '#2bd96b', fontWeight: 'bold', lineHeight: 1 },
   incrementButton: { backgroundColor: '#2bd96b', borderColor: '#00aa09' },
   decrementButton: { backgroundColor: '#ff4d4f', borderColor: '#aa0000' },
 };

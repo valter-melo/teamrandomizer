@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, Button, Spin, Alert, message, Card, Modal } from 'antd';
 import { CloseOutlined, FullscreenOutlined } from '@ant-design/icons';
 import { useChampionships } from '../hooks/useChampionships';
-import { useGameSession } from '../hooks/useGameSession';
 import { GroupStandings } from '../components/championship/GroupStandings';
 import { GroupMatches } from '../components/championship/GroupMatches';
 import { KnockoutBracket } from '../components/championship/KnockoutBracket';
@@ -23,23 +22,12 @@ const ChampionshipDetailsPage: React.FC = () => {
   } = useChampionships(id);
 
   const { data, isLoading, error, refetch } = useDetails();
-  const { refetch: refetchSession } = useGameSession();
 
   const [activeTab, setActiveTab] = useState('groups');
   const [fullscreenGroups, setFullscreenGroups] = useState(false);
 
   const refetchTimeoutRef = useRef<number | null>(null);
 
-  // Debounce para evitar múltiplas recargas durante rajadas de eventos SSE
-  const handleMatchUpdate = useCallback(() => {
-    if (refetchTimeoutRef.current !== null) {
-      clearTimeout(refetchTimeoutRef.current);
-    }
-    refetchTimeoutRef.current = window.setTimeout(() => {
-      refetch();
-      refetchSession();
-    }, 300);
-  }, [refetch, refetchSession]);
 
   useEffect(() => {
     return () => {

@@ -10,7 +10,6 @@ export default function SignupTenant() {
   async function onFinish(values: any) {
     try {
       const res = await registerTenant(values);
-      // se seu backend já devolve token, salva e segue. Se vier token "", só salva tenantId.
       authStore.set({ token: res.token || null, tenantId: res.tenantId, userId: res.userId, role: res.role });
       message.success("Tenant criado com sucesso!");
       nav(res.token ? "/dashboard" : "/login");
