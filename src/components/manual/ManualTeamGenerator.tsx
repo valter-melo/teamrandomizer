@@ -20,13 +20,14 @@ export const ManualTeamGenerator: React.FC = () => {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [championshipName, setChampionshipName] = useState('');
+  const [championshipFormat, setChampionshipFormat] = useState<'GROUPS' | 'KNOCKOUT'>('GROUPS');
   const [groupsCount, setGroupsCount] = useState(2);
   const [teamGroups, setTeamGroups] = useState<{ [teamIndex: number]: number }>({});
   const [matchesType, setMatchesType] = useState<'SINGLE' | 'HOME_AND_AWAY'>('SINGLE');
   const [qualifiedPerGroup, setQualifiedPerGroup] = useState(2);
 
-  // Novos estados para configuração de sets
-  const [setsToWin, setSetsToWin] = useState(2);        // 1 = melhor de 1, 2 = melhor de 3, 3 = melhor de 5
+  // Configuração de sets
+  const [setsToWin, setSetsToWin] = useState(2);
   const [pointsPerSet, setPointsPerSet] = useState(25);
   const [tieBreakPoints, setTieBreakPoints] = useState(15);
 
@@ -69,25 +70,44 @@ export const ManualTeamGenerator: React.FC = () => {
   };
 
   const handleSaveChampionship = async () => {
+    const isPowerOfTwo = teamCount > 1 && (teamCount & (teamCount - 1)) === 0;
+
     if (!championshipName.trim()) {
       message.error('Informe o nome do campeonato');
       return;
     }
+
+    // Validação: KNOCKOUT precisa de número de times potência de 2
+    if (championshipFormat === 'KNOCKOUT') {
+      if (!isPowerOfTwo) {
+        message.error('Para eliminatórias diretas, o número de times deve ser potência de 2 (2, 4, 8, 16...)');
+        return;
+      }
+    }
+
+    if (championshipFormat === 'GROUPS') {
+      const isEven = teamCount % 2 === 0;
+      if (!isEven) {
+        message.error('Para fase de grupos, o número de times deve ser par');
+        return;
+      }
+    }
+
     const payload = {
       name: championshipName,
-      groupsCount,
+      format: championshipFormat,
+      groupsCount: championshipFormat === 'KNOCKOUT' ? 0 : groupsCount,
+      qualifiedPerGroup: championshipFormat === 'KNOCKOUT' ? 0 : qualifiedPerGroup,
       matchesType,
-      qualifiedPerGroup,
       teams: Object.entries(teams).map(([idx, playerIds]) => ({
         teamIndex: parseInt(idx),
         playerIds,
-        groupId: teamGroups[parseInt(idx)] || 1,
+        groupId: championshipFormat === 'KNOCKOUT' ? 1 : (teamGroups[parseInt(idx)] || 1),
       })),
       teamNames: Object.entries(teamNames).reduce((acc, [idx, name]) => {
         if (name.trim()) acc[parseInt(idx)] = name.trim();
         return acc;
       }, {} as Record<number, string>),
-      // Novos campos de configuração de sets
       setsToWin,
       pointsPerSet,
       tieBreakPoints,
@@ -105,6 +125,9 @@ export const ManualTeamGenerator: React.FC = () => {
 
   if (playersLoading) return <div style={{ color: '#fff' }}>Carregando jogadores...</div>;
 
+  const isKnockout = championshipFormat === 'KNOCKOUT';
+  const isPowerOfTwo = teamCount > 1 && (teamCount & (teamCount - 1)) === 0;
+
   return (
     <div style={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <Title level={2} style={{ color: '#2bd96b', margin: '16px 0' }}>Criação de Campeonato</Title>
@@ -118,7 +141,12 @@ export const ManualTeamGenerator: React.FC = () => {
           >
             <div style={{ marginBottom: 16 }}>
               <label style={{ color: '#fff' }}>Número de times: </label>
-              <Input type="number" min={1} value={teamCount} onChange={e => setTeamCount(Math.max(1, Number(e.target.value) || 1))} style={{ width: 120 }} />
+              <Input type="number" min={2} value={teamCount} onChange={e => setTeamCount(Math.max(2, Number(e.target.value) || 2))} style={{ width: 120 }} />
+              {isKnockout && !isPowerOfTwo && (
+                <div style={{ color: '#ff4d4f', fontSize: 12, marginTop: 4 }}>
+                  Deve ser potência de 2 (2, 4, 8, 16...)
+                </div>
+              )}
             </div>
             <div style={{ marginBottom: 16 }}>
               <label style={{ color: '#fff' }}>Jogadores por time: </label>
@@ -217,27 +245,45 @@ export const ManualTeamGenerator: React.FC = () => {
           <Form.Item label="Nome do Campeonato" required>
             <Input value={championshipName} onChange={e => setChampionshipName(e.target.value)} />
           </Form.Item>
-          <Form.Item label="Número de Grupos" required>
-            <InputNumber min={1} value={groupsCount} onChange={val => setGroupsCount(val || 1)} />
+
+          {/* FORMATO DO CAMPEONATO */}
+          <Form.Item label="Formato" required>
+            <Select value={championshipFormat} onChange={val => setChampionshipFormat(val)}>
+              <Select.Option value="GROUPS">Fase de Grupos + Eliminatórias</Select.Option>
+              <Select.Option value="KNOCKOUT">Eliminatórias Diretas</Select.Option>
+            </Select>
           </Form.Item>
-          <Form.Item label="Alocar Times aos Grupos">
-            {Array.from({ length: teamCount }, (_, i) => i + 1).map(teamIdx => (
-              <div key={teamIdx} style={{ marginBottom: 8, display: 'flex', alignItems: 'center' }}>
-                <span style={{ width: 80, color: '#fff' }}>
-                  {teamNames[teamIdx]?.trim() || `Time ${teamIdx}`}
-                </span>
-                <Select
-                  value={teamGroups[teamIdx]}
-                  onChange={val => setTeamGroups(prev => ({ ...prev, [teamIdx]: val }))}
-                  style={{ width: 120 }}
-                  options={Array.from({ length: groupsCount }, (_, g) => ({
-                    value: g + 1,
-                    label: `Grupo ${g + 1}`,
-                  }))}
-                />
-              </div>
-            ))}
-          </Form.Item>
+
+          {/* CAMPOS DE GRUPOS: só aparecem se NÃO for KNOCKOUT */}
+          {!isKnockout && (
+            <>
+              <Form.Item label="Número de Grupos" required>
+                <InputNumber min={1} value={groupsCount} onChange={val => setGroupsCount(val || 1)} />
+              </Form.Item>
+              <Form.Item label="Alocar Times aos Grupos">
+                {Array.from({ length: teamCount }, (_, i) => i + 1).map(teamIdx => (
+                  <div key={teamIdx} style={{ marginBottom: 8, display: 'flex', alignItems: 'center' }}>
+                    <span style={{ width: 80, color: '#fff' }}>
+                      {teamNames[teamIdx]?.trim() || `Time ${teamIdx}`}
+                    </span>
+                    <Select
+                      value={teamGroups[teamIdx]}
+                      onChange={val => setTeamGroups(prev => ({ ...prev, [teamIdx]: val }))}
+                      style={{ width: 120 }}
+                      options={Array.from({ length: groupsCount }, (_, g) => ({
+                        value: g + 1,
+                        label: `Grupo ${g + 1}`,
+                      }))}
+                    />
+                  </div>
+                ))}
+              </Form.Item>
+              <Form.Item label="Classificados por grupo" required>
+                <InputNumber min={1} value={qualifiedPerGroup} onChange={val => setQualifiedPerGroup(val || 1)} />
+              </Form.Item>
+            </>
+          )}
+
           <Form.Item label="Tipo de Partidas" required>
             <Radio.Group value={matchesType} onChange={e => setMatchesType(e.target.value)}>
               <Radio value="SINGLE">Somente Ida</Radio>
@@ -245,27 +291,25 @@ export const ManualTeamGenerator: React.FC = () => {
             </Radio.Group>
           </Form.Item>
           
-          {/* ========== NOVA SEÇÃO: CONFIGURAÇÃO DE SETS ========== */}
-          <Form.Item label="Sets para vencer" required>
-            <Select value={setsToWin} onChange={val => setSetsToWin(val)}>
-              <Select.Option value={1}>Melhor de 1 set</Select.Option>
-              <Select.Option value={2}>Melhor de 3 sets</Select.Option>
-              <Select.Option value={3}>Melhor de 5 sets</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="Pontos por set" required>
-            <InputNumber min={10} max={30} value={pointsPerSet} onChange={val => setPointsPerSet(val || 25)} />
-          </Form.Item>
-          {setsToWin > 1 && (
-            <Form.Item label="Pontos no tie-break (set decisivo)">
-              <InputNumber min={10} max={25} value={tieBreakPoints} onChange={val => setTieBreakPoints(val || 15)} />
+          {/* CONFIGURAÇÃO DE SETS */}
+          <Card title="Configuração de Sets" size="small" style={{ marginBottom: 16, backgroundColor: '#1a1a1a', borderColor: '#333' }}>
+            <Form.Item label="Sets para vencer" style={{ marginBottom: 12 }}>
+              <Select value={setsToWin} onChange={val => setSetsToWin(val)}>
+                <Select.Option value={1}>Melhor de 1 set</Select.Option>
+                <Select.Option value={2}>Melhor de 3 sets</Select.Option>
+                <Select.Option value={3}>Melhor de 5 sets</Select.Option>
+              </Select>
             </Form.Item>
-          )}
-          {/* ===================================================== */}
+            <Form.Item label="Pontos por set" style={{ marginBottom: 12 }}>
+              <InputNumber min={10} max={30} value={pointsPerSet} onChange={val => setPointsPerSet(val || 25)} />
+            </Form.Item>
+            {setsToWin > 1 && (
+              <Form.Item label="Pontos no tie-break (set decisivo)" style={{ marginBottom: 0 }}>
+                <InputNumber min={10} max={25} value={tieBreakPoints} onChange={val => setTieBreakPoints(val || 15)} />
+              </Form.Item>
+            )}
+          </Card>
           
-          <Form.Item label="Classificados por grupo" required>
-            <InputNumber min={1} value={qualifiedPerGroup} onChange={val => setQualifiedPerGroup(val || 1)} />
-          </Form.Item>
           <Form.Item>
             <Button
               type="primary"

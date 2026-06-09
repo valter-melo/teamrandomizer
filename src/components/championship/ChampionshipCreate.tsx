@@ -22,12 +22,13 @@ export const ChampionshipCreate: React.FC = () => {
   const navigate = useNavigate();
   const { createChampionship, isCreating } = useChampionships();
 
-  // Buscar sessões
+  // Observa o formato selecionado para esconder/mostrar campos de grupos
+  const selectedFormat = Form.useWatch('format', form);
+
   useEffect(() => {
     http.get('/team-generation/sessions').then(res => setSessions(res.data));
   }, []);
 
-  // Quando a sessão selecionada mudar, buscar seus times
   useEffect(() => {
     if (!selectedSession) {
       setTeams([]);
@@ -38,11 +39,8 @@ export const ChampionshipCreate: React.FC = () => {
     http.get<TeamInfo[]>(`/teams/session/${selectedSession}`)
       .then(res => {
         setTeams(res.data);
-        // Inicializa nomes padrão (Time 1, Time 2...)
         const defaultNames: Record<number, string> = {};
-        res.data.forEach(t => {
-          defaultNames[t.teamIndex] = ''; // deixa vazio, mas placeholder mostrará "Time X"
-        });
+        res.data.forEach(t => { defaultNames[t.teamIndex] = ''; });
         setTeamNames(defaultNames);
       })
       .catch(() => message.error('Erro ao carregar times da sessão'))
@@ -58,7 +56,6 @@ export const ChampionshipCreate: React.FC = () => {
       message.error('Selecione uma sessão de times');
       return;
     }
-    // Remove nomes vazios, pois nesse caso o backend usará o padrão
     const nonEmptyNames = Object.entries(teamNames)
       .filter(([_, name]) => name.trim() !== '')
       .reduce((acc, [idx, name]) => ({ ...acc, [idx]: name }), {});
@@ -67,10 +64,15 @@ export const ChampionshipCreate: React.FC = () => {
       name: values.name,
       generationSessionId: selectedSession,
       format: values.format,
-      groupsCount: values.groupsCount,
-      qualifiedPerGroup: values.qualifiedPerGroup,
+      // Campos de grupos (só enviar se não for KNOCKOUT)
+      groupsCount: values.format !== 'KNOCKOUT' ? values.groupsCount : 0,
+      qualifiedPerGroup: values.format !== 'KNOCKOUT' ? values.qualifiedPerGroup : 0,
       matchesType: values.matchesType,
-      teamNames: nonEmptyNames,           // enviar apenas os preenchidos
+      teamNames: nonEmptyNames,
+      // Configurações de sets (comuns a todos os formatos)
+      setsToWin: values.setsToWin,
+      pointsPerSet: values.pointsPerSet,
+      tieBreakPoints: values.tieBreakPoints,
     };
     try {
       const result = await createChampionship(payload);
@@ -97,7 +99,6 @@ export const ChampionshipCreate: React.FC = () => {
           </Select>
         </Form.Item>
 
-        {/* Exibição dos times com campos de nome */}
         {selectedSession && (
           <Card title="Times da Sessão" size="small" style={{ marginBottom: 16 }}>
             {loadingTeams ? <Spin /> : (
@@ -130,13 +131,17 @@ export const ChampionshipCreate: React.FC = () => {
           </Radio.Group>
         </Form.Item>
 
-        <Form.Item name="groupsCount" label="Número de Grupos" initialValue={2} rules={[{ required: true }]}>
-          <InputNumber min={1} />
-        </Form.Item>
-
-        <Form.Item name="qualifiedPerGroup" label="Classificados por Grupo" initialValue={2} rules={[{ required: true }]}>
-          <InputNumber min={1} />
-        </Form.Item>
+        {/* Campos de grupos: só aparecem se NÃO for KNOCKOUT */}
+        {selectedFormat !== 'KNOCKOUT' && (
+          <>
+            <Form.Item name="groupsCount" label="Número de Grupos" initialValue={2} rules={[{ required: true }]}>
+              <InputNumber min={1} />
+            </Form.Item>
+            <Form.Item name="qualifiedPerGroup" label="Classificados por Grupo" initialValue={2} rules={[{ required: true }]}>
+              <InputNumber min={1} />
+            </Form.Item>
+          </>
+        )}
 
         <Form.Item name="matchesType" label="Tipo de Partidas" initialValue="SINGLE" rules={[{ required: true }]}>
           <Radio.Group>
@@ -144,6 +149,23 @@ export const ChampionshipCreate: React.FC = () => {
             <Radio value="HOME_AND_AWAY">Ida e Volta</Radio>
           </Radio.Group>
         </Form.Item>
+
+        {/* Configurações de sets (comuns a todos os formatos) */}
+        <Card title="Configuração de Sets" size="small" style={{ marginBottom: 16, backgroundColor: '#1a1a1a', borderColor: '#333' }}>
+          <Form.Item name="setsToWin" label="Sets para vencer" initialValue={2} rules={[{ required: true }]}>
+            <Select>
+              <Select.Option value={1}>Melhor de 1 set</Select.Option>
+              <Select.Option value={2}>Melhor de 3 sets</Select.Option>
+              <Select.Option value={3}>Melhor de 5 sets</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item name="pointsPerSet" label="Pontos por set" initialValue={25} rules={[{ required: true }]}>
+            <InputNumber min={10} max={30} />
+          </Form.Item>
+          <Form.Item name="tieBreakPoints" label="Pontos no tie‑break" initialValue={15} rules={[{ required: true }]}>
+            <InputNumber min={10} max={25} />
+          </Form.Item>
+        </Card>
 
         <Button type="primary" htmlType="submit" loading={isCreating} block>
           Criar Campeonato
