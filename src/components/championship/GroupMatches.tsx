@@ -92,8 +92,8 @@ export const GroupMatches: React.FC<Props> = ({ matches, championshipId, groupNa
           homeTeamIndex={selectedMatch.homeTeamIndex}
           awayTeamIndex={selectedMatch.awayTeamIndex}
           generationSessionId={selectedMatch.generationSessionId}
-          homeTeamName={selectedMatch.homeTeamName}   // ← ADICIONE
-          awayTeamName={selectedMatch.awayTeamName}   // ← ADICIONE
+          homeTeamName={selectedMatch.homeTeamName}
+          awayTeamName={selectedMatch.awayTeamName}
           onSuccess={() => onMatchPlayed && onMatchPlayed()}
         />
       )}

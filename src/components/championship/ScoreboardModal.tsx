@@ -167,20 +167,31 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
 
   // Detecção de fim de set
   useEffect(() => {
+    // Se a partida já tiver um vencedor, não faz nada
     if (matchWinner) return;
-    
+
     const target = getTargetPoints();
-    if ((homeScore >= target || awayScore >= target) && Math.abs(homeScore - awayScore) >= minAdvantage) {
-      const homeWon = homeScore > awayScore;
-      setCurrentSetWinner(homeWon ? 'home' : 'away');
-      setSetFinished(true);
-      setConfirmSetModalOpen(true);
-    } else if (setFinished) {
-      setSetFinished(false);
-      setCurrentSetWinner(null);
-      setConfirmSetModalOpen(false);
+    const homeWonSet = (homeScore >= target || awayScore >= target) && Math.abs(homeScore - awayScore) >= minAdvantage;
+    
+    if (homeWonSet) {
+      // Alguém atingiu a condição de vitória do set
+      const winner = homeScore > awayScore ? 'home' : 'away';
+      
+      // Só atualiza se for diferente do estado atual (evita loops)
+      if (!setFinished || currentSetWinner !== winner) {
+        setSetFinished(true);
+        setCurrentSetWinner(winner);
+        setConfirmSetModalOpen(true);
+      }
+    } else {
+      // Condição de vitória NÃO é mais satisfeita (placar foi alterado)
+      if (setFinished) {
+        setSetFinished(false);
+        setCurrentSetWinner(null);
+        setConfirmSetModalOpen(false);
+      }
     }
-  }, [homeScore, awayScore, matchWinner, setFinished, minAdvantage]);
+  }, [homeScore, awayScore, matchWinner, setFinished, currentSetWinner, minAdvantage, getTargetPoints]);
 
   // Confirma o fim do set
   const confirmSet = () => {
@@ -231,29 +242,20 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
     if (!matchWinner) return;
     setSaving(true);
     try {
-      const finalSets = [...sets, { setNumber: currentSet, homeScore, awayScore }];
-      const finalHomeSets = matchWinner === 'home' ? homeSetsWon + 1 : homeSetsWon;
-      const finalAwaySets = matchWinner === 'away' ? awaySetsWon + 1 : awaySetsWon;
+      // sets já contém todos os sets confirmados, inclusive o último
+      const finalSets = sets;
 
       if (onSave) {
         await onSave({
-          homeScore,
-          awayScore,
           walkover: false,
           winnerTeamIndex: matchWinner === 'home' ? homeTeamIndex : awayTeamIndex,
           sets: finalSets,
-          homeSetsWon: finalHomeSets,
-          awaySetsWon: finalAwaySets,
         });
       } else {
         await http.post(`/championships/${championshipId}/matches/result`, {
           matchId,
-          homeScore,
-          awayScore,
           walkover: false,
           sets: finalSets,
-          homeSetsWon: finalHomeSets,
-          awaySetsWon: finalAwaySets,
         });
       }
       message.success('Resultado registrado com sucesso!');
@@ -266,7 +268,6 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
     }
   };
 
-  // Registra WO
   const handleRegisterWO = async () => {
     if (!selectedWoWinner) {
       message.error('Selecione o time vencedor');
@@ -274,17 +275,12 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
     }
     setSaving(true);
     try {
-      const winnerTeamIndex = selectedWoWinner === 'home' ? homeTeamIndex : awayTeamIndex;
       const payload = {
         matchId,
-        homeScore: 0,
-        awayScore: 0,
         walkover: true,
-        winnerTeamIndex,
+        winnerTeamIndex: selectedWoWinner === 'home' ? homeTeamIndex : awayTeamIndex,
         woWinnerPoints: editablePointsPerSet,
         sets: [],
-        homeSetsWon: selectedWoWinner === 'home' ? setsToWin : 0,
-        awaySetsWon: selectedWoWinner === 'away' ? setsToWin : 0,
       };
 
       if (onSave) {
@@ -420,6 +416,8 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
           title="Fim do Set"
           open={confirmSetModalOpen}
           onCancel={cancelSetConfirmation}
+          maskClosable={false}
+          keyboard={false}
           footer={[
             <Button key="cancel" onClick={cancelSetConfirmation}>Continuar jogando</Button>,
             <Button key="confirm" type="primary" onClick={confirmSet}>Confirmar set</Button>,
@@ -444,7 +442,7 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
           <div style={{ textAlign: 'center' }}>
             <Title level={3} style={{ color: '#2bd96b' }}>Vencedor: {matchWinner === 'home' ? getHomeName() : getAwayName()}</Title>
             <Text style={{ fontSize: 20 }}>
-              Sets: {matchWinner === 'home' ? homeSetsWon + 1 : homeSetsWon} x {matchWinner === 'away' ? awaySetsWon + 1 : awaySetsWon}
+              Sets: {matchWinner === 'home' ? homeSetsWon : homeSetsWon} x {matchWinner === 'away' ? awaySetsWon : awaySetsWon}
             </Text>
             <br />
             <Button size="large" type="primary" onClick={handleSave} loading={saving} style={{ marginTop: 24 }}>Salvar Resultado</Button>

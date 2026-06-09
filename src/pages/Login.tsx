@@ -32,7 +32,7 @@ export default function Login() {
   }
 
   return (
-    <Card title="Entrar no grupo" style={{ maxWidth: 520 }}>
+    <Card title="Entrar" style={{ maxWidth: 520 }}>
       <Form
         layout="vertical"
         form={form}
@@ -54,7 +54,7 @@ export default function Login() {
           name="email"
           rules={[{ required: true, type: "email" }]}
         >
-          <Input />
+          <Input type="email" />
         </Form.Item>
 
         <Form.Item
