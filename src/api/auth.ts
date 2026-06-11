@@ -5,10 +5,13 @@ export type AuthResponse = {
   tenantId: string;
   userId: string;
   role: string;
-  userName?: string | null;
-  primaryColor?: string | null;
-  secondaryColor?: string | null;
-  logoUrl?: string | null;
+  userName?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  logoUrl?: string;
+  planName?: string;
+  features?: string[];
+  emailVerified?: boolean;
 };
 
 export async function registerTenant(payload: {

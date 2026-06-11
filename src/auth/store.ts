@@ -8,6 +8,9 @@ export type AuthState = {
   primaryColor?: string | null;
   secondaryColor?: string | null;
   logoUrl?: string | null;
+  planName?: string | null;
+  features?: string[] | null;
+  emailVerified?: boolean;
 };
 
 export const authStore = {

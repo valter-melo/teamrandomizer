@@ -4,9 +4,11 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "antd";
 import Nav from "./components/Nav";
 import RequireAuth from "./auth/RequireAuth";
+import { authStore } from './auth/store';
 
 import Login from "./pages/Login";
 import SignupTenant from "./pages/SignupTenant";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 import Dashboard from "./pages/Dashboard";
 import Skills from "./pages/Skills";
 import Players from "./pages/Players";
@@ -36,6 +38,8 @@ export default function App() {
     () => localStorage.getItem("nav:collapsed") === "1"
   );
 
+  const token = authStore.getToken();
+
   useEffect(() => {
     localStorage.setItem("nav:collapsed", collapsed ? "1" : "0");
   }, [collapsed]);
@@ -45,7 +49,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Layout style={{ minHeight: "100vh" }}>
-        <Nav collapsed={collapsed} onToggle={toggleCollapsed} />
+        {token && <Nav collapsed={collapsed} onToggle={toggleCollapsed} />}
         <Layout
           style={{
             marginLeft: collapsed ? 72 : 220,
@@ -57,9 +61,12 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
+              {/* Rotas públicas */}
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<SignupTenant />} />
+              <Route path="/verify" element={<VerifyEmailPage />} />
 
+              {/* Rotas protegidas */}
               <Route
                 path="/dashboard"
                 element={
@@ -132,7 +139,6 @@ export default function App() {
                   </RequireAuth>
                 }
               />
-
               <Route
                 path="/championships"
                 element={
@@ -158,6 +164,7 @@ export default function App() {
                 }
               />
 
+              {/* Rota coringa */}
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </Content>

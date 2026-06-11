@@ -1,7 +1,7 @@
 import { Card, Form, Input, message } from "antd";
 import { loginBySlug } from "../api/auth";
 import { authStore } from "../auth/store";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import AppButton from "../components/AppButton";
 
 export default function Login() {
@@ -19,56 +19,94 @@ export default function Login() {
         role: res.role,
         tenantSlug: values.tenantSlug,
         userName: res.userName,
-        primaryColor: res.primaryColor,      // ← NOVO
-        secondaryColor: res.secondaryColor,  // ← NOVO
-        logoUrl: res.logoUrl,                // ← NOVO
+        primaryColor: res.primaryColor,
+        secondaryColor: res.secondaryColor,
+        logoUrl: res.logoUrl,
+        planName: res.planName,
+        features: res.features,
+        emailVerified: res.emailVerified,
       });
 
       message.success("Bem-vindo!");
       nav(`/t/${values.tenantSlug}/dashboard`);
     } catch (e: any) {
-      message.error(e?.response?.data?.message ?? "Falha no login");
+      const msg = e?.response?.data?.message || "Falha no login";
+
+      if (msg.toLowerCase().includes("não verificado") || msg.toLowerCase().includes("email não verificado")) {
+        message.warning({
+          content: "E-mail não verificado. Verifique sua caixa de entrada ou solicite um novo link.",
+          duration: 6,
+        });
+      } else {
+        message.error(msg);
+      }
     }
   }
 
   return (
-    <Card title="Entrar" style={{ maxWidth: 520 }}>
-      <Form
-        layout="vertical"
-        form={form}
-        onFinish={onFinish}
-        initialValues={{
-          tenantSlug: authStore.getTenantSlug() ?? "",
-        }}
-      >
-        <Form.Item
-          label="Grupo"
-          name="tenantSlug"
-          rules={[{ required: true, message: "Informe o grupo" }]}
-        >
-          <Input />
-        </Form.Item>
+    <div
+      style={{
+        height: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#0d0d0d",
+        padding: 16,
+      }}
+    >
+      <div style={{ width: "100%", maxWidth: 440 }}>
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <img
+            src="/images/logo_light.svg"
+            alt="Bora Ver"
+            style={{ width: 400, height: "auto" }}
+          />
+        </div>
 
-        <Form.Item
-          label="Email"
-          name="email"
-          rules={[{ required: true, type: "email" }]}
-        >
-          <Input type="email" />
-        </Form.Item>
+        <Card title="Entrar">
+          <Form
+            layout="vertical"
+            form={form}
+            onFinish={onFinish}
+            initialValues={{
+              tenantSlug: authStore.getTenantSlug() ?? "",
+            }}
+          >
+            <Form.Item
+              label="Grupo"
+              name="tenantSlug"
+              rules={[{ required: true, message: "Informe o grupo" }]}
+            >
+              <Input />
+            </Form.Item>
 
-        <Form.Item
-          label="Senha"
-          name="password"
-          rules={[{ required: true }]}
-        >
-          <Input.Password />
-        </Form.Item>
+            <Form.Item
+              label="Email"
+              name="email"
+              rules={[{ required: true, type: "email" }]}
+            >
+              <Input type="email" />
+            </Form.Item>
 
-        <AppButton tone="generate" htmlType="submit" block>
-          Entrar
-        </AppButton>
-      </Form>
-    </Card>
+            <Form.Item
+              label="Senha"
+              name="password"
+              rules={[{ required: true }]}
+            >
+              <Input.Password />
+            </Form.Item>
+
+            <AppButton tone="generate" htmlType="submit" block>
+              Entrar
+            </AppButton>
+          </Form>
+
+          <div style={{ textAlign: "center", marginTop: 16 }}>
+            <Link to="/signup">Criar novo grupo</Link>
+          </div>
+        </Card>
+      </div>
+    </div>
   );
 }

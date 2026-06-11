@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Card, Row, Col, Typography, Statistic, Button, Spin, Tag, Modal, Table
+  Card, Row, Col, Typography, Statistic, Button, Spin, Tag, Modal, Table, Space, Avatar
 } from 'antd';
 import {
   TrophyOutlined,
@@ -10,6 +10,8 @@ import {
   ThunderboltOutlined,
   SettingOutlined,
   CloseOutlined,
+  CrownOutlined,
+  StarFilled,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { http } from '../api/http';
@@ -60,6 +62,11 @@ export default function Dashboard() {
   const [inactiveList, setInactiveList] = useState<InactivePlayer[]>([]);
   const [inactiveModalOpen, setInactiveModalOpen] = useState(false);
   const [championships, setChampionships] = useState<any[]>([]);
+
+  // Dados do plano
+  const planName = auth.planName || 'Free';
+  const features = auth.features || [];
+  const isFreePlan = planName === 'Free';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -120,19 +127,90 @@ export default function Dashboard() {
     FINISHED: 'Finalizado',
   };
 
+  const planColors: Record<string, string> = {
+    Free: '#2bd96b',
+    Pro: '#1890ff',
+    Elite: '#ff9f1a',
+  };
+
   if (loading) return <Spin size="large" style={{ display: 'block', marginTop: 50 }} />;
 
   return (
     <div style={{ padding: '24px' }}>
-      {/* Saudação */}
-      <div style={{ marginBottom: 32 }}>
-        <Title level={2} style={{ color: '#2bd96b', marginBottom: 8 }}>
-          Seja bem vindo(a), {auth.userName?.toUpperCase()}
-        </Title>
-        <Text style={{ color: '#aaa', fontSize: 16 }}>
-          Resumo geral da sua organização esportiva
-        </Text>
+      {/* Saudação com avatar */}
+      <div style={{ marginBottom: 32, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <Avatar
+          size={64}
+          style={{
+            backgroundColor: auth.primaryColor || '#2bd96b',
+            verticalAlign: 'middle',
+            fontSize: 28,
+            fontWeight: 'bold',
+          }}
+        >
+          {auth.userName?.charAt(0)?.toUpperCase() || 'U'}
+        </Avatar>
+        <div>
+          <Title level={2} style={{ color: '#2bd96b', marginBottom: 4 }}>
+            Seja bem vindo(a), {auth.userName?.toUpperCase()}
+          </Title>
+          <Space>
+            <Tag color={planColors[planName] || '#2bd96b'} style={{ fontSize: 14, padding: '2px 12px' }}>
+              <StarFilled style={{ marginRight: 4 }} />
+              Plano {planName}
+            </Tag>
+            {auth.emailVerified ? (
+              <Tag color="green" style={{ fontSize: 12 }}>E-mail verificado</Tag>
+            ) : (
+              <Tag color="orange" style={{ fontSize: 12 }}>E-mail não verificado</Tag>
+            )}
+          </Space>
+        </div>
       </div>
+
+      {/* Card de upgrade (apenas para plano Free) */}
+      {isFreePlan && (
+        <Card
+          style={{
+            backgroundColor: '#1a1a1a',
+            borderColor: '#ff9f1a',
+            borderLeft: '4px solid #ff9f1a',
+            borderRadius: 8,
+            marginBottom: 24,
+          }}
+        >
+          <Row align="middle" justify="space-between">
+            <Col>
+              <Text style={{ color: '#ff9f1a', fontWeight: 'bold', fontSize: 16 }}>
+                <CrownOutlined style={{ marginRight: 8 }} />
+                Plano {planName} — Recursos Limitados
+              </Text>
+              <br />
+              <Text style={{ color: '#aaa', fontSize: 14 }}>
+                Faça upgrade para acessar campeonatos, relatórios avançados e mais.
+              </Text>
+            </Col>
+            <Col>
+              <Button
+                type="primary"
+                icon={<CrownOutlined />}
+                style={{
+                  backgroundColor: '#ff9f1a',
+                  borderColor: '#ff9f1a',
+                  color: '#000',
+                  fontWeight: 'bold',
+                  borderRadius: 6,
+                  height: 44,
+                  fontSize: 16,
+                }}
+                onClick={() => navigate('/upgrade')}
+              >
+                Fazer Upgrade
+              </Button>
+            </Col>
+          </Row>
+        </Card>
+      )}
 
       {/* Cards principais */}
       <Row gutter={[16, 16]} style={{ marginBottom: 32 }}>
@@ -165,23 +243,25 @@ export default function Dashboard() {
 
       {/* Ações rápidas */}
       <div style={{ marginBottom: 32, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <Button
-          type="primary"
-          size="large"
-          icon={<PlusOutlined />}
-          onClick={() => navigate('/manual-teams')}
-          style={{
-            backgroundColor: '#2bd96b',
-            borderColor: '#2bd96b',
-            color: '#1a1a1a',
-            fontWeight: 'bold',
-            borderRadius: 6,
-            height: 48,
-            fontSize: 16,
-          }}
-        >
-          CRIAR NOVO CAMPEONATO
-        </Button>
+        {features.includes('campeonatos') && (
+          <Button
+            type="primary"
+            size="large"
+            icon={<PlusOutlined />}
+            onClick={() => navigate('/manual-teams')}
+            style={{
+              backgroundColor: '#2bd96b',
+              borderColor: '#2bd96b',
+              color: '#1a1a1a',
+              fontWeight: 'bold',
+              borderRadius: 6,
+              height: 48,
+              fontSize: 16,
+            }}
+          >
+            CRIAR NOVO CAMPEONATO
+          </Button>
+        )}
         <Button
           size="large"
           icon={<ThunderboltOutlined />}
@@ -291,6 +371,7 @@ export default function Dashboard() {
         </div>
       </Card>
 
+      {/* Modal de inativos */}
       <Modal
         title={<span style={{ color: '#f5222d' }}>Jogadores Inativos (mais de 30 dias)</span>}
         open={inactiveModalOpen}

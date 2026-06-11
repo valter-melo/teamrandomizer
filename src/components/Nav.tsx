@@ -32,6 +32,7 @@ export default function Nav({ collapsed, onToggle }: NavProps) {
   const token = authStore.getToken();
 
   const auth = authStore.get();
+  const features = auth.features || [];
   const groupName = auth.tenantSlug || slug || "Team Generator";
   
   const resolveLogoUrl = (logoPath?: string | null) => {
@@ -58,26 +59,27 @@ export default function Nav({ collapsed, onToggle }: NavProps) {
 
   const base = slug ? `/t/${slug}` : "";
 
-  const items = useMemo(
-    () =>
-      token
-        ? [
-            { key: `${base}/dashboard`, icon: <TrophyOutlined />, label: "Dashboard" },
-            { key: `${base}/performance`, icon: <BarChartOutlined />, label: "Desempenho" },
-            { key: `${base}/skills`, icon: <StarOutlined />, label: "Skills" },
-            { key: `${base}/positions`, icon: <FaVolleyballBall />, label: "Posições" },
-            { key: `${base}/players`, icon: <UserOutlined />, label: "Jogadores" },
-            { key: `${base}/generator`, icon: <TeamOutlined />, label: "Gerar Times" },
-            { key: "/manual-teams", icon: <EditOutlined />, label: "Criar Campeonato" },
-            { key: "/championships", icon: <ScheduleOutlined />, label: "Campeonatos" },
-            { key: `${base}/logout`, icon: <LogoutOutlined />, label: "Sair" },
-          ]
-        : [
-            { key: `${base}/login`, icon: <LoginOutlined />, label: "Login" },
-            { key: "/signup", icon: <UserOutlined />, label: "Criar Grupo" },
-          ],
-    [token, base]
-  );
+  const items = useMemo(() => {
+    const baseItems = [
+      { key: `${base}/dashboard`, icon: <TrophyOutlined />, label: "Dashboard" },
+      { key: `${base}/performance`, icon: <BarChartOutlined />, label: "Desempenho" },
+      { key: `${base}/skills`, icon: <StarOutlined />, label: "Skills" },
+      { key: `${base}/positions`, icon: <FaVolleyballBall />, label: "Posições" },
+      { key: `${base}/players`, icon: <UserOutlined />, label: "Jogadores" },
+      { key: `${base}/generator`, icon: <TeamOutlined />, label: "Gerar Times" },
+    ];
+
+    if (features.includes('campeonatos')) {
+      baseItems.push(
+        { key: "/manual-teams", icon: <EditOutlined />, label: "Criar Campeonato" },
+        { key: "/championships", icon: <ScheduleOutlined />, label: "Campeonatos" }
+      );
+    }
+
+    baseItems.push({ key: `${base}/logout`, icon: <LogoutOutlined />, label: "Sair" });
+
+    return baseItems;
+  }, [token, base, features]);
 
   const selectedKey = useMemo(() => {
     return (
