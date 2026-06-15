@@ -12,6 +12,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { http } from '../api/http';
 import { authStore } from '../auth/store';
+import CpfCnpjModal from '../components/CpfCnpjModal';
 
 const { Title, Text } = Typography;
 
@@ -33,6 +34,7 @@ export default function Upgrade() {
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [cpfModalOpen, setCpfModalOpen] = useState(false);
 
   const currentPlanName = auth.planName || 'Free';
 
@@ -52,21 +54,9 @@ export default function Upgrade() {
     fetchPlans();
   }, []);
 
-  const handleSubscribe = async () => {
-    if (!selectedPlan) {
-      message.warning('Selecione um plano');
-      return;
-    }
-
-    // Verifica se está tentando assinar o plano atual
-    const plan = plans.find(p => p.id === selectedPlan);
-    if (plan?.name === currentPlanName) {
-      message.info('Você já está neste plano!');
-      return;
-    }
-
+  // ─── Função que efetivamente cria a assinatura ───
+  const proceedWithSubscription = async () => {
     setSubscribing(true);
-    
     try {
       const res = await http.post('/checkout/subscribe', { planId: selectedPlan });
       const { bankSlipUrl, pixUrl } = res.data;
@@ -87,6 +77,38 @@ export default function Upgrade() {
     } finally {
       setSubscribing(false);
     }
+  };
+
+  // ─── Handler principal do botão "Confirmar Upgrade" ───
+  const handleSubscribe = async () => {
+    if (!selectedPlan) {
+      message.warning('Selecione um plano');
+      return;
+    }
+
+    const plan = plans.find(p => p.id === selectedPlan);
+    if (plan?.name === currentPlanName) {
+      message.info('Você já está neste plano!');
+      return;
+    }
+
+    // Se for plano pago, verifica se o CPF/CNPJ já foi informado
+    if (plan && plan.price > 0) {
+      try {
+        const { data: profile } = await http.get('/user/profile');
+        if (!profile.cpfCnpj) {
+          setCpfModalOpen(true); // abre modal para coletar
+          return;
+        }
+      } catch {
+        // Se falhar a consulta, também pede o documento
+        setCpfModalOpen(true);
+        return;
+      }
+    }
+
+    // Se for plano gratuito ou CPF já existe, prossegue
+    proceedWithSubscription();
   };
 
   if (loading) return <Spin size="large" style={{ display: 'block', marginTop: 50 }} />;
@@ -130,7 +152,7 @@ export default function Upgrade() {
           Escolha o plano ideal para o seu grupo e libere recursos avançados
         </Text>
       </div>
-      
+
       {plans.length === 0 ? (
         <Card style={{ backgroundColor: '#1a1a1a', borderColor: '#333', textAlign: 'center' }}>
           <Text style={{ color: '#aaa' }}>Nenhum plano disponível no momento.</Text>
@@ -150,10 +172,10 @@ export default function Upgrade() {
                   <Card
                     style={{
                       backgroundColor: '#1a1a1a',
-                      borderColor: isCurrentPlan 
-                        ? colors.border 
-                        : isSelected 
-                          ? '#ff9f1a' 
+                      borderColor: isCurrentPlan
+                        ? colors.border
+                        : isSelected
+                          ? '#ff9f1a'
                           : '#333',
                       borderWidth: isCurrentPlan ? 3 : isSelected ? 2 : 1,
                       borderRadius: 8,
@@ -163,21 +185,20 @@ export default function Upgrade() {
                       display: 'flex',
                       flexDirection: 'column',
                       opacity: isCurrentPlan ? 1 : 0.85,
-                      boxShadow: isCurrentPlan 
-                        ? `0 0 20px ${colors.border}40` 
+                      boxShadow: isCurrentPlan
+                        ? `0 0 20px ${colors.border}40`
                         : 'none',
                       position: 'relative',
                     }}
                     onClick={() => !isCurrentPlan && setSelectedPlan(plan.id)}
-                    bodyStyle={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+                    styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column' } }}
                   >
-                    
                     {/* Cabeçalho */}
                     <div style={{ textAlign: 'center', marginBottom: 20 }}>
-                      <Title 
-                        level={3} 
-                        style={{ 
-                          color: colors.text, 
+                      <Title
+                        level={3}
+                        style={{
+                          color: colors.text,
                           marginBottom: 4,
                           fontSize: isCurrentPlan ? 28 : 24,
                         }}
@@ -341,6 +362,13 @@ export default function Upgrade() {
           )}
         </>
       )}
+
+      {/* Modal de CPF/CNPJ */}
+      <CpfCnpjModal
+        open={cpfModalOpen}
+        onClose={() => setCpfModalOpen(false)}
+        onSuccess={proceedWithSubscription}
+      />
     </div>
   );
 }
