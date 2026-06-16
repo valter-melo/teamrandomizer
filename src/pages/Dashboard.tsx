@@ -12,7 +12,6 @@ import {
   CloseOutlined,
   CrownOutlined,
   StarFilled,
-  CheckCircleOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
   InfoCircleOutlined,
@@ -20,6 +19,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { http } from '../api/http';
 import { authStore } from '../auth/store';
+import { usePlanChanged } from '../hooks/usePlanChanged';
 
 const { Title, Text } = Typography;
 
@@ -67,6 +67,7 @@ const StatCard: React.FC<{
 export default function Dashboard() {
   const navigate = useNavigate();
   const auth = authStore.get();
+  const syncedPlan = usePlanChanged();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     finishedChampionships: 0,
@@ -77,8 +78,12 @@ export default function Dashboard() {
   const [inactiveModalOpen, setInactiveModalOpen] = useState(false);
   const [championships, setChampionships] = useState<any[]>([]);
 
+  useEffect(() => {
+    authStore.syncPlan();
+  }, []);
+
   // Dados do plano
-  const planName = auth.planName || 'Free';
+  const planName = syncedPlan || auth.planName || 'Free';
   const features = auth.features || [];
   const isFreePlan = planName === 'Free';
   const isProPlan = planName === 'Pro';

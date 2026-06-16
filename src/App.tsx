@@ -22,6 +22,7 @@ import FriendlySessionDetailPage from "./pages/FriendlySessionDetailPage";
 import PlayerPerformancePage from "./pages/PlayerPerformancePage";
 import PositionsPage from "./pages/PositionsPage";
 import Upgrade from './pages/Upgrade';
+import { usePlanSync } from './hooks/usePlanSync';
 
 const { Content } = Layout;
 
@@ -42,6 +43,8 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => !!authStore.getToken()
   );
+
+  usePlanSync(60000);
 
   useEffect(() => {
     localStorage.setItem("nav:collapsed", collapsed ? "1" : "0");
