@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Layout } from "antd";
+import { useMediaQuery } from "react-responsive";
 import Nav from "./components/Nav";
 import RequireAuth from "./auth/RequireAuth";
 import { authStore } from "./auth/store";
@@ -44,6 +45,8 @@ export default function App() {
     () => !!authStore.getToken()
   );
 
+  const isMobile = useMediaQuery({ maxWidth: 768 });
+
   usePlanSync(60000);
 
   useEffect(() => {
@@ -59,18 +62,26 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Layout style={{ minHeight: "100vh" }}>
+      <Layout
+        style={{ minHeight: "100vh" }}
+        hasSider={isAuthenticated && !isMobile}
+      >
         {isAuthenticated && (
           <Nav collapsed={collapsed} onToggle={toggleCollapsed} />
         )}
         <Layout
           style={{
-            marginLeft: isAuthenticated ? (collapsed ? 72 : 220) : 0,
+            marginLeft: isAuthenticated && !isMobile ? (collapsed ? 72 : 220) : 0,
             transition: "margin-left 0.2s",
             minHeight: "100vh",
           }}
         >
-          <Content style={{ padding: 24 }}>
+          <Content style={{ 
+            padding: isMobile ? '8px' : 24,
+            overflowX: 'hidden', 
+            maxWidth: '100vw',
+            boxSizing: 'border-box',            
+          }}>
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
 

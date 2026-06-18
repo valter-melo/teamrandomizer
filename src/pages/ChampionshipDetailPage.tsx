@@ -37,13 +37,12 @@ const ChampionshipDetailsPage: React.FC = () => {
   }, []);
 
   if (isLoading) return <Spin size="large" style={{ display: 'block', marginTop: 50 }} />;
-  if (error) return <Alert message="Erro ao carregar detalhes" type="error" />;
+  if (error) return <Alert message="Erro ao carregar detalhes" type="error" style={{ margin: 16 }} />;
   if (!data) return null;
 
   const { championship, standingsByGroup, matchesByGroup, knockoutMatches } = data;
   const isKnockoutFormat = championship.format === 'KNOCKOUT';
 
-  // Se for KNOCKOUT, já inicia na aba Mata-Mata
   if (isKnockoutFormat && activeTab === 'groups') {
     setActiveTab('knockout');
   }
@@ -118,8 +117,9 @@ const ChampionshipDetailsPage: React.FC = () => {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))',
-          gap: '16px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: 16,
+          width: '100%',
         }}
       >
         {groups.map(([groupIdx, standings]) => {
@@ -127,13 +127,14 @@ const ChampionshipDetailsPage: React.FC = () => {
           const groupMatches = matchesByGroup[groupIndex] || [];
           const isGroupComplete = groupMatches.length > 0 && groupMatches.every((m) => m.played);
           return (
-            <GroupStandings
-              key={groupIdx}
-              standings={standings}
-              groupName={`Grupo ${getGroupLetter(groupIndex)}`}
-              qualifiedCount={qualifiedCount}
-              isGroupComplete={isGroupComplete}
-            />
+            <div key={groupIdx} style={{ minWidth: 0 }}>
+              <GroupStandings
+                standings={standings}
+                groupName={`Grupo ${getGroupLetter(groupIndex)}`}
+                qualifiedCount={qualifiedCount}
+                isGroupComplete={isGroupComplete}
+              />
+            </div>
           );
         })}
       </div>
@@ -153,108 +154,140 @@ const ChampionshipDetailsPage: React.FC = () => {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))',
-          gap: '16px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: 16,
+          width: '100%',
         }}
       >
         {groups.map(([groupIdx, matches]) => (
-          <GroupMatches
-            key={groupIdx}
-            matches={matches}
-            championshipId={id!}
-            groupName={`Grupo ${getGroupLetter(parseInt(groupIdx))}`}
-            onMatchPlayed={refetch}
-          />
+          <div key={groupIdx} style={{ minWidth: 0 }}>
+            <GroupMatches
+              matches={matches}
+              championshipId={id!}
+              groupName={`Grupo ${getGroupLetter(parseInt(groupIdx))}`}
+              onMatchPlayed={refetch}
+            />
+          </div>
         ))}
       </div>
     );
   };
 
-  // Abas dinâmicas: se for KNOCKOUT, não mostra Grupos nem Partidas
+  const renderKnockoutContent = () => (
+    <>
+      {knockoutMatches.length === 0 && !isKnockoutFormat && isGroupStageComplete() && (
+        <Button
+          onClick={handleNextStage}
+          loading={isGeneratingNext}
+          size="large"
+          block
+          style={{
+            marginBottom: 16,
+            backgroundColor: '#01ff69',
+            borderColor: '#01ff69',
+            color: '#000',
+            fontWeight: 'bold',
+            height: 48,
+            fontSize: 16,
+          }}
+        >
+          Gerar Fase Eliminatória
+        </Button>
+      )}
+      {knockoutMatches.length > 0 && canGenerateNextStage() && championship.status !== 'FINISHED' && (
+        <Button
+          onClick={handleNextStage}
+          loading={isGeneratingNext}
+          size="large"
+          block
+          style={{
+            marginBottom: 16,
+            backgroundColor: '#01ff69',
+            borderColor: '#01ff69',
+            color: '#000',
+            fontWeight: 'bold',
+            height: 48,
+            fontSize: 16,
+          }}
+        >
+          {getNextStageButtonText()}
+        </Button>
+      )}
+      {knockoutMatches.length > 0 && (
+        <>
+          <div style={{ overflowX: 'auto', overflowY: 'hidden', maxWidth: '100%' }}>
+            <KnockoutBracket
+              matches={knockoutMatches}
+              championshipId={id!}
+              onMatchPlayed={refetch}
+            />
+          </div>
+          {knockoutMatches.some((m) => m.stage === 'SEMI' && m.played) &&
+            !knockoutMatches.some((m) => m.stage === 'THIRD_PLACE') && (
+              <Button
+                onClick={handleThirdPlace}
+                loading={isGeneratingThirdPlace}
+                size="large"
+                block
+                style={{
+                  marginTop: 16,
+                  backgroundColor: '#01ff69',
+                  borderColor: '#01ff69',
+                  color: '#000',
+                  fontWeight: 'bold',
+                  height: 48,
+                  fontSize: 16,
+                }}
+              >
+                Gerar Disputa de 3º Lugar
+              </Button>
+            )}
+        </>
+      )}
+      {knockoutMatches.length === 0 && isKnockoutFormat && (
+        <Card>
+          <p>Nenhuma partida eliminatória encontrada. Verifique se o campeonato foi configurado corretamente.</p>
+        </Card>
+      )}
+    </>
+  );
+
   const tabItems = isKnockoutFormat
     ? [
         {
           key: 'knockout',
-          label: 'Mata-Mata',
-          children: (
-            <>
-              {knockoutMatches.length > 0 && canGenerateNextStage() && championship.status !== 'FINISHED' && (
-                <Button onClick={handleNextStage} loading={isGeneratingNext} style={{ marginBottom: 16 }}>
-                  {getNextStageButtonText()}
-                </Button>
-              )}
-              {knockoutMatches.length > 0 && (
-                <>
-                  <KnockoutBracket
-                    matches={knockoutMatches}
-                    championshipId={id!}
-                    onMatchPlayed={refetch}
-                  />
-                  {knockoutMatches.some((m) => m.stage === 'SEMI' && m.played) &&
-                    !knockoutMatches.some((m) => m.stage === 'THIRD_PLACE') && (
-                      <Button onClick={handleThirdPlace} loading={isGeneratingThirdPlace} style={{ marginTop: 16 }}>
-                        Gerar Disputa de 3º Lugar
-                      </Button>
-                    )}
-                </>
-              )}
-              {knockoutMatches.length === 0 && (
-                <Card>
-                  <p>Nenhuma partida eliminatória encontrada. Verifique se o campeonato foi configurado corretamente.</p>
-                </Card>
-              )}
-            </>
-          ),
+          label: <span style={{ fontSize: 'clamp(14px, 2.5vw, 16px)' }}>Mata-Mata</span>,
+          children: renderKnockoutContent(),
         },
       ]
     : [
         {
           key: 'groups',
-          label: 'Grupos',
+          label: <span style={{ fontSize: 'clamp(14px, 2.5vw, 16px)' }}>Grupos</span>,
           children: renderGroupsGrid(),
         },
         {
           key: 'matches',
-          label: 'Partidas',
+          label: <span style={{ fontSize: 'clamp(14px, 2.5vw, 16px)' }}>Partidas</span>,
           children: renderMatches(),
         },
         {
           key: 'knockout',
-          label: 'Mata-Mata',
-          children: (
-            <>
-              {knockoutMatches.length === 0 && isGroupStageComplete() && (
-                <Button onClick={handleNextStage} loading={isGeneratingNext} style={{ marginBottom: 16 }}>
-                  Gerar Fase Eliminatória
-                </Button>
-              )}
-              {knockoutMatches.length > 0 && canGenerateNextStage() && championship.status !== 'FINISHED' && (
-                <Button onClick={handleNextStage} loading={isGeneratingNext} style={{ marginBottom: 16 }}>
-                  {getNextStageButtonText()}
-                </Button>
-              )}
-              {knockoutMatches.length > 0 && (
-                <>
-                  <KnockoutBracket
-                    matches={knockoutMatches}
-                    championshipId={id!}
-                    onMatchPlayed={refetch}
-                  />
-                  {knockoutMatches.some((m) => m.stage === 'SEMI' && m.played) &&
-                    !knockoutMatches.some((m) => m.stage === 'THIRD_PLACE') && (
-                      <Button onClick={handleThirdPlace} loading={isGeneratingThirdPlace} style={{ marginTop: 16 }}>
-                        Gerar Disputa de 3º Lugar
-                      </Button>
-                    )}
-                </>
-              )}
-            </>
-          ),
+          label: <span style={{ fontSize: 'clamp(14px, 2.5vw, 16px)' }}>Mata-Mata</span>,
+          children: renderKnockoutContent(),
         },
       ];
 
   return (
-    <div style={{ padding: 'clamp(12px, 3vw, 24px)', maxWidth: 1400, margin: '0 auto' }}>
+    <div style={{
+      padding: 'clamp(8px, 2vw, 24px)',
+      maxWidth: 1400,
+      margin: '0 auto',
+      width: '100%',
+      boxSizing: 'border-box',
+      overflow: 'hidden',
+    }}>
+      {/* Cabeçalho */}
       <div
         style={{
           display: 'flex',
@@ -265,14 +298,28 @@ const ChampionshipDetailsPage: React.FC = () => {
           marginBottom: 16,
         }}
       >
-        <h1 style={{ fontSize: 'clamp(24px, 6vw, 48px)', color: '#01ff69', margin: 0 }}>
+        <h1 style={{
+          fontSize: 'clamp(22px, 5vw, 48px)',
+          color: '#01ff69',
+          margin: 0,
+          wordBreak: 'break-word',
+          flex: 1,
+        }}>
           {championship.name}
         </h1>
         {!isKnockoutFormat && (
           <Button
             icon={<FullscreenOutlined />}
             onClick={() => setFullscreenGroups(true)}
-            style={{ fontSize: 'clamp(14px, 2vw, 20px)', padding: 'clamp(12px, 2vw, 20px) clamp(16px, 3vw, 30px)' }}
+            style={{
+              fontSize: 'clamp(13px, 2vw, 16px)',
+              padding: 'clamp(8px, 1.5vw, 12px) clamp(12px, 2.5vw, 24px)',
+              height: 'clamp(36px, 8vw, 44px)',
+              fontWeight: 'bold',
+              borderColor: '#01ff69',
+              color: '#01ff69',
+              flexShrink: 0,
+            }}
           >
             Tela Cheia
           </Button>
@@ -283,14 +330,22 @@ const ChampionshipDetailsPage: React.FC = () => {
         activeKey={activeTab}
         items={tabItems}
         onChange={setActiveTab}
-        style={{ overflowX: 'auto' }}
+        size="large"
+        tabBarStyle={{ fontSize: 'clamp(14px, 2.5vw, 16px)' }}
       />
 
-      {/* Modal de tela cheia (apenas para formato com grupos) */}
+      {/* Modal de tela cheia */}
       {!isKnockoutFormat && (
         <Modal
           title={
-            <div style={{ fontSize: 'clamp(18px, 4vw, 32px)', fontWeight: 700, textAlign: 'center', color: '#4CAF50', width: '100%', paddingBottom: 8 }}>
+            <div style={{
+              fontSize: 'clamp(18px, 4vw, 32px)',
+              fontWeight: 700,
+              textAlign: 'center',
+              color: '#4CAF50',
+              width: '100%',
+              paddingBottom: 8,
+            }}>
               Classificação
             </div>
           }
@@ -304,7 +359,6 @@ const ChampionshipDetailsPage: React.FC = () => {
               height: 'calc(100vh - 55px)',
               padding: 16,
               overflow: 'auto',
-              position: 'relative',
             },
           }}
           closeIcon={<CloseOutlined style={{ color: '#01ff69' }} />}

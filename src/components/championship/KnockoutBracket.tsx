@@ -1,76 +1,17 @@
 import React, { useState } from 'react';
-import { Card, Button, Tag, message } from 'antd';
+import { Card, Button, Tag, message, Typography } from 'antd';
 import { PlayCircleOutlined } from '@ant-design/icons';
-import styled from 'styled-components';
+import { useMediaQuery } from 'react-responsive';
 import type { MatchDetails } from '../types';
 import { ScoreboardModal } from './ScoreboardModal';
+
+const { Text } = Typography;
 
 interface Props {
   matches: MatchDetails[];
   championshipId: string;
   onMatchPlayed?: () => void;
 }
-
-// Estilos customizados com styled-components para maior controle
-const StyledCard = styled(Card)`
-  background-color: #1a1a1a !important;
-  border: 1px solid #333 !important;
-  margin-bottom: 24px;
-  .ant-card-head {
-    background-color: #0d0d0d;
-    border-bottom: 1px solid #01ff69;
-  }
-  .ant-card-head-title {
-    font-size: 36px;
-    font-weight: bold;
-    color: #01ff69;
-  }
-`;
-
-const MatchContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: #262626;
-  padding: 20px 24px;
-  margin-bottom: 16px;
-  border-radius: 8px;
-  border-left: 6px solid #01ff69;
-`;
-
-const TeamsDisplay = styled.div`
-  font-size: 32px;
-  font-weight: 600;
-  color: #ffffff;
-  span {
-    color: #01ff69;
-    margin: 0 12px;
-  }
-`;
-
-const ScoreDisplay = styled(Tag)`
-  font-size: 28px !important;
-  padding: 12px 24px !important;
-  border-radius: 8px;
-  background-color: #01ff69 !important;
-  color: #1a1a1a !important;
-  border: none;
-  font-weight: bold;
-`;
-
-const PlayButton = styled(Button)`
-  font-size: 24px !important;
-  padding: 12px 30px !important;
-  height: auto !important;
-  background-color: #01ff69 !important;
-  border-color: #01ff69 !important;
-  color: #1a1a1a !important;
-  font-weight: bold;
-  &:hover {
-    background-color: #1faa4e !important;
-    border-color: #1faa4e !important;
-  }
-`;
 
 const stageOrder = ['QUARTER', 'SEMI', 'FINAL', 'THIRD_PLACE'];
 const stageNames: Record<string, string> = {
@@ -83,6 +24,7 @@ const stageNames: Record<string, string> = {
 export const KnockoutBracket: React.FC<Props> = ({ matches, championshipId, onMatchPlayed }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<MatchDetails | null>(null);
+  const isMobile = useMediaQuery({ maxWidth: 768 });
 
   const handlePlay = (match: MatchDetails) => {
     if (!match.generationSessionId) {
@@ -100,36 +42,148 @@ export const KnockoutBracket: React.FC<Props> = ({ matches, championshipId, onMa
     return acc;
   }, {} as Record<string, MatchDetails[]>);
 
+  const teamName = (match: MatchDetails, isHome: boolean) => {
+    return isHome
+      ? (match.homeTeamName || `Time ${match.homeTeamIndex}`)
+      : (match.awayTeamName || `Time ${match.awayTeamIndex}`);
+  };
+
   return (
-    <div>
-      {stageOrder.map(stage => {
+    <div style={{ width: '100%' }}>
+      {stageOrder.map((stage) => {
         const stageMatches = grouped[stage];
         if (!stageMatches || stageMatches.length === 0) return null;
 
         return (
-          <StyledCard key={stage} title={stageNames[stage]}>
-            {stageMatches.map(match => (
-              <MatchContainer key={match.matchId}>
-                <TeamsDisplay>
-                  {match.homeTeamName || `Time ${match.homeTeamIndex}`} <span>vs</span> {match.awayTeamName || `Time ${match.awayTeamIndex}`}
-                </TeamsDisplay>
-                <div>
+          <Card
+            key={stage}
+            title={
+              <span style={{
+                fontSize: 'clamp(18px, 3vw, 28px)',
+                fontWeight: 'bold',
+                color: '#01ff69',
+              }}>
+                {stageNames[stage]}
+              </span>
+            }
+            style={{
+              backgroundColor: '#1a1a1a',
+              border: '1px solid #333',
+              borderRadius: 8,
+              marginBottom: 16,
+            }}
+            styles={{
+              header: {
+                backgroundColor: '#0d0d0d',
+                borderBottom: '1px solid #01ff69',
+              },
+              body: {
+                padding: 'clamp(8px, 2vw, 16px)',
+              },
+            }}
+          >
+            {stageMatches.map((match) => (
+              <div
+                key={match.matchId}
+                style={{
+                  display: 'flex',
+                  flexDirection: isMobile ? 'column' : 'row',
+                  alignItems: isMobile ? 'stretch' : 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: '#262626',
+                  padding: 'clamp(12px, 2vw, 20px) clamp(12px, 2vw, 24px)',
+                  marginBottom: 12,
+                  borderRadius: 8,
+                  borderLeft: '6px solid #01ff69',
+                  gap: isMobile ? 12 : 16,
+                  flexWrap: 'wrap',
+                }}
+              >
+                {/* Times */}
+                <div
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 'clamp(8px, 2vw, 12px)',
+                    flexWrap: 'wrap',
+                    textAlign: 'center',
+                  }}
+                >
+                  <Text
+                    strong
+                    style={{
+                      fontSize: 'clamp(16px, 2.5vw, 28px)',
+                      color: '#fff',
+                      flex: isMobile ? '1 1 40%' : 'none',
+                    }}
+                  >
+                    {teamName(match, true)}
+                  </Text>
+
+                  <Text
+                    style={{
+                      fontSize: 'clamp(18px, 3vw, 24px)',
+                      color: '#01ff69',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    vs
+                  </Text>
+
+                  <Text
+                    strong
+                    style={{
+                      fontSize: 'clamp(16px, 2.5vw, 28px)',
+                      color: '#fff',
+                      flex: isMobile ? '1 1 40%' : 'none',
+                    }}
+                  >
+                    {teamName(match, false)}
+                  </Text>
+                </div>
+
+                {/* Placar ou Botão */}
+                <div style={{ textAlign: 'center' }}>
                   {match.played ? (
-                    <ScoreDisplay>
-                      {match.homeScore} x {match.awayScore}
-                    </ScoreDisplay>
-                  ) : (
-                    <PlayButton
-                      icon={<PlayCircleOutlined style={{ fontSize: 28, marginRight: 8 }} />}
-                      onClick={() => handlePlay(match)}
+                    <Tag
+                      style={{
+                        fontSize: 'clamp(20px, 3vw, 28px)',
+                        padding: 'clamp(8px, 1.5vw, 12px) clamp(16px, 2.5vw, 24px)',
+                        borderRadius: 8,
+                        backgroundColor: '#01ff69',
+                        color: '#1a1a1a',
+                        border: 'none',
+                        fontWeight: 'bold',
+                      }}
                     >
-                      Iniciar Jogo
-                    </PlayButton>
+                      {match.homeScore} x {match.awayScore}
+                    </Tag>
+                  ) : (
+                    <Button
+                      type="primary"
+                      icon={<PlayCircleOutlined />}
+                      onClick={() => handlePlay(match)}
+                      size={isMobile ? 'middle' : 'large'}
+                      block={isMobile}
+                      style={{
+                        backgroundColor: '#01ff69',
+                        borderColor: '#01ff69',
+                        color: '#1a1a1a',
+                        fontWeight: 'bold',
+                        fontSize: 'clamp(16px, 2.5vw, 22px)',
+                        height: isMobile ? 40 : 'auto',
+                        padding: isMobile ? '8px 16px' : 'clamp(10px, 2vw, 12px) clamp(20px, 3vw, 30px)',
+                      }}
+                    >
+                      Jogar
+                    </Button>
                   )}
                 </div>
-              </MatchContainer>
+              </div>
             ))}
-          </StyledCard>
+          </Card>
         );
       })}
 

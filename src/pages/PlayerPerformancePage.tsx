@@ -70,7 +70,7 @@ const StatCard: React.FC<{
     <Statistic
       title={<span style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 16px)' }}>{title}</span>}
       value={value}
-      valueStyle={{ color, fontSize: 'clamp(24px, 4vw, 36px)', fontWeight: 'bold' }}
+      styles={{ content: { display: 'flex', alignItems: 'center', gap: 12 } }}
       prefix={icon}
     />
   </Card>

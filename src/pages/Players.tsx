@@ -170,7 +170,7 @@ export default function Players() {
 
   const columns = useMemo(
     () => [
-      { title: "Nome", dataIndex: "name", width: 180, ellipsis: true },
+      { title: "Nome", dataIndex: "name", width: 160, ellipsis: true },
       { title: "Sexo", dataIndex: "sex", width: 70, align: "center" as const },
       {
         title: "Posição",
@@ -183,9 +183,9 @@ export default function Players() {
         },
       },
       {
-        title: "Média Rating",
+        title: "Média",
         key: "avg",
-        width: 110,
+        width: 90,
         align: "center" as const,
         render: (_: any, p: Player) => {
           if (p.overall == null) return <Tag color="default">—</Tag>;
@@ -193,19 +193,19 @@ export default function Players() {
         },
       },
       {
-        title: "Ações",
+        title: "",
         key: "actions",
-        width: 240,
+        width: 220,
         render: (_: any, p: Player) => (
           <Space size={[4, 4]} wrap>
-            <AppButton tone="copy" onClick={() => openRatings(p)} style={{ height: 32, lineHeight: "32px", padding: "0 8px", fontSize: 13 }}>
+            <AppButton tone="copy" onClick={() => openRatings(p)} style={{ height: 32, lineHeight: "32px", padding: "0 8px", fontSize: 12, whiteSpace: 'nowrap' }}>
               Ratings
             </AppButton>
-            <AppButton tone="save" onClick={() => openEdit(p)} style={{ height: 32, lineHeight: "32px", padding: "0 8px", fontSize: 13 }}>
+            <AppButton tone="save" onClick={() => openEdit(p)} style={{ height: 32, lineHeight: "32px", padding: "0 8px", fontSize: 12, whiteSpace: 'nowrap' }}>
               Editar
             </AppButton>
             <Popconfirm title="Excluir jogador?" description="Esta ação é irreversível." onConfirm={() => handleDelete(p.id)} okText="Sim" cancelText="Cancelar">
-              <AppButton tone="reset" style={{ height: 32, lineHeight: "32px", padding: "0 8px", fontSize: 13 }}>
+              <AppButton tone="reset" style={{ height: 32, lineHeight: "32px", padding: "0 8px", fontSize: 12, whiteSpace: 'nowrap' }}>
                 Excluir
               </AppButton>
             </Popconfirm>
@@ -219,9 +219,16 @@ export default function Players() {
   const cardBodyStyle = { padding: 'clamp(12px, 3vw, 24px)' };
 
   return (
-    <div style={{ padding: 'clamp(12px, 3vw, 24px)', maxWidth: 1400, margin: '0 auto' }}>
+    <div style={{ padding: 'clamp(8px, 2vw, 24px)', maxWidth: 1400, margin: '0 auto' }}>
       <Space orientation="vertical" style={{ width: "100%" }} size={16}>
-        <Card title={<span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)' }}>Novo Jogador</span>} styles={{ body: cardBodyStyle }}>
+        <Card
+          title={<span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)', color: '#01ff69' }}>Novo Jogador</span>}
+          styles={{
+            body: cardBodyStyle,
+            header: { borderBottom: '1px solid #333' },
+          }}
+          style={{ backgroundColor: '#1a1a1a', borderColor: '#333' }}
+        >
           <Form
             layout="vertical"
             onFinish={handleCreate}
@@ -345,9 +352,13 @@ export default function Players() {
         </Card>
 
         <Card
-          title={<span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)' }}>Jogadores</span>}
+          title={<span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)', color: '#01ff69' }}>Jogadores</span>}
           extra={<AppButton tone="save" onClick={refresh} disabled={loading} style={{ fontSize: 13 }}>Recarregar</AppButton>}
-          styles={{ body: cardBodyStyle }}
+          styles={{
+            body: cardBodyStyle,
+            header: { borderBottom: '1px solid #333' },
+          }}
+          style={{ backgroundColor: '#1a1a1a', borderColor: '#333' }}
         >
           <Table
             rowKey="id"
@@ -356,6 +367,8 @@ export default function Players() {
             columns={columns as any}
             scroll={{ x: 'max-content' }}
             pagination={{ responsive: true, pageSize: 10, showSizeChanger: false }}
+            style={{ backgroundColor: '#1a1a1a' }}
+            rowClassName={() => 'dark-row'}
           />
         </Card>
       </Space>
@@ -369,6 +382,10 @@ export default function Players() {
         cancelText="Cancelar"
         width="min(90vw, 500px)"
         closeIcon={<CloseOutlined style={{ color: '#01ff69' }} />}
+        styles={{
+          body: { backgroundColor: '#1a1a1a' },
+          header: { backgroundColor: '#1a1a1a', color: '#01ff69' },
+        }}
       >
         <Form form={editForm} layout="vertical">
           <Form.Item name="name" label="Nome" rules={[{ required: true }]}>

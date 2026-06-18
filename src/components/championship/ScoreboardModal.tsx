@@ -20,6 +20,8 @@ import {
   WarningOutlined,
   CloseOutlined,
   SwapOutlined,
+  FullscreenOutlined,
+  FullscreenExitOutlined,
 } from '@ant-design/icons';
 import { http } from '../../api/http';
 import type { Team } from '../types';
@@ -65,6 +67,35 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
   pointsPerSet: initialPointsPerSet = 25,
   tieBreakPoints: initialTieBreakPoints = 15,
 }) => {
+  const [isCompact, setIsCompact] = useState(
+    () => window.innerHeight < window.innerWidth && window.innerHeight < 500
+  );
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsCompact(window.innerHeight < window.innerWidth && window.innerHeight < 500);
+    };
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
   const [loading, setLoading] = useState(false);
   const [homeTeam, setHomeTeam] = useState<Team | null>(null);
   const [awayTeam, setAwayTeam] = useState<Team | null>(null);
@@ -101,9 +132,7 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
   const [dragOverRight, setDragOverRight] = useState(false);
 
   const targetPoints = useMemo(() => {
-    if (setsToWin === 1) {
-      return editablePointsPerSet;
-    }
+    if (setsToWin === 1) return editablePointsPerSet;
     if (setsToWin === 2) {
       const isTieBreak = homeSetsWon === 1 && awaySetsWon === 1;
       return isTieBreak ? editableTieBreakPoints : editablePointsPerSet;
@@ -287,6 +316,25 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
     }
   };
 
+  const handleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if ((elem as any).webkitRequestFullscreen) {
+        (elem as any).webkitRequestFullscreen();
+      }
+      setIsFullscreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      }
+      setIsFullscreen(false);
+    }
+  };
+
   const getHomeName = () => homeTeamName || `Time ${homeTeamIndex}`;
   const getAwayName = () => awayTeamName || `Time ${awayTeamIndex}`;
 
@@ -346,25 +394,90 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
           variant="borderless"
           style={{
             backgroundColor: '#1a1a1a',
-            padding: 'clamp(8px, 2vw, 16px)',
+            padding: isCompact ? '8px' : 'clamp(8px, 2vw, 16px)',
             height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
           }}
-          styles={{ body: { padding: 'clamp(8px, 2vw, 16px)' } }}
+          styles={{ body: { padding: isCompact ? '8px' : 'clamp(8px, 2vw, 16px)', flex: 1, display: 'flex', flexDirection: 'column' } }}
         >
-          <Title
-            level={3}
+          {/* Linha 1: [ - ] Nome | Sets | [ + ] */}
+          <div
             style={{
-              fontSize: 'clamp(20px, 5vw, 50px)',
-              fontWeight: 'bold',
-              color: '#fff',
-              textAlign: 'center',
-              marginBottom: 8,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: isCompact ? 'clamp(4px, 2vw, 8px)' : 'clamp(12px, 2vw, 24px)',
+              flexShrink: 0,
             }}
           >
-            {teamName}
-          </Title>
+            <Button
+              size={isCompact ? 'large' : 'large'}
+              icon={<MinusOutlined />}
+              onClick={() => decrement(isHome ? 'home' : 'away')}
+              style={{
+                backgroundColor: '#ff4d4f',
+                borderColor: '#aa0000',
+                color: '#fff',
+                fontWeight: 'bold',
+                height: isCompact ? 'clamp(44px, 15vh, 60px)' : 'clamp(40px, 8vw, 56px)',
+                width: isCompact ? 'clamp(44px, 15vh, 60px)' : 'clamp(50px, 10vw, 80px)',
+                fontSize: isCompact ? 'clamp(24px, 8vh, 32px)' : 'clamp(18px, 3vw, 24px)',
+                flexShrink: 0,
+              }}
+            />
 
-          {team && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+              <Title
+                level={3}
+                style={{
+                  fontSize: isCompact ? 'clamp(14px, 3vh, 24px)' : 'clamp(20px, 5vw, 50px)',
+                  fontWeight: 'bold',
+                  color: '#fff',
+                  textAlign: 'center',
+                  margin: 0,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  maxWidth: '100%',
+                }}
+              >
+                {teamName}
+              </Title>
+
+              {setsToWin > 1 && (
+                <span
+                  style={{
+                    fontSize: isCompact ? 'clamp(14px, 3vh, 24px)' : 'clamp(20px, 5vw, 50px)',
+                    fontWeight: 'bold',
+                    color: '#01ff69',
+                  }}
+                >
+                  ({isHome ? homeSetsWon : awaySetsWon})
+                </span>
+              )}
+            </div>
+
+            <Button
+              size={isCompact ? 'large' : 'large'}
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => increment(isHome ? 'home' : 'away')}
+              style={{
+                backgroundColor: '#01ff69',
+                borderColor: '#00aa09',
+                color: '#000',
+                fontWeight: 'bold',
+                height: isCompact ? 'clamp(44px, 15vh, 60px)' : 'clamp(40px, 8vw, 56px)',
+                width: isCompact ? 'clamp(44px, 15vh, 60px)' : 'clamp(50px, 10vw, 80px)',
+                fontSize: isCompact ? 'clamp(24px, 8vh, 32px)' : 'clamp(18px, 3vw, 24px)',
+                flexShrink: 0,
+              }}
+            />
+          </div>
+
+          {/* Lista de jogadores (apenas desktop) */}
+          {team && !isCompact && (
             <div
               style={{
                 marginTop: 4,
@@ -372,6 +485,7 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
                 flexWrap: 'wrap',
                 justifyContent: 'center',
                 gap: '4px',
+                flexShrink: 0,
               }}
             >
               {team.players.map((p, idx) => (
@@ -391,85 +505,29 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
             </div>
           )}
 
+          {/* Score Gigante */}
           <div
             style={{
+              flex: 1,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 'clamp(8px, 2vw, 20px)',
-              marginTop: 'clamp(8px, 2vw, 16px)',
-              flexWrap: 'wrap',
             }}
           >
             <div
               style={{
-                fontSize: 'clamp(60px, 18vw, 280px)',
+                fontSize: isCompact
+                  ? 'clamp(100px, 45vh, 250px)'
+                  : 'clamp(80px, 25vw, 350px)',
                 color: '#01ff69',
                 fontWeight: 'bold',
                 lineHeight: 1,
+                textAlign: 'center',
               }}
             >
               {score}
             </div>
-
-            {setsToWin > 1 && (
-              <div
-                style={{
-                  fontSize: 'clamp(30px, 10vw, 80px)',
-                  fontWeight: 'bold',
-                  color: '#01ff69',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                }}
-              >
-                <span style={{ fontSize: 'clamp(14px, 3vw, 24px)', color: '#aaa' }}>Sets</span>
-                <span>{isHome ? homeSetsWon : awaySetsWon}</span>
-              </div>
-            )}
           </div>
-
-          <Space
-            size="middle"
-            style={{
-              marginTop: 'clamp(12px, 2vw, 16px)',
-              display: 'flex',
-              justifyContent: 'center',
-              flexWrap: 'wrap',
-              gap: 'clamp(8px, 2vw, 16px)',
-            }}
-          >
-            <Button
-              size="large"
-              icon={<MinusOutlined />}
-              onClick={() => decrement(isHome ? 'home' : 'away')}
-              style={{
-                backgroundColor: '#ff4d4f',
-                borderColor: '#aa0000',
-                color: '#fff',
-                fontWeight: 'bold',
-                height: 'clamp(40px, 8vw, 56px)',
-                width: 'clamp(50px, 12vw, 80px)',
-                fontSize: 'clamp(18px, 3vw, 24px)',
-              }}
-            />
-
-            <Button
-              size="large"
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => increment(isHome ? 'home' : 'away')}
-              style={{
-                backgroundColor: '#01ff69',
-                borderColor: '#00aa09',
-                color: '#000',
-                fontWeight: 'bold',
-                height: 'clamp(40px, 8vw, 56px)',
-                width: 'clamp(50px, 12vw, 80px)',
-                fontSize: 'clamp(18px, 3vw, 24px)',
-              }}
-            />
-          </Space>
         </Card>
       </div>
     );
@@ -482,8 +540,36 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
       onCancel={onClose}
       footer={null}
       width="100vw"
-      style={{ top: 0, maxWidth: '100vw', height: '100vh', padding: 0, overflow: 'hidden' }}
-      styles={{ body: { height: 'calc(100vh - 55px)', padding: 'clamp(8px, 2vw, 16px)', overflow: 'auto', position: 'relative' } }}
+      style={{
+        top: 0,
+        maxWidth: '100vw',
+        height: '100vh',
+        padding: 0,
+        overflow: 'hidden',
+        position: 'fixed',
+        left: 0,
+        right: 0,
+        bottom: 0,
+      }}
+      styles={{
+        body: {
+          height: '100vh',
+          padding: 'clamp(8px, 2vw, 16px)',
+          overflow: 'auto',
+          position: 'relative',
+        },
+        mask: {
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+        },
+        wrapper: {
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          position: 'fixed',
+          overflow: 'hidden',
+        },
+      }}
       closeIcon={<CloseOutlined style={{ color: '#01ff69' }} />}
     >
       <div style={{ position: 'relative', minHeight: '100%' }}>
@@ -529,8 +615,11 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
                   WO
                 </Button>
               </Tooltip>
-              <Tooltip title="Inverter lados">
-                <Button icon={<SwapOutlined />} onClick={() => setSwapped((prev) => !prev)} style={{ marginLeft: 'auto' }} />
+              <Tooltip title={isFullscreen ? "Sair da Tela Cheia" : "Tela Cheia"}>
+                <Button
+                  icon={isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
+                  onClick={handleFullscreen}
+                />
               </Tooltip>
               {setsToWin > 1 && (
                 <Tag color="blue" style={{ fontSize: 'clamp(14px, 2.5vw, 18px)', padding: '4px 12px' }}>
@@ -540,18 +629,35 @@ export const ScoreboardModal: React.FC<ScoreboardModalProps> = ({
             </div>
 
             <Row
-              gutter={[16, 32]}
+              gutter={[16, 16]}
               justify="center"
               align="stretch"
-              style={{ minHeight: '70vh', position: 'relative', zIndex: 1 }}
+              style={{ minHeight: isCompact ? 'auto' : '70vh', position: 'relative', zIndex: 1 }}
             >
-              <Col xs={24} md={10} style={{ display: 'flex' }}>
+              <Col xs={24} md={11} style={{ display: 'flex' }}>
                 <div style={{ width: '100%' }}>{renderTeamCard('left')}</div>
               </Col>
-              <Col xs={0} md={4} style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ fontSize: 'clamp(30px, 6vw, 68px)', color: '#fff' }}>VS</Text>
+              <Col xs={24} md={2} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Button
+                  shape="circle"
+                  size="large"
+                  icon={<SwapOutlined />}
+                  onClick={() => setSwapped((prev) => !prev)}
+                  style={{
+                    backgroundColor: '#333',
+                    borderColor: '#01ff69',
+                    color: '#01ff69',
+                    fontWeight: 'bold',
+                    fontSize: isCompact ? 16 : 20,
+                    width: isCompact ? 40 : 48,
+                    height: isCompact ? 40 : 48,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                />
               </Col>
-              <Col xs={24} md={10} style={{ display: 'flex' }}>
+              <Col xs={24} md={11} style={{ display: 'flex' }}>
                 <div style={{ width: '100%' }}>{renderTeamCard('right')}</div>
               </Col>
             </Row>

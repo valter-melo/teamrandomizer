@@ -36,11 +36,15 @@ export default function Skills() {
   const cardBodyStyle = { padding: 'clamp(12px, 3vw, 24px)' };
 
   return (
-    <div style={{ padding: 'clamp(12px, 3vw, 24px)', maxWidth: 800, margin: '0 auto' }}>
-      <Space orientation="vertical" style={{ width: "100%" }} size={16}>
+    <div style={{ padding: 'clamp(8px, 2vw, 24px)', maxWidth: 800, margin: '0 auto' }}>
+      <Space direction="vertical" style={{ width: "100%" }} size={16}>
         <Card
-          title={<span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)' }}>Nova Skill</span>}
-          styles={{ body: cardBodyStyle }}
+          title={<span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)', color: '#01ff69' }}>Nova Skill</span>}
+          styles={{
+            body: cardBodyStyle,
+            header: { borderBottom: '1px solid #333' },
+          }}
+          style={{ backgroundColor: '#1a1a1a', borderColor: '#333' }}
         >
           <Form layout="vertical" onFinish={onCreate}>
             <Row gutter={[12, 8]} align="bottom">
@@ -66,19 +70,25 @@ export default function Skills() {
         </Card>
 
         <Card
-          title={<span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)' }}>Skills</span>}
-          styles={{ body: cardBodyStyle }}
+          title={<span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)', color: '#01ff69' }}>Skills</span>}
+          styles={{
+            body: cardBodyStyle,
+            header: { borderBottom: '1px solid #333' },
+          }}
+          style={{ backgroundColor: '#1a1a1a', borderColor: '#333' }}
         >
           <Table
             rowKey="id"
             loading={loading}
             dataSource={items}
             columns={[
-              { title: "Nome", dataIndex: "name", width: "60%" },
+              { title: "Nome", dataIndex: "name", width: "60%", ellipsis: true },
               { title: "Ativa", dataIndex: "active", width: "40%", render: (v) => (v ? "Sim" : "Não") },
             ]}
             scroll={{ x: 'max-content' }}
             pagination={{ responsive: true, pageSize: 10, showSizeChanger: false }}
+            style={{ backgroundColor: '#1a1a1a' }}
+            rowClassName={() => 'dark-row'}
           />
         </Card>
       </Space>

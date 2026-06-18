@@ -2,6 +2,7 @@ import { Card, Col, Form, Input, Radio, Row, Space, Table, message, Modal, Popco
 import { useEffect, useState } from "react";
 import { http } from "../api/http";
 import AppButton from "../components/AppButton";
+import { CloseOutlined } from "@ant-design/icons";
 
 export interface Position {
   id: string;
@@ -73,7 +74,7 @@ export default function PositionsPage() {
   };
 
   const columns = [
-    { title: "Nome", dataIndex: "name", key: "name", width: "60%" },
+    { title: "Nome", dataIndex: "name", key: "name", width: "60%", ellipsis: true },
     {
       title: "Ativa",
       dataIndex: "active",
@@ -84,12 +85,12 @@ export default function PositionsPage() {
       ),
     },
     {
-      title: "Ações",
+      title: "",
       key: "actions",
       width: "20%",
       render: (_: any, record: Position) => (
         <Space size={[4, 4]} wrap>
-          <AppButton tone="save" onClick={() => openEdit(record)} style={{ fontSize: 13 }}>
+          <AppButton tone="save" onClick={() => openEdit(record)} style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
             Editar
           </AppButton>
           <Popconfirm
@@ -98,7 +99,7 @@ export default function PositionsPage() {
             okText="Sim"
             cancelText="Cancelar"
           >
-            <AppButton tone="reset" style={{ fontSize: 13 }}>Excluir</AppButton>
+            <AppButton tone="reset" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>Excluir</AppButton>
           </Popconfirm>
         </Space>
       ),
@@ -108,11 +109,15 @@ export default function PositionsPage() {
   const cardBodyStyle = { padding: 'clamp(12px, 3vw, 24px)' };
 
   return (
-    <div style={{ padding: 'clamp(12px, 3vw, 24px)', maxWidth: 800, margin: '0 auto' }}>
-      <Space orientation="vertical" style={{ width: "100%" }} size={16}>
+    <div style={{ padding: 'clamp(8px, 2vw, 24px)', maxWidth: 800, margin: '0 auto' }}>
+      <Space direction="vertical" style={{ width: "100%" }} size={16}>
         <Card
-          title={<span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)' }}>Nova Posição</span>}
-          styles={{ body: cardBodyStyle }}
+          title={<span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)', color: '#01ff69' }}>Nova Posição</span>}
+          styles={{
+            body: cardBodyStyle,
+            header: { borderBottom: '1px solid #333' },
+          }}
+          style={{ backgroundColor: '#1a1a1a', borderColor: '#333' }}
         >
           <Form layout="vertical" onFinish={handleCreate}>
             <Row gutter={[12, 8]} align="bottom">
@@ -138,8 +143,12 @@ export default function PositionsPage() {
         </Card>
 
         <Card
-          title={<span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)' }}>Posições</span>}
-          styles={{ body: cardBodyStyle }}
+          title={<span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)', color: '#01ff69' }}>Posições</span>}
+          styles={{
+            body: cardBodyStyle,
+            header: { borderBottom: '1px solid #333' },
+          }}
+          style={{ backgroundColor: '#1a1a1a', borderColor: '#333' }}
         >
           <Table
             rowKey="id"
@@ -148,6 +157,8 @@ export default function PositionsPage() {
             columns={columns}
             scroll={{ x: 'max-content' }}
             pagination={{ responsive: true, pageSize: 10, showSizeChanger: false }}
+            style={{ backgroundColor: '#1a1a1a' }}
+            rowClassName={() => 'dark-row'}
           />
         </Card>
 
@@ -159,6 +170,11 @@ export default function PositionsPage() {
           okText="Salvar"
           cancelText="Cancelar"
           width="min(90vw, 400px)"
+          closeIcon={<CloseOutlined style={{ color: '#01ff69' }} />}
+          styles={{
+            body: { backgroundColor: '#1a1a1a' },
+            header: { backgroundColor: '#1a1a1a', color: '#01ff69' },
+          }}
         >
           <Form form={form} layout="vertical">
             <Form.Item name="name" label="Nome" rules={[{ required: true }]}>
