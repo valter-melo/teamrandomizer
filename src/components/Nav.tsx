@@ -38,23 +38,7 @@ export default function Nav({ collapsed, onToggle }: NavProps) {
   const features = auth.features || [];
   const groupName = auth.groupName || slug || "Team Generator";
 
-  const resolveLogoUrl = (logoPath?: string | null) => {
-    if (!logoPath) {
-      return "/logo_minimal_light.svg";
-    }
-    if (logoPath.startsWith("http://") || logoPath.startsWith("https://")) {
-      return logoPath;
-    }
-    if (logoPath.startsWith("/api/")) {
-      return logoPath;
-    }
-    if (logoPath.startsWith("/uploads/")) {
-      return `/api${logoPath}`;
-    }
-    return logoPath;
-  };
-
-  const logoSrc = resolveLogoUrl(auth.logoUrl);
+  const logoSrc = "/logo_minimal_light.svg";
 
   const base = slug ? `/t/${slug}` : "";
 

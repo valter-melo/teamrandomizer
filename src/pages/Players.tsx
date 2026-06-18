@@ -176,6 +176,7 @@ export default function Players() {
         title: "Posição",
         key: "position",
         width: 130,
+        align: "center" as const,
         render: (_: any, p: Player) => {
           if (!p.positions || p.positions.length === 0) return <Tag>—</Tag>;
           const main = p.positions.sort((a, b) => a.priority - b.priority)[0];
@@ -196,6 +197,7 @@ export default function Players() {
         title: "",
         key: "actions",
         width: 220,
+        align: "center" as const,
         render: (_: any, p: Player) => (
           <Space size={[4, 4]} wrap>
             <AppButton tone="copy" onClick={() => openRatings(p)} style={{ height: 32, lineHeight: "32px", padding: "0 8px", fontSize: 12, whiteSpace: 'nowrap' }}>

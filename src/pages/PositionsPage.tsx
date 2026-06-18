@@ -74,12 +74,13 @@ export default function PositionsPage() {
   };
 
   const columns = [
-    { title: "Nome", dataIndex: "name", key: "name", width: "60%", ellipsis: true },
+    { title: "Nome", dataIndex: "name", key: "name", width: "40%", ellipsis: true, align: 'left' as const },
     {
       title: "Ativa",
       dataIndex: "active",
       key: "active",
       width: "20%",
+      align: 'center' as const,
       render: (active: boolean) => (
         <Tag color={active ? "green" : "red"}>{active ? "Sim" : "Não"}</Tag>
       ),
@@ -87,7 +88,8 @@ export default function PositionsPage() {
     {
       title: "",
       key: "actions",
-      width: "20%",
+      width: "40%",
+      align: 'center' as const,
       render: (_: any, record: Position) => (
         <Space size={[4, 4]} wrap>
           <AppButton tone="save" onClick={() => openEdit(record)} style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
@@ -110,7 +112,7 @@ export default function PositionsPage() {
 
   return (
     <div style={{ padding: 'clamp(8px, 2vw, 24px)', maxWidth: 800, margin: '0 auto' }}>
-      <Space direction="vertical" style={{ width: "100%" }} size={16}>
+      <Space orientation="vertical" style={{ width: "100%" }} size={16}>
         <Card
           title={<span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)', color: '#01ff69' }}>Nova Posição</span>}
           styles={{
