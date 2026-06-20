@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { createPlayer, listPlayersWithRatings, updatePlayer, deletePlayer } from "../api/players";
 import type { Player } from "../api/players";
 import AppButton from "../components/AppButton";
-import PlayerRatingsModal from "../features/players/PlayerRatingsModal";
+import PlayerRatingsModal from "../components/PlayerRatingsModal";
 import { CloseOutlined } from "@ant-design/icons";
 import dayjs, { Dayjs } from "dayjs";
 import { http } from "../api/http";
@@ -298,13 +298,12 @@ export default function Players() {
                     value={newPlayerPositions.map(p => p.positionId)}
                     onChange={handleCreatePositionChange}
                     style={{ width: "100%" }}
-                  >
-                    {positionsList.map(pos => (
-                      <Select.Option key={pos.id} value={pos.id}>
-                        {pos.name}
-                      </Select.Option>
-                    ))}
-                  </Select>
+                    styles={{ placeholder: { color: '#ffffff80' } }}
+                    options={positionsList.map(pos => ({
+                      value: pos.id,
+                      label: pos.name,
+                    }))}
+                  />
                 </Form.Item>
               </Col>
 
@@ -409,9 +408,18 @@ export default function Players() {
             <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item label="Posições">
-            <Select mode="multiple" placeholder="Selecione" value={editPlayerPositions.map(p => p.positionId)} onChange={handleEditPositionChange} style={{ width: "100%" }}>
-              {positionsList.map(pos => <Select.Option key={pos.id} value={pos.id}>{pos.name}</Select.Option>)}
-            </Select>
+            <Select
+              mode="multiple"
+              placeholder="Selecione"
+              value={editPlayerPositions.map(p => p.positionId)}
+              onChange={handleEditPositionChange}
+              style={{ width: "100%" }}
+              styles={{ placeholder: { color: '#ffffff80' } }}
+              options={positionsList.map(pos => ({
+                value: pos.id,
+                label: pos.name,
+              }))}
+            />
           </Form.Item>
           {editPlayerPositions.sort((a, b) => a.priority - b.priority).map(pos => {
             const posName = positionsList.find(p => p.id === pos.positionId)?.name || pos.positionId;

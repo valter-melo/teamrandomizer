@@ -12,7 +12,8 @@ import {
   EditOutlined,
   BarChartOutlined,
   MenuOutlined,
-  WhatsAppOutlined
+  WhatsAppOutlined,
+  HistoryOutlined
 } from "@ant-design/icons";
 import { FaVolleyballBall } from "@react-icons/all-files/fa/FaVolleyballBall";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -51,6 +52,7 @@ export default function Nav({ collapsed, onToggle }: NavProps) {
       { key: `${base}/positions`, icon: <FaVolleyballBall />, label: "Posições" },
       { key: `${base}/players`, icon: <UserOutlined />, label: "Jogadores" },
       { key: `${base}/generator`, icon: <TeamOutlined />, label: "Gerar Times" },
+      { key: `${base}/sessions`, icon: <HistoryOutlined />, label: "Histórico" },
     ];
 
     if (features.includes('campeonatos')) {
@@ -99,98 +101,118 @@ export default function Nav({ collapsed, onToggle }: NavProps) {
   // ─── DESKTOP: Sider fixa ───
   if (!isMobile) {
     return (
-<Sider
-  width={220}
-  collapsedWidth={72}
-  collapsed={collapsed}
-  trigger={null}
-  className="nav-sider"
-  style={{
-    position: "fixed",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    height: "100vh",
-    overflow: "hidden",
-    zIndex: 10,
-    display: "flex",
-    flexDirection: "column",
-  }}
->
-  {/* BRAND */}
-  <div className={`nav-brand ${collapsed ? "collapsed" : ""}`}>
-    <img src={logoSrc} alt="Logo" className="nav-logo" />
-    {!collapsed && (
-      <div className="nav-brand-text">
-        <div className="nav-title">R4NDO</div>
-        <div className="nav-subtitle">{groupName.toUpperCase()}</div>
-      </div>
-    )}
-  </div>
+      <>
+        {/* Sider */}
+        <Sider
+          width={220}
+          collapsedWidth={collapsed ? 72 : 220}
+          collapsed={collapsed}
+          trigger={null}
+          className="nav-sider"
+          style={{
+            position: "fixed",
+            left: 0,
+            top: 0,
+            bottom: 0,
+            height: "100vh",
+            overflow: "hidden",
+            zIndex: 10,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {/* BRAND */}
+          <div className={`nav-brand ${collapsed ? "collapsed" : ""}`}>
+            <img src={logoSrc} alt="Logo" className="nav-logo" />
+            {!collapsed && (
+              <div className="nav-brand-text">
+                <div className="nav-title">R4NDO</div>
+                <div className="nav-subtitle">{groupName.toUpperCase()}</div>
+              </div>
+            )}
+          </div>
 
-  {/* MENU - com padding inferior para não sobrepor o footer */}
-  <Menu
-    className="nav-menu"
-    mode="inline"
-    inlineCollapsed={collapsed}
-    selectedKeys={[selectedKey]}
-    items={menuItems}
-    onClick={(e) => handleMenuClick(String(e.key))}
-    style={{ flex: 1, overflow: "auto", paddingBottom: collapsed ? 5 : 10 }}
-  />
+          {/* MENU */}
+          <Menu
+            className="nav-menu"
+            mode="inline"
+            inlineCollapsed={collapsed}
+            selectedKeys={[selectedKey]}
+            items={menuItems}
+            onClick={(e) => handleMenuClick(String(e.key))}
+            style={{ flex: 1, overflow: "auto" }}
+          />
 
-    {/* Botão de recolher/expandir */}
-    <Tooltip title={collapsed ? "Expandir menu" : "Recolher menu"} placement="right">
-      <button
-        type="button"
-        className="action-btn-compact generate nav-toggle-btn"
-        onClick={onToggle}
-        aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
-        style={{alignContent: 'center', justifyContent: 'center', margin: '8px auto'}}
-      >
-        {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-      </button>
-    </Tooltip>
-  {/* FOOTER FIXO NA BASE */}
-  <div
-    style={{
-      position: "absolute",
-      bottom: 0,
-      left: 0,
-      right: 0,
-      display: "flex",
-      flexDirection: "column",
-      gap: 8,
-      padding: "12px 16px",
-    }}
-  >
-    {/* WhatsApp */}
-    <Tooltip title="Suporte WhatsApp" placement="right">
-      <a
-        href="https://wa.me/5598984733608?text=Olá! Preciso de ajuda com o R4NDO"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 8,
-          padding: "8px 12px",
-          borderRadius: 6,
-          backgroundColor: "#01FF69",
-          color: "#000",
-          fontWeight: "bold",
-          textDecoration: "none",
-          fontSize: 14,
-          textAlign: "center",
-        }}
-      >
-        <WhatsAppOutlined style={{ fontSize: 18 }} />
-        {!collapsed && <span>Suporte</span>}
-      </a>
-    </Tooltip>
-  </div>
-</Sider>
+          {/* FOOTER - fixo no final */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+              padding: "12px 16px",
+              borderTop: "1px solid #333",
+              width: "100%",
+            }}
+          >
+            {/* WhatsApp */}
+            <Tooltip title="Suporte WhatsApp" placement="right">
+              <a
+                href="https://wa.me/5598984733608?text=Olá! Preciso de ajuda com o R4NDO"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  padding: "8px 12px",
+                  borderRadius: 6,
+                  backgroundColor: "#01FF69",
+                  color: "#000",
+                  fontWeight: "bold",
+                  textDecoration: "none",
+                  fontSize: 14,
+                  textAlign: "center",
+                }}
+              >
+                <WhatsAppOutlined style={{ fontSize: 18 }} />
+                {!collapsed && <span>Suporte</span>}
+              </a>
+            </Tooltip>
+          </div>
+        </Sider>
+
+        {/* Botão de toggle - FORA da Sider, fixo no topo */}
+        <Tooltip title={collapsed ? "Expandir menu" : "Recolher menu"} placement="right">
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+            style={{
+              position: "fixed",
+              top: 12,
+              left: collapsed ? 84 : 232,
+              zIndex: 11,
+              width: 36,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 8,
+              border: "1px solid #333",
+              backgroundColor: "#1a1a1a",
+              color: "#01ff69",
+              cursor: "pointer",
+              fontSize: 16,
+              transition: "left 0.2s",
+            }}
+          >
+            {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+          </button>
+        </Tooltip>
+      </>
     );
   }
 

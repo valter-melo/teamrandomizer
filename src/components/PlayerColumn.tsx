@@ -1,5 +1,4 @@
 import React from 'react';
-import './styles/PlayerColumn.css';
 
 interface Props {
   players: string[];

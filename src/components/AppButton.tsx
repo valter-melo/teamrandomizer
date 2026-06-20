@@ -1,7 +1,6 @@
 import { Button } from "antd";
 import type { ButtonProps } from "antd";
 import clsx from "clsx";
-import "../styles/app-button.css"
 type Tone = "generate" | "save" | "copy" | "reset";
 
 type AppButtonProps = Omit<ButtonProps, "variant"> & {

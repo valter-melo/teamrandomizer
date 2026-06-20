@@ -63,18 +63,17 @@ const CreateChampionshipPage: React.FC = () => {
 
             <Col xs={24} sm={12}>
               <Form.Item label="Sessão de Times" required>
-                <Select
-                  value={selectedSession}
-                  onChange={setSelectedSession}
-                  placeholder="Selecione uma sessão"
-                  style={{ width: '100%' }}
-                >
-                  {sessions.map((s: any) => (
-                    <Select.Option key={s.sessionId} value={s.sessionId}>
-                      {new Date(s.createdAt).toLocaleDateString()}
-                    </Select.Option>
-                  ))}
-                </Select>
+              <Select
+                value={selectedSession}
+                onChange={setSelectedSession}
+                placeholder="Selecione uma sessão"
+                style={{ width: '100%' }}
+                styles={{ placeholder: { color: '#ffffff80' } }}
+                options={sessions.map((s: any) => ({
+                  value: s.sessionId,
+                  label: new Date(s.createdAt).toLocaleDateString(),
+                }))}
+              />
               </Form.Item>
             </Col>
 

@@ -15,6 +15,8 @@ import {
   InfoCircleOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
+  PlayCircleOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { http } from '../api/http';
@@ -76,6 +78,7 @@ export default function Dashboard() {
   const [inactiveList, setInactiveList] = useState<InactivePlayer[]>([]);
   const [inactiveModalOpen, setInactiveModalOpen] = useState(false);
   const [championships, setChampionships] = useState<any[]>([]);
+  const [currentSession, setCurrentSession] = useState<any>(null);
 
   const planName = auth.planName || 'Free';
   const features = auth.features || [];
@@ -85,10 +88,11 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [champsRes, playersRes, inactiveRes] = await Promise.all([
+        const [champsRes, playersRes, inactiveRes, sessionRes] = await Promise.all([
           http.get('/championships'),
           http.get('/players'),
           http.get('/dashboard/inactive-players'),
+          http.get('/game-sessions/current').catch(() => ({ data: null })),
         ]);
         const allChampionships = champsRes.data;
         const finished = allChampionships.filter((c: any) => c.status === 'FINISHED').length;
@@ -106,6 +110,9 @@ export default function Dashboard() {
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         setChampionships(sorted.slice(0, 5));
+        if (sessionRes.data) {
+          setCurrentSession(sessionRes.data);
+        }
       } catch (error) {
         console.error('Erro ao carregar dashboard', error);
       } finally {
@@ -115,7 +122,6 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  // Atualiza o plano dinamicamente após possível mudança
   useEffect(() => {
     const updatePlan = async () => {
       try {
@@ -166,7 +172,7 @@ export default function Dashboard() {
 
   return (
     <div style={{ padding: 'clamp(12px, 3vw, 24px)', maxWidth: 1400, margin: '0 auto' }}>
-      {/* Saudação com avatar - responsivo */}
+      {/* Saudação com avatar */}
       <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 32 }}>
         <Col xs={24} sm={6} md={4} lg={3} style={{ textAlign: 'center' }}>
           <Avatar
@@ -204,7 +210,7 @@ export default function Dashboard() {
         </Col>
       </Row>
 
-      {/* Card do plano atual - responsivo */}
+      {/* Card do plano atual */}
       <Card
         style={{
           backgroundColor: '#1a1a1a',
@@ -274,7 +280,50 @@ export default function Dashboard() {
         </Row>
       </Card>
 
-      {/* Cards principais - sempre em grid */}
+      {/* Card da Sessão Atual */}
+      {currentSession && (
+        <Card
+          style={{
+            backgroundColor: '#1a1a1a',
+            borderColor: '#01ff69',
+            borderLeft: '4px solid #01ff69',
+            borderRadius: 8,
+            marginBottom: 24,
+          }}
+        >
+          <Row align="middle" justify="space-between">
+            <Col>
+              <Space orientation="vertical" size={4}>
+                <Text style={{ color: '#01ff69', fontWeight: 'bold', fontSize: 'clamp(14px, 2.5vw, 16px)' }}>
+                  <PlayCircleOutlined style={{ marginRight: 8 }} />
+                  Sessão Atual
+                </Text>
+                <Text style={{ color: '#aaa', fontSize: 13 }}>
+                  {currentSession.dateFormatted} • {currentSession.courts?.length || 0} quadra(s)
+                </Text>
+              </Space>
+            </Col>
+            <Col>
+              <Button
+                type="primary"
+                icon={<PlayCircleOutlined />}
+                onClick={() => navigate(`/friendly-sessions/${currentSession.sessionId}`)}
+                style={{
+                  backgroundColor: '#01ff69',
+                  borderColor: '#01ff69',
+                  color: '#000',
+                  fontWeight: 'bold',
+                  height: 40,
+                }}
+              >
+                Iniciar Jogos
+              </Button>
+            </Col>
+          </Row>
+        </Card>
+      )}
+      
+      {/* Cards principais */}
       <Row gutter={[16, 16]} style={{ marginBottom: 32 }}>
         <Col xs={24} sm={8}>
           <StatCard icon={<TrophyOutlined />} title="CAMPEONATOS FINALIZADOS" value={stats.finishedChampionships} color="#01ff69" />
@@ -293,7 +342,7 @@ export default function Dashboard() {
         </Col>
       </Row>
 
-      {/* Ações rápidas - grid responsivo */}
+      {/* Ações rápidas */}
       <Row gutter={[12, 12]} style={{ marginBottom: 32 }}>
         {features.includes('campeonatos') && (
           <Col xs={12} sm={6} md={6}>
@@ -344,7 +393,7 @@ export default function Dashboard() {
         </Col>
       </Row>
 
-      {/* Últimos campeonatos - tabela responsiva */}
+      {/* Últimos campeonatos */}
       <Card
         title={<span style={{ color: '#01ff69', fontSize: 'clamp(16px, 3vw, 20px)', fontWeight: 'bold' }}>ÚLTIMOS CAMPEONATOS</span>}
         style={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: 8 }}

@@ -1,10 +1,10 @@
 import { Modal, Card, Space, Table, message } from "antd";
 import { useEffect, useMemo, useState } from "react";
-import { listSkills } from "../../api/skills";
-import type { Skill } from "../../api/skills";
-import { getCurrentRatings, upsertRatings } from "../../api/ratings";
-import RatingStars from "../../components/RatingStars";
-import AppButton from "../../components/AppButton";
+import { listSkills } from "../api/skills";
+import type { Skill } from "../api/skills";
+import { getCurrentRatings, upsertRatings } from "../api/ratings";
+import RatingStars from "./RatingStars";
+import AppButton from "./AppButton";
 import { CloseOutlined } from "@ant-design/icons";
 
 type Row = Skill & { rating: number };

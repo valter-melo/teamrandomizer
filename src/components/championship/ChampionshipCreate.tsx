@@ -101,13 +101,12 @@ export const ChampionshipCreate: React.FC = () => {
                   onChange={setSelectedSession}
                   placeholder="Selecione a sessão"
                   style={{ width: '100%' }}
-                >
-                  {sessions.map(s => (
-                    <Select.Option key={s.sessionId} value={s.sessionId}>
-                      {new Date(s.createdAt).toLocaleDateString()} - {s.sessionId}
-                    </Select.Option>
-                  ))}
-                </Select>
+                  styles={{ placeholder: { color: '#ffffff80' } }}
+                  options={sessions.map(s => ({
+                    value: s.sessionId,
+                    label: `${new Date(s.createdAt).toLocaleDateString()} - ${s.sessionId}`,
+                  }))}
+                />
               </Form.Item>
             </Col>
 
@@ -155,11 +154,15 @@ export const ChampionshipCreate: React.FC = () => {
                 <Row gutter={[16, 8]}>
                   <Col xs={24} sm={8}>
                     <Form.Item name="setsToWin" label="Sets para vencer" initialValue={2} rules={[{ required: true }]}>
-                      <Select style={{ width: '100%' }}>
-                        <Select.Option value={1}>Melhor de 1 set</Select.Option>
-                        <Select.Option value={2}>Melhor de 3 sets</Select.Option>
-                        <Select.Option value={3}>Melhor de 5 sets</Select.Option>
-                      </Select>
+                      <Select
+                        style={{ width: '100%' }}
+                        styles={{ placeholder: { color: '#ffffff80' } }}
+                        options={[
+                          { value: 1, label: 'Melhor de 1 set' },
+                          { value: 2, label: 'Melhor de 3 sets' },
+                          { value: 3, label: 'Melhor de 5 sets' },
+                        ]}
+                      />
                     </Form.Item>
                   </Col>
                   <Col xs={12} sm={8}>

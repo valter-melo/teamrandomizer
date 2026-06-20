@@ -13,6 +13,9 @@ export const theme: ThemeConfig = {
     colorText: "rgba(255,255,255,0.92)",
     colorTextSecondary: "rgba(255,255,255,0.72)",
 
+    colorTextDisabled: "rgba(255,255,255,0.45)",
+    colorBgContainerDisabled: "rgba(255,255,255,0.08)",
+
     borderRadius: 14,
     controlHeight: 38,
     fontSize: 14,
@@ -29,7 +32,7 @@ export const theme: ThemeConfig = {
     },
     Menu: {
       itemBg: "transparent",
-      itemSelectedBg: "rgba(43,217,107,0.12)",
+      itemSelectedBg: "rgba(1,255,105,0.12)",
       itemSelectedColor: "#01ff69",
       itemColor: "rgba(255,255,255,0.78)",
     },
@@ -45,6 +48,17 @@ export const theme: ThemeConfig = {
     },
     Button: {
       borderRadius: 10,
+      colorTextDisabled: "rgba(255,255,255,0.5)",
+      colorBgContainerDisabled: "rgba(255,255,255,0.1)",
+      borderColorDisabled: "rgba(255,255,255,0.15)",
+      fontWeight: 600,
+      paddingInline: 12,
+    },
+    Modal: {
+      borderRadiusLG: 8,
+    },
+    Tag: {
+      borderRadiusSM: 6,
     },
   },
 };

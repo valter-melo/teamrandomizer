@@ -1,38 +1,472 @@
-:root{
-  /* Base */
+/* ============================================
+   R4NDO - Design System Único
+   ============================================ */
+
+/* -------- VARIÁVEIS CSS (fonte única de verdade) -------- */
+:root {
+  /* Cores principais */
+  --primary: #01ff69;
+  --primary-hover: #00cc54;
+  --info: #2f9bff;
+  --warn: #ff9f1a;
+  --danger: #ff4d4f;
+
+  /* Fundos */
   --bg: #0b0f0c;
   --surface: #161616;
   --surface-2: #1a1a1a;
-  --surface-3: #18201c;
+  --surface-3: #262626;
 
-  --text: rgba(255,255,255,.92);
-  --text-2: rgba(255,255,255,.72);
+  /* Textos */
+  --text: rgba(255, 255, 255, 0.92);
+  --text-2: rgba(255, 255, 255, 0.72);
+  --muted: rgba(255, 255, 255, 0.55);
+  --placeholder: #ffffff80;
 
-  --muted: rgba(255,255,255,.70);
-  --muted-2: rgba(255,255,255,.55);
+  /* Bordas */
+  --border: #333;
+  --border-2: #444;
+  --border-primary: rgba(43, 217, 107, 0.18);
 
-  --border: rgba(43, 217, 107, 0.18);
-  --border-2: rgba(255,255,255,.10);
+  /* Potes */
+  --pot-1: #01ff69;
+  --pot-2: #3154c5;
+  --pot-3: #cebd23;
+  --pot-4: #ce2323;
 
-  /* Cores de ação (seguindo sua CSS) */
-  --primary: #01ff69;  /* generate / destaque */
-  --info: #2f9bff;     /* save */
-  --warn: #ff9f1a;     /* copy */
-  --danger: #ff4d4f;   /* reset */
+  /* Raio */
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 14px;
 
-  /* Radius / fontes */
-  --r-sm: 10px;
-  --r-md: 14px;
+  /* Sombras */
+  --shadow-1: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.35);
 
-  --fs-2: 0.9rem;
-  --fs-3: 0.95rem;
-  --fs-4: 1.05rem;
-  --fs-5: 1.25rem;
+  /* Espaçamento */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
 
-  /* Sombras (equivalentes ao seu look) */
-  --shadow-1: 0 6px 16px rgba(0,0,0,.35);
-  --shadow-2: 0 10px 25px rgba(0,0,0,.45);
+  /* Tipografia */
+  --fs-1: 12px;
+  --fs-2: 14px;
+  --fs-3: 16px;
+  --fs-4: 18px;
+  --fs-5: 24px;
+
+  /* Foco */
+  --focus-ring: 0 0 0 3px rgba(1, 255, 105, 0.25);
 }
 
-/* Base do app */
-html, body, #root { height: 100%; background: var(--bg); }
+/* -------- RESET GLOBAL -------- */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-size: var(--fs-3);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+a:hover { color: var(--primary-hover); }
+
+/* -------- SCROLLBAR -------- */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+
+/* -------- CLASSES UTILITÁRIAS -------- */
+.ui-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-1);
+}
+
+.ui-scroll {
+  overflow: auto;
+}
+
+.dropzone {
+  border: 2px dashed var(--primary);
+  border-radius: var(--r-md);
+  background: rgba(1, 255, 105, 0.04);
+  padding: var(--s-4);
+}
+
+/* -------- BOTÕES DE AÇÃO (AppButton) -------- */
+.action-btn-compact {
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.15s, opacity 0.15s;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.action-btn-compact:hover { transform: translateY(-1px); opacity: 0.95; }
+
+.action-btn-compact.generate { background: var(--primary); color: #000; }
+.action-btn-compact.save     { background: var(--info); color: #fff; }
+.action-btn-compact.copy     { background: var(--warn); color: #fff; }
+.action-btn-compact.reset    { background: var(--danger); color: #fff; }
+
+/* ============================================================
+   OVERRIDES ANT DESIGN (tema escuro global)
+   Estes estilos precisam de alta especificidade para vencer
+   o CSS padrão do Ant Design.
+   ============================================================ */
+
+/* Layout */
+.ant-layout,
+.ant-layout-content {
+  background: var(--bg) !important;
+}
+
+/* Card */
+.ant-card {
+  background: var(--surface-2) !important;
+  border-radius: var(--r-sm) !important;
+  border: 1px solid var(--border) !important;
+}
+.ant-card-head {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+.ant-card-head-title {
+  color: var(--primary) !important;
+  font-weight: 700 !important;
+}
+
+/* Table */
+.ant-table {
+  background: transparent !important;
+}
+.ant-table-container {
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-sm) !important;
+  overflow: hidden;
+}
+.ant-table-thead > tr > th {
+  background: var(--surface-2) !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+.ant-table-tbody > tr > td {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+.ant-table-tbody > tr:hover > td {
+  background: var(--surface-3) !important;
+}
+
+/* Input / InputNumber / DatePicker */
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-input-number,
+.ant-picker {
+  background: var(--surface-2) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+  border-radius: var(--r-sm) !important;
+}
+.ant-input::placeholder,
+.ant-picker-input input::placeholder {
+  color: var(--placeholder) !important;
+  opacity: 1 !important;
+}
+
+/* ============================================================
+   SELECT - CORREÇÃO COMPLETA PARA TEMA ESCURO
+   ============================================================ */
+
+/* Campo do Select */
+.ant-select:not(.ant-select-customize-input) .ant-select-selector {
+  background-color: var(--surface-2) !important;
+  border-color: var(--border) !important;
+  border-radius: var(--r-sx) !important;
+}
+
+/* Placeholder do Select */
+.ant-select .ant-select-selection-placeholder {
+  color: var(--placeholder) !important;
+  opacity: 1 !important;
+}
+
+/* Texto selecionado */
+.ant-select .ant-select-selection-item {
+  color: #ffffff !important;
+}
+
+/* Seta */
+.ant-select .ant-select-arrow {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+/* Select em foco / aberto */
+.ant-select-focused .ant-select-selector,
+.ant-select-open .ant-select-selector {
+  border-color: var(--primary) !important;
+  box-shadow: var(--focus-ring) !important;
+}
+
+/* Dropdown - container */
+.ant-select-dropdown {
+  background-color: var(--surface-2) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-sx) !important;
+  box-shadow: var(--shadow-2) !important;
+}
+
+/* Dropdown - itens */
+.ant-select-dropdown .ant-select-item {
+  color: #ffffff !important;
+  background-color: var(--surface-2) !important;
+  padding: 8px 12px !important;
+}
+
+.ant-select-dropdown .ant-select-item-option {
+  background-color: var(--surface-2) !important;
+  color: #ffffff !important;
+}
+
+.ant-select-dropdown .ant-select-item-option-content {
+  color: #ffffff !important;
+}
+
+/* Dropdown - hover */
+.ant-select-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background-color: rgba(1, 255, 105, 0.15) !important;
+}
+
+/* Dropdown - selecionado */
+.ant-select-dropdown .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: rgba(1, 255, 105, 0.25) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+/* Input de busca dentro do Select */
+.ant-select .ant-select-selection-search-input {
+  color: #ffffff !important;
+}
+
+/* Tags múltiplas */
+.ant-select-multiple .ant-select-selection-item {
+  background-color: var(--surface-3) !important;
+  border-color: var(--border-2) !important;
+  color: #ffffff !important;
+}
+
+.ant-select-multiple .ant-select-selection-item-remove {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+/* Menu lateral */
+.ant-menu {
+  background: transparent !important;
+}
+.ant-menu-item {
+  border-radius: var(--r-sm) !important;
+  margin: 4px 0 !important;
+}
+.ant-menu-item-selected {
+  background: rgba(1, 255, 105, 0.12) !important;
+  color: var(--primary) !important;
+}
+
+/* Modal */
+.ant-modal-content {
+  background: var(--surface) !important;
+  border-radius: var(--r-md) !important;
+}
+.ant-modal-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+/* Tag */
+.ant-tag {
+  border-radius: var(--r-xs) !important;
+  font-weight: 600 !important;
+}
+
+/* Checkbox */
+.ant-checkbox-wrapper {
+  color: var(--text) !important;
+}
+
+/* Botões desabilitados */
+.ant-btn:disabled,
+.ant-btn.ant-btn-disabled {
+  opacity: 0.6 !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+.ant-btn-primary:disabled {
+  opacity: 0.5 !important;
+  color: rgba(0, 0, 0, 0.5) !important;
+  background: rgba(1, 255, 105, 0.3) !important;
+  border-color: rgba(1, 255, 105, 0.2) !important;
+}
+
+/* -------- COMPONENTES CUSTOMIZADOS -------- */
+.players-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+/* Times gerados */
+.tg-teams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.tg-team-card {
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: var(--s-4);
+}
+.tg-team-name {
+  font-size: var(--fs-4);
+  color: var(--primary);
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: var(--s-3);
+}
+.tg-team-player {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2);
+  border-radius: var(--r-xs);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.tg-player-name {
+  font-weight: 600;
+  color: #fff;
+  font-size: var(--fs-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+/* TV Table */
+.tv-table .ant-table-thead > tr > th,
+.tv-table .ant-table-tbody > tr > td {
+  font-size: 28px !important;
+  padding: 20px 16px !important;
+}
+.tv-table .ant-table-thead > tr > th {
+  background: #0d0d0d !important;
+  color: var(--primary) !important;
+  font-size: 30px !important;
+}
+
+/* Exportação oculta */
+.export-hidden-area {
+  position: fixed;
+  left: -99999px;
+  top: 0;
+  pointer-events: none;
+}
+
+/* Player Column */
+.pc-compact {
+  padding: var(--s-3);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 200px;
+}
+.pc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--s-2);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--s-2);
+}
+.pc-item {
+  padding: 6px 8px;
+  border-radius: var(--r-xs);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+}
+.pc-name {
+  font-weight: 600;
+  color: var(--text);
+  font-size: var(--fs-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+/* Nav Sider */
+.nav-sider {
+  background: var(--surface-2) !important;
+  border-right: 1px solid var(--border);
+}
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm);
+  object-fit: contain;
+  background: var(--surface-3);
+  padding: 6px;
+  border: 1px solid var(--border);
+}
+.nav-title {
+  font-weight: 700;
+  color: var(--primary);
+}
+.nav-footer {
+  padding: var(--s-3);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  :root {
+    --fs-5: 20px;
+  }
+  .players-selection-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  .tg-teams-grid {
+    grid-template-columns: 1fr;
+  }
+}

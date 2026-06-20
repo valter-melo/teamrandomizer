@@ -339,31 +339,35 @@ export default function PlayerPerformancePage() {
           onChange={(e) => setSearch(e.target.value)}
           style={{ width: 'clamp(180px, 100%, 250px)' }}
         />
-        <Select
-          placeholder="Filtrar por nível"
-          allowClear
-          style={{ width: 'clamp(150px, 100%, 180px)' }}
-          value={levelFilter}
-          onChange={setLevelFilter}
-          options={[
-            'Elite',
-            'Muito alto',
-            'Alto',
-            'Médio',
-            'A desenvolver',
-            'Iniciante',
-          ].map((n) => ({ value: n, label: n }))}
-        />
-        <Select
-          placeholder="Ordenar por"
-          style={{ width: 'clamp(150px, 100%, 200px)' }}
-          value={sortSkill}
-          onChange={setSortSkill}
-          options={[
-            { value: 'overall', label: 'Overall' },
-            ...allSkills.map((s) => ({ value: s, label: s })),
-          ]}
-        />
+        <Space wrap size={[8, 8]}>
+          <Select
+            placeholder="Filtrar por nível"
+            allowClear
+            style={{ width: 180 }}
+            styles={{ placeholder: { color: '#ffffff80' } }}
+            value={levelFilter}
+            onChange={setLevelFilter}
+            options={[
+              'Elite',
+              'Muito alto',
+              'Alto',
+              'Médio',
+              'A desenvolver',
+              'Iniciante',
+            ].map((n) => ({ value: n, label: n }))}
+          />
+          <Select
+            placeholder="Ordenar por"
+            style={{ width: 200 }}
+            styles={{ placeholder: { color: '#ffffff80' } }}
+            value={sortSkill}
+            onChange={setSortSkill}
+            options={[
+              { value: 'overall', label: 'Overall' },
+              ...allSkills.map((s) => ({ value: s, label: s })),
+            ]}
+          />
+        </Space>
       </Space>
 
       <Card

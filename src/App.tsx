@@ -23,6 +23,7 @@ import FriendlySessionDetailPage from "./pages/FriendlySessionDetailPage";
 import PlayerPerformancePage from "./pages/PlayerPerformancePage";
 import PositionsPage from "./pages/PositionsPage";
 import Upgrade from './pages/Upgrade';
+import SessionHistory from "./pages/SessionHistory";
 import { usePlanSync } from './hooks/usePlanSync';
 
 const { Content } = Layout;
@@ -144,6 +145,14 @@ export default function App() {
                 element={
                   <RequireAuth>
                     <PlayerRatings />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/sessions"
+                element={
+                  <RequireAuth>
+                    <SessionHistory />
                   </RequireAuth>
                 }
               />

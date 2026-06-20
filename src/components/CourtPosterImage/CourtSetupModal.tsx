@@ -320,6 +320,7 @@ export const CourtSetupModal: React.FC<CourtSetupModalProps> = ({
                     value={assignments[team.teamIndex] ?? 0}
                     onChange={(val) => handleAssignTeam(team.teamIndex, val)}
                     style={{ width: 220 }}
+                    styles={{ placeholder: { color: '#ffffff80' } }}
                     options={Array.from({ length: courtCount }, (_, i) => ({
                       value: i,
                       label: courtNames[i] || `Quadra ${i + 1}`,
