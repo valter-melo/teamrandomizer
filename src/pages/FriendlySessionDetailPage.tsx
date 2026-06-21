@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Button, Card, Select, Spin, Tag, Typography, message } from 'antd';
+import { Button, Card, Select, Spin, Typography, message } from 'antd';
 import {
   CalendarOutlined,
   PlayCircleOutlined,
-  TeamOutlined,
   TrophyOutlined,
 } from '@ant-design/icons';
 
@@ -145,28 +144,6 @@ export default function FriendlySessionDetailPage() {
     loadDetails();
   }, [loadDetails]);
 
-  const pageStats = useMemo(() => {
-    if (!details) {
-      return {
-        totalCourts: 0,
-        totalTeams: 0,
-        totalMatches: 0,
-      };
-    }
-
-    return {
-      totalCourts: details.courts.length,
-      totalTeams: details.courts.reduce(
-        (acc, court) => acc + court.teams.length,
-        0,
-      ),
-      totalMatches: details.courts.reduce(
-        (acc, court) => acc + (court.matches?.length || 0),
-        0,
-      ),
-    };
-  }, [details]);
-
   const handleTeamSelect = (
     courtName: string,
     type: 'home' | 'away',
@@ -288,14 +265,6 @@ export default function FriendlySessionDetailPage() {
               return acc;
             },
             {},
-          );
-
-          const selectedHomeTeam = court.teams.find(
-            (team) => team.teamIndex === selection.homeTeam,
-          );
-
-          const selectedAwayTeam = court.teams.find(
-            (team) => team.teamIndex === selection.awayTeam,
           );
 
           return (

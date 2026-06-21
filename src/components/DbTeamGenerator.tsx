@@ -567,11 +567,29 @@ export default function DbTeamGenerator() {
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {step !== "result" && (
-            <Button onClick={handleRecoverLatest} disabled={recovering} icon={<HistoryOutlined />} size={isMobile ? 'small' : 'middle'}>
+            <Button 
+              onClick={handleRecoverLatest} 
+              disabled={recovering} 
+              icon={<HistoryOutlined />} 
+              size={isMobile ? 'small' : 'middle'}
+              style={{
+                borderColor: '#01ff69',
+                color: '#01ff69',
+              }}
+            >
               {recovering ? "Carregando..." : "Recuperar última geração"}
             </Button>
           )}
-          <Button onClick={resetAll} size={isMobile ? 'small' : 'middle'}>Limpar</Button>
+          <Button 
+            onClick={resetAll} 
+            size={isMobile ? 'small' : 'middle'}
+            style={{
+              borderColor: '#ff4d4f',
+              color: '#ff4d4f',
+            }}
+          >
+            Limpar
+          </Button>
         </div>
       </div>
       <div style={{ marginTop: 8, color: '#aaa', fontSize: 'clamp(12px, 1.8vw, 14px)' }}>
