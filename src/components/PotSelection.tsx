@@ -5,7 +5,7 @@ import { useMediaQuery } from 'react-responsive';
 import { http } from '../api/http';
 import { usePlayers } from '../hooks/usePlayers';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 type TeamGenerated = {
   teamIndex: number;

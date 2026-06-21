@@ -59,7 +59,7 @@ export const KnockoutBracket: React.FC<Props> = ({ matches, championshipId, onMa
             key={stage}
             title={
               <span style={{
-                fontSize: 'clamp(18px, 3vw, 28px)',
+                fontSize: 'clamp(14px, 2.5vw, 22px)',
                 fontWeight: 'bold',
                 color: '#01ff69',
               }}>
@@ -78,7 +78,7 @@ export const KnockoutBracket: React.FC<Props> = ({ matches, championshipId, onMa
                 borderBottom: '1px solid #01ff69',
               },
               body: {
-                padding: 'clamp(8px, 2vw, 16px)',
+                padding: isMobile ? 8 : 'clamp(8px, 2vw, 16px)',
               },
             }}
           >
@@ -86,78 +86,65 @@ export const KnockoutBracket: React.FC<Props> = ({ matches, championshipId, onMa
               <div
                 key={match.matchId}
                 style={{
-                  display: 'flex',
-                  flexDirection: isMobile ? 'column' : 'row',
-                  alignItems: isMobile ? 'stretch' : 'center',
-                  justifyContent: 'space-between',
                   backgroundColor: '#262626',
-                  padding: 'clamp(12px, 2vw, 20px) clamp(12px, 2vw, 24px)',
-                  marginBottom: 12,
+                  padding: isMobile ? '10px 12px' : 'clamp(10px, 1.5vw, 16px) clamp(12px, 2vw, 20px)',
+                  marginBottom: 8,
                   borderRadius: 8,
                   borderLeft: '6px solid #01ff69',
-                  gap: isMobile ? 12 : 16,
-                  flexWrap: 'wrap',
                 }}
               >
-                {/* Times */}
-                <div
-                  style={{
+                {/* Times lado a lado */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: isMobile ? 6 : 12,
+                  flexWrap: 'wrap',
+                }}>
+                  <Text style={{
+                    fontSize: 'clamp(13px, 2vw, 18px)',
+                    color: '#fff',
                     flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 'clamp(8px, 2vw, 12px)',
-                    flexWrap: 'wrap',
-                    textAlign: 'center',
-                  }}
-                >
-                  <Text
-                    strong
-                    style={{
-                      fontSize: 'clamp(16px, 2.5vw, 28px)',
-                      color: '#fff',
-                      flex: isMobile ? '1 1 40%' : 'none',
-                    }}
-                  >
+                    minWidth: 70,
+                    textAlign: 'right',
+                    wordBreak: 'break-word',
+                  }}>
                     {teamName(match, true)}
                   </Text>
 
-                  <Text
-                    style={{
-                      fontSize: 'clamp(18px, 3vw, 24px)',
-                      color: '#01ff69',
-                      fontWeight: 'bold',
-                    }}
-                  >
+                  <Text style={{
+                    fontSize: 'clamp(16px, 2.5vw, 22px)',
+                    fontWeight: 'bold',
+                    color: '#01ff69',
+                    flexShrink: 0,
+                    minWidth: 36,
+                    textAlign: 'center',
+                  }}>
                     vs
                   </Text>
 
-                  <Text
-                    strong
-                    style={{
-                      fontSize: 'clamp(16px, 2.5vw, 28px)',
-                      color: '#fff',
-                      flex: isMobile ? '1 1 40%' : 'none',
-                    }}
-                  >
+                  <Text style={{
+                    fontSize: 'clamp(13px, 2vw, 18px)',
+                    color: '#fff',
+                    flex: 1,
+                    minWidth: 70,
+                    textAlign: 'left',
+                    wordBreak: 'break-word',
+                  }}>
                     {teamName(match, false)}
                   </Text>
-                </div>
 
-                {/* Placar ou Botão */}
-                <div style={{ textAlign: 'center' }}>
+                  {/* Placar ou Botão */}
                   {match.played ? (
-                    <Tag
-                      style={{
-                        fontSize: 'clamp(20px, 3vw, 28px)',
-                        padding: 'clamp(8px, 1.5vw, 12px) clamp(16px, 2.5vw, 24px)',
-                        borderRadius: 8,
-                        backgroundColor: '#01ff69',
-                        color: '#1a1a1a',
-                        border: 'none',
-                        fontWeight: 'bold',
-                      }}
-                    >
+                    <Tag style={{
+                      fontSize: 'clamp(14px, 2.5vw, 20px)',
+                      padding: 'clamp(4px, 1vw, 8px) clamp(10px, 2vw, 18px)',
+                      borderRadius: 8,
+                      backgroundColor: '#01ff69',
+                      color: '#1a1a1a',
+                      border: 'none',
+                      fontWeight: 'bold',
+                      flexShrink: 0,
+                    }}>
                       {match.homeScore} x {match.awayScore}
                     </Tag>
                   ) : (
@@ -165,16 +152,16 @@ export const KnockoutBracket: React.FC<Props> = ({ matches, championshipId, onMa
                       type="primary"
                       icon={<PlayCircleOutlined />}
                       onClick={() => handlePlay(match)}
-                      size={isMobile ? 'middle' : 'large'}
-                      block={isMobile}
+                      size="small"
                       style={{
                         backgroundColor: '#01ff69',
                         borderColor: '#01ff69',
                         color: '#1a1a1a',
                         fontWeight: 'bold',
-                        fontSize: 'clamp(16px, 2.5vw, 22px)',
-                        height: isMobile ? 40 : 'auto',
-                        padding: isMobile ? '8px 16px' : 'clamp(10px, 2vw, 12px) clamp(20px, 3vw, 30px)',
+                        fontSize: 'clamp(12px, 1.8vw, 14px)',
+                        height: 32,
+                        padding: '0 12px',
+                        flexShrink: 0,
                       }}
                     >
                       Jogar
@@ -204,6 +191,8 @@ export const KnockoutBracket: React.FC<Props> = ({ matches, championshipId, onMa
           }}
           homeTeamName={selectedMatch.homeTeamName}
           awayTeamName={selectedMatch.awayTeamName}
+          setsToWin={selectedMatch?.setsToWin || 2}
+          pointsPerSet={selectedMatch?.pointsPerSet || 25}
         />
       )}
     </div>

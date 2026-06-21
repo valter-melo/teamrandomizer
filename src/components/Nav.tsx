@@ -13,7 +13,7 @@ import {
   BarChartOutlined,
   MenuOutlined,
   WhatsAppOutlined,
-  HistoryOutlined
+  NumberOutlined
 } from "@ant-design/icons";
 import { FaVolleyballBall } from "@react-icons/all-files/fa/FaVolleyballBall";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -49,10 +49,10 @@ export default function Nav({ collapsed, onToggle }: NavProps) {
       { key: `${base}/dashboard`, icon: <TrophyOutlined />, label: "Dashboard" },
       { key: `${base}/performance`, icon: <BarChartOutlined />, label: "Desempenho" },
       { key: `${base}/skills`, icon: <StarOutlined />, label: "Skills" },
-      { key: `${base}/positions`, icon: <FaVolleyballBall />, label: "Posições" },
+      { key: `${base}/positions`, icon: <NumberOutlined />, label: "Posições" },
       { key: `${base}/players`, icon: <UserOutlined />, label: "Jogadores" },
       { key: `${base}/generator`, icon: <TeamOutlined />, label: "Gerar Times" },
-      { key: `${base}/sessions`, icon: <HistoryOutlined />, label: "Histórico" },
+      { key: `${base}/sessions`, icon: <FaVolleyballBall />, label: "Jogos" },
     ];
 
     if (features.includes('campeonatos')) {

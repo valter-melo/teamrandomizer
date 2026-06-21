@@ -224,7 +224,7 @@ export const ManualTeamGenerator: React.FC = () => {
       style={cardStyle}
       styles={{ body: cardBodyStyle }}
     >
-      <Space direction="vertical" size={isCompact ? 12 : 16} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={isCompact ? 12 : 16} style={{ width: '100%' }}>
         <div>
           <Text style={{ color: '#ccc', display: 'block', marginBottom: 4 }}>Número de times</Text>
           <InputNumber min={2} value={teamCount} onChange={v => setTeamCount(Math.max(2, Number(v) || 2))} style={{ width: '100%' }} />
@@ -237,7 +237,13 @@ export const ManualTeamGenerator: React.FC = () => {
           <Text style={{ color: '#01ff69', fontWeight: 'bold' }}>{totalSelected} / {needed} selecionados</Text>
         </div>
         {!isMobile && (
-          <Button type="primary" onClick={handleOpenModal} disabled={!isComplete} block style={{ fontWeight: 'bold', height: 40 }}>
+          <Button 
+            type="primary" 
+            onClick={handleOpenModal} 
+            disabled={!isComplete} 
+            block 
+            style={{ fontWeight: 'bold', height: 40, color: "#000" }}
+          >
             <TrophyOutlined /> Criar Campeonato
           </Button>
         )}
@@ -519,7 +525,15 @@ export const ManualTeamGenerator: React.FC = () => {
             )}
           </Card>
           <Form.Item>
-            <Button type="primary" onClick={handleSaveChampionship} loading={isSaving} block icon={<TrophyOutlined />} style={{ fontWeight: 'bold', height: 44 }}>
+            <Button 
+              type="primary" 
+              onClick={handleSaveChampionship} 
+              loading={isSaving} block icon={<TrophyOutlined />} 
+              style={{ 
+                fontWeight: 'bold', 
+                height: 44, 
+                color: "#000"
+              }}>
               Criar Campeonato
             </Button>
           </Form.Item>

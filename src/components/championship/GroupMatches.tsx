@@ -44,114 +44,105 @@ export const GroupMatches: React.FC<Props> = ({ matches, championshipId, groupNa
   return (
     <Card
       title={
-        <span style={{ fontSize: 'clamp(16px, 2.5vw, 20px)', color: '#01ff69', fontWeight: 'bold' }}>
+        <span style={{ fontSize: 'clamp(14px, 2.5vw, 18px)', color: '#01ff69', fontWeight: 'bold' }}>
           {groupName}
         </span>
       }
       style={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: 8, marginBottom: 16 }}
       styles={{
         header: { borderBottom: '1px solid #333' },
-        body: { padding: 'clamp(8px, 2vw, 16px)' },
+        body: { padding: isMobile ? 8 : 'clamp(8px, 2vw, 16px)' },
       }}
     >
       {matches.map((match) => (
         <div
           key={match.matchId}
           style={{
-            display: 'flex',
-            flexDirection: isMobile ? 'column' : 'row',
-            alignItems: isMobile ? 'stretch' : 'center',
-            justifyContent: 'space-between',
-            padding: 'clamp(12px, 2vw, 16px) 0',
+            padding: isMobile ? '8px 0' : 'clamp(8px, 1.5vw, 14px) 0',
             borderBottom: '1px solid #333',
-            gap: isMobile ? 12 : 16,
-            flexWrap: 'wrap',
           }}
         >
           {/* Rodada */}
-          <Text
-            style={{
-              fontSize: 'clamp(13px, 2vw, 16px)',
-              color: '#aaa',
-              minWidth: isMobile ? 'auto' : 80,
-              textAlign: isMobile ? 'center' : 'left',
-            }}
-          >
+          <Text style={{
+            fontSize: 'clamp(11px, 1.8vw, 14px)',
+            color: '#888',
+            display: 'block',
+            marginBottom: isMobile ? 4 : 6,
+          }}>
             Rodada {match.round}
           </Text>
 
           {/* Times + Placar */}
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 'clamp(8px, 2vw, 20px)',
-              flexWrap: 'wrap',
-              textAlign: 'center',
-            }}
-          >
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: isMobile ? 6 : 12,
+            flexWrap: 'wrap',
+          }}>
+            {/* Time Casa */}
             <Text
-              strong
               style={{
-                fontSize: 'clamp(16px, 2.5vw, 24px)',
-                color: isWinner(match, true) ? '#01ff69' : '#fff',
+                fontSize: 'clamp(13px, 2vw, 16px)',
+                color: isWinner(match, true) ? '#01ff69' : '#ccc',
                 fontWeight: isWinner(match, true) ? 'bold' : 'normal',
-                flex: isMobile ? '1 1 40%' : 'none',
+                flex: 1,
+                minWidth: 80,
+                textAlign: 'right',
+                wordBreak: 'break-word',
               }}
             >
               {teamName(match, true)}
             </Text>
 
-            <Text
-              style={{
-                fontSize: 'clamp(20px, 3vw, 28px)',
-                fontWeight: 'bold',
-                color: '#fff',
-                minWidth: 60,
-                textAlign: 'center',
-              }}
-            >
+            {/* Placar ou vs */}
+            <Text style={{
+              fontSize: 'clamp(16px, 2.5vw, 24px)',
+              fontWeight: 'bold',
+              color: match.played ? '#01ff69' : '#fff',
+              minWidth: 50,
+              textAlign: 'center',
+              flexShrink: 0,
+            }}>
               {match.played ? `${match.homeScore} x ${match.awayScore}` : 'vs'}
             </Text>
 
+            {/* Time Fora */}
             <Text
-              strong
               style={{
-                fontSize: 'clamp(16px, 2.5vw, 24px)',
-                color: isWinner(match, false) ? '#01ff69' : '#fff',
+                fontSize: 'clamp(13px, 2vw, 16px)',
+                color: isWinner(match, false) ? '#01ff69' : '#ccc',
                 fontWeight: isWinner(match, false) ? 'bold' : 'normal',
-                flex: isMobile ? '1 1 40%' : 'none',
+                flex: 1,
+                minWidth: 80,
+                textAlign: 'left',
+                wordBreak: 'break-word',
               }}
             >
               {teamName(match, false)}
             </Text>
-          </div>
 
-          {/* Botão Jogar */}
-          {!match.played && (
-            <Button
-              type="primary"
-              icon={<PlayCircleOutlined />}
-              onClick={() => handlePlay(match)}
-              size={isMobile ? 'middle' : 'large'}
-              block={isMobile}
-              style={{
-                backgroundColor: '#01ff69',
-                borderColor: '#01ff69',
-                color: '#1a1a1a',
-                fontWeight: 'bold',
-                fontSize: 'clamp(14px, 2vw, 18px)',
-                height: isMobile ? 40 : 'auto',
-                padding: isMobile ? '8px 16px' : '10px 24px',
-                minWidth: isMobile ? 'auto' : 160,
-                alignSelf: isMobile ? 'stretch' : 'center',
-              }}
-            >
-              Jogar
-            </Button>
-          )}
+            {/* Botão Jogar */}
+            {!match.played && (
+              <Button
+                type="primary"
+                icon={<PlayCircleOutlined />}
+                onClick={() => handlePlay(match)}
+                size="small"
+                style={{
+                  backgroundColor: '#01ff69',
+                  borderColor: '#01ff69',
+                  color: '#1a1a1a',
+                  fontWeight: 'bold',
+                  fontSize: 'clamp(12px, 1.8vw, 14px)',
+                  height: 32,
+                  padding: '0 12px',
+                  flexShrink: 0,
+                }}
+              >
+                Jogar
+              </Button>
+            )}
+          </div>
         </div>
       ))}
 

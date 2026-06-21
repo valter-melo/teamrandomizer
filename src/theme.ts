@@ -46,6 +46,15 @@ export const theme: ThemeConfig = {
       colorBorder: "rgba(255,255,255,0.10)",
       colorTextPlaceholder: "rgba(255,255,255,0.45)",
     },
+    Select: {
+      selectorBg: "#1a1a1a",
+      colorBgElevated: "#1a1a1a",
+      optionSelectedBg: "rgba(1,255,105,0.18)",
+      optionActiveBg: "rgba(1,255,105,0.12)",
+      colorText: "rgba(255,255,255,0.92)",
+      colorTextPlaceholder: "rgba(255,255,255,0.45)",
+      colorBorder: "rgba(255,255,255,0.10)",
+    },
     Button: {
       borderRadius: 10,
       colorTextDisabled: "rgba(255,255,255,0.5)",
@@ -53,6 +62,7 @@ export const theme: ThemeConfig = {
       borderColorDisabled: "rgba(255,255,255,0.15)",
       fontWeight: 600,
       paddingInline: 12,
+      colorText: "#000",
     },
     Modal: {
       borderRadiusLG: 8,

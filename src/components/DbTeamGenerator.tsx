@@ -615,7 +615,7 @@ export default function DbTeamGenerator() {
           type="primary"
           onClick={goNext}
           disabled={!canGoNext}
-          style={{ fontWeight: 'bold', height: 40, whiteSpace: 'nowrap' }}
+          style={{ fontWeight: 'bold', height: 40, whiteSpace: 'nowrap', color: '#000' }}
         >
           Próximo: Skills
         </Button>

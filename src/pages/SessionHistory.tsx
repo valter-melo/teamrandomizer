@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, Row, Col, Typography, Spin, Tag, Button, Empty } from 'antd';
 import { HistoryOutlined, PlayCircleOutlined, TeamOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -83,7 +83,7 @@ export default function SessionHistory() {
                   type="primary"
                   icon={<PlayCircleOutlined />}
                   block
-                  style={{ fontWeight: 'bold' }}
+                  style={{ fontWeight: 'bold', color: "#000" }}
                   onClick={() => navigate(`/friendly-sessions/${session.sessionId}`)}
                 >
                   Ver Detalhes
