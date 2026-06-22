@@ -19,6 +19,9 @@ const ChampionshipDetailsPage: React.FC = () => {
 
   const { championship, standingsByGroup, matchesByGroup, knockoutMatches } = data;
 
+  // Verifica se o campeonato é de 1 set (para ocultar colunas de sets na classificação)
+  const isSingleSet = (championship as any).setsToWin === 1;
+
   const isGroupStageComplete = () => {
     const groups = Object.keys(matchesByGroup);
     return groups.length > 0 && groups.every(g => matchesByGroup[parseInt(g)].every(m => m.played));
@@ -73,6 +76,7 @@ const ChampionshipDetailsPage: React.FC = () => {
               groupName={`Grupo ${groupIdx}`}
               qualifiedCount={qualifiedCount}
               isGroupComplete={isGroupComplete}
+              isSingleSet={isSingleSet}
             />
           );
         })}

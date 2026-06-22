@@ -1,19 +1,29 @@
-import { Card, Col, Form, Input, Row, Space, Table, message } from "antd";
+import { Card, Form, Input, Table, Typography, message } from "antd";
+import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
+import { PlusOutlined } from "@ant-design/icons";
+
 import { createSkill, listSkills } from "../api/skills";
 import type { Skill } from "../api/skills";
 import AppButton from "../components/AppButton";
 
+const { Title, Text } = Typography;
+
 export default function Skills() {
+  const [form] = Form.useForm();
+  const [messageApi, contextHolder] = message.useMessage();
+
   const [items, setItems] = useState<Skill[]>([]);
   const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   async function refresh() {
     setLoading(true);
+
     try {
       setItems(await listSkills());
-    } catch (e: any) {
-      message.error(e?.response?.data?.error ?? "Erro ao listar skills");
+    } catch (error: any) {
+      messageApi.error(error?.response?.data?.error ?? "Erro ao listar skills");
     } finally {
       setLoading(false);
     }
@@ -23,75 +33,121 @@ export default function Skills() {
     refresh();
   }, []);
 
-  async function onCreate(values: any) {
+  async function onCreate(values: { name: string }) {
+    setCreating(true);
+
     try {
       await createSkill(values);
-      message.success("Skill criada");
+
+      messageApi.success("Skill criada com sucesso.");
+      form.resetFields();
+
       await refresh();
-    } catch (e: any) {
-      message.error(e?.response?.data?.error ?? "Erro ao criar skill");
+    } catch (error: any) {
+      messageApi.error(error?.response?.data?.error ?? "Erro ao criar skill");
+    } finally {
+      setCreating(false);
     }
   }
 
-  const cardBodyStyle = { padding: 'clamp(12px, 3vw, 24px)' };
+  const columns: ColumnsType<Skill> = [
+    {
+      title: "Nome",
+      dataIndex: "name",
+      width: "70%",
+      ellipsis: true,
+      render: (name: string) => <span className="skill-name">{name}</span>,
+    },
+    {
+      title: "Status",
+      dataIndex: "active",
+      width: "30%",
+      render: (active: boolean) => (
+        <span className={`skill-status ${active ? "active" : "inactive"}`}>
+          {active ? "Ativa" : "Inativa"}
+        </span>
+      ),
+    },
+  ];
 
   return (
-    <div style={{ padding: 'clamp(8px, 2vw, 24px)', maxWidth: 800, margin: '0 auto' }}>
-      <Space orientation="vertical" style={{ width: "100%" }} size={16}>
+    <main className="skills-page">
+      {contextHolder}
+
+      <header className="skills-header">
+        <Title level={2} className="skills-title">
+          Skills
+        </Title>
+
+        <Text className="skills-subtitle">
+          Cadastre e acompanhe os critérios usados para avaliação dos atletas.
+        </Text>
+      </header>
+
+      <section className="skills-stack">
         <Card
-          title={<span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)', color: '#01ff69' }}>Nova Skill</span>}
-          styles={{
-            body: cardBodyStyle,
-            header: { borderBottom: '1px solid #333' },
-          }}
-          style={{ backgroundColor: '#1a1a1a', borderColor: '#333' }}
+          className="skills-card"
+          title={<span className="skills-section-title">Nova Skill</span>}
         >
-          <Form layout="vertical" onFinish={onCreate}>
-            <Row gutter={[12, 8]} align="bottom">
-              <Col xs={24} sm={18} md={20}>
-                <Form.Item
-                  name="name"
-                  rules={[{ required: true, message: "Informe o nome da skill" }]}
-                  label="Nome"
-                  style={{ marginBottom: 0 }}
-                >
-                  <Input placeholder="Ex: Saque, Ataque, Defesa..." />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={6} md={4}>
-                <Form.Item style={{ marginBottom: 0 }}>
-                  <AppButton tone="generate" htmlType="submit" style={{ width: "100%" }}>
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={onCreate}
+            className="skills-create-form"
+          >
+            <div className="skills-form-grid">
+              <Form.Item
+                name="name"
+                label="Nome"
+                rules={[
+                  {
+                    required: true,
+                    message: "Informe o nome da skill",
+                  },
+                ]}
+              >
+                <Input placeholder="Ex: Saque, Ataque, Defesa..." />
+              </Form.Item>
+
+              <Form.Item>
+                <div className="skills-submit">
+                  <AppButton
+                    tone="generate"
+                    htmlType="submit"
+                    disabled={creating}
+                  >
+                    <PlusOutlined />
                     Adicionar
                   </AppButton>
-                </Form.Item>
-              </Col>
-            </Row>
+                </div>
+              </Form.Item>
+            </div>
           </Form>
         </Card>
 
         <Card
-          title={<span style={{ fontSize: 'clamp(16px, 2.5vw, 18px)', color: '#01ff69' }}>Skills</span>}
-          styles={{
-            body: cardBodyStyle,
-            header: { borderBottom: '1px solid #333' },
-          }}
-          style={{ backgroundColor: '#1a1a1a', borderColor: '#333' }}
+          className="skills-card skills-table-card"
+          title={<span className="skills-section-title">Skills cadastradas</span>}
         >
-          <Table
+          <Table<Skill>
             rowKey="id"
             loading={loading}
             dataSource={items}
-            columns={[
-              { title: "Nome", dataIndex: "name", width: "60%", ellipsis: true },
-              { title: "Ativa", dataIndex: "active", width: "40%", render: (v) => (v ? "Sim" : "Não") },
-            ]}
-            scroll={{ x: 'max-content' }}
-            pagination={{ responsive: true, pageSize: 10, showSizeChanger: false }}
-            style={{ backgroundColor: '#1a1a1a' }}
-            rowClassName={() => 'dark-row'}
+            columns={columns}
+            scroll={{
+              x: "max-content",
+            }}
+            pagination={{
+              responsive: true,
+              pageSize: 10,
+              showSizeChanger: false,
+            }}
+            locale={{
+              emptyText: <div className="skills-empty">Nenhuma skill cadastrada.</div>,
+            }}
           />
         </Card>
-      </Space>
-    </div>
+      </section>
+    </main>
   );
 }

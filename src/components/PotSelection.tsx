@@ -1,31 +1,56 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Button, Card, InputNumber, Space, Typography, Row, Col, Alert, Checkbox, message, Input } from 'antd';
-import { useNavigate } from 'react-router-dom';
-import { useMediaQuery } from 'react-responsive';
-import { http } from '../api/http';
-import { usePlayers } from '../hooks/usePlayers';
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Alert,
+  Button,
+  Checkbox,
+  Input,
+  InputNumber,
+  Spin,
+  Typography,
+  message,
+} from "antd";
+import { useNavigate } from "react-router-dom";
+import { useMediaQuery } from "react-responsive";
+
+import { http } from "../api/http";
+import { usePlayers } from "../hooks/usePlayers";
 
 const { Text } = Typography;
 
 type TeamGenerated = {
   teamIndex: number;
-  players: { id: string; name: string; sex: string; score: number }[];
+  players: {
+    id: string;
+    name: string;
+    sex: string;
+    score: number;
+  }[];
 };
 
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+
+  for (let index = shuffled.length - 1; index > 0; index--) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+
+    [shuffled[index], shuffled[randomIndex]] = [
+      shuffled[randomIndex],
+      shuffled[index],
+    ];
   }
+
   return shuffled;
 };
 
 export const PotSelection: React.FC = () => {
   const navigate = useNavigate();
-  const { players, loading, error } = usePlayers();
-  const activePlayers = players.filter(p => p.active);
   const isMobile = useMediaQuery({ maxWidth: 768 });
+
+  const { players, loading, error } = usePlayers();
+
+  const activePlayers = useMemo(() => {
+    return players.filter((player) => player.active);
+  }, [players]);
 
   const [teamCount, setTeamCount] = useState(8);
   const [playersPerTeam, setPlayersPerTeam] = useState(4);
@@ -37,125 +62,227 @@ export const PotSelection: React.FC = () => {
 
   useEffect(() => {
     setPotes(Array(playersPerTeam).fill(null).map(() => []));
+    setCurrentPoteIndex(0);
+    setGeneratedTeams([]);
   }, [playersPerTeam]);
 
   const selectedPlayerIds = useMemo(() => {
     const selected = new Set<string>();
+
     potes.forEach((pote, index) => {
       if (index !== currentPoteIndex) {
-        pote.forEach(id => selected.add(id));
+        pote.forEach((id) => selected.add(id));
       }
     });
+
     return selected;
   }, [potes, currentPoteIndex]);
 
   const availablePlayers = useMemo(() => {
-    return activePlayers.filter(p => !selectedPlayerIds.has(p.id));
+    return activePlayers.filter((player) => !selectedPlayerIds.has(player.id));
   }, [activePlayers, selectedPlayerIds]);
 
   const filteredPlayers = useMemo(() => {
-    const q = playerQuery.trim().toLowerCase();
-    if (!q) return availablePlayers;
-    return availablePlayers.filter(p => p.name.toLowerCase().includes(q));
+    const query = playerQuery.trim().toLowerCase();
+
+    if (!query) return availablePlayers;
+
+    return availablePlayers.filter((player) =>
+      player.name.toLowerCase().includes(query)
+    );
   }, [availablePlayers, playerQuery]);
 
-  const isCurrentPoteComplete = potes[currentPoteIndex]?.length >= teamCount;
-  const areAllPotesComplete = potes.every(pote => pote.length === teamCount);
+  const currentPote = potes[currentPoteIndex] || [];
 
-  const togglePlayer = useCallback((playerId: string) => {
-    if (isCurrentPoteComplete && !potes[currentPoteIndex].includes(playerId)) {
-      message.warning(`Este pote já tem ${teamCount} jogadores.`);
-      return;
-    }
-    setPotes(prev => {
-      const newPotes = [...prev];
-      const current = newPotes[currentPoteIndex];
-      if (current.includes(playerId)) {
-        newPotes[currentPoteIndex] = current.filter(id => id !== playerId);
-      } else {
-        newPotes[currentPoteIndex] = [...current, playerId];
+  const isCurrentPoteComplete = currentPote.length >= teamCount;
+
+  const areAllPotesComplete =
+    potes.length === playersPerTeam &&
+    potes.every((pote) => pote.length === teamCount);
+
+  const togglePlayer = useCallback(
+    (playerId: string) => {
+      if (
+        isCurrentPoteComplete &&
+        !potes[currentPoteIndex]?.includes(playerId)
+      ) {
+        message.warning(`Este pote já tem ${teamCount} jogadores.`);
+        return;
       }
-      return newPotes;
-    });
-  }, [currentPoteIndex, isCurrentPoteComplete, teamCount]);
+
+      setPotes((prev) => {
+        const newPotes = [...prev];
+        const current = newPotes[currentPoteIndex] || [];
+
+        if (current.includes(playerId)) {
+          newPotes[currentPoteIndex] = current.filter((id) => id !== playerId);
+        } else {
+          newPotes[currentPoteIndex] = [...current, playerId];
+        }
+
+        return newPotes;
+      });
+    },
+    [currentPoteIndex, isCurrentPoteComplete, potes, teamCount]
+  );
 
   const goToNextPote = useCallback(() => {
     if (currentPoteIndex < potes.length - 1) {
-      setCurrentPoteIndex(prev => prev + 1);
+      setCurrentPoteIndex((prev) => prev + 1);
+      setPlayerQuery("");
     }
   }, [currentPoteIndex, potes.length]);
 
   const goToPrevPote = useCallback(() => {
     if (currentPoteIndex > 0) {
-      setCurrentPoteIndex(prev => prev - 1);
+      setCurrentPoteIndex((prev) => prev - 1);
+      setPlayerQuery("");
     }
   }, [currentPoteIndex]);
 
   const handleGenerate = useCallback(() => {
-    const playerMap = new Map(activePlayers.map(p => [p.id, p]));
-    const shuffledPotes = potes.map(pote => shuffleArray([...pote]));
-    const potesInfo = shuffledPotes.map(pote =>
-      pote.map(id => ({ id, sex: playerMap.get(id)!.sex }))
-    );
-    const numTimes = teamCount;
-    const numPotes = playersPerTeam;
-    const times: { players: (string | null)[]; menCount: number }[] = [];
-    for (let i = 0; i < numTimes; i++) {
-      times.push({ players: new Array(numPotes).fill(null), menCount: 0 });
-    }
-    for (let p = 0; p < numPotes; p++) {
-      const jogadores = potesInfo[p];
-      const homens = jogadores.filter(j => j.sex === 'M').map(j => j.id);
-      const mulheres = jogadores.filter(j => j.sex === 'F').map(j => j.id);
-      let timesDisponiveis = times.map((t, idx) => ({ idx, ocupado: t.players[p] !== null })).filter(t => !t.ocupado).map(t => t.idx);
-      const timesOrdenados = times.map((t, idx) => ({ idx, menCount: t.menCount })).sort((a, b) => a.menCount - b.menCount).map(t => t.idx);
-      let timesElegiveis = timesOrdenados.filter(idx => timesDisponiveis.includes(idx) && times[idx].menCount < 3);
-      if (homens.length > timesElegiveis.length) {
-        message.error('Não há times suficientes com menos de 3 homens para alocar todos os homens. Tente novamente ou ajuste as seleções.');
-        return;
-      }
-      for (const homem of homens) {
-        const timeIdx = timesElegiveis.shift()!;
-        times[timeIdx].players[p] = homem;
-        times[timeIdx].menCount += 1;
-        timesDisponiveis = timesDisponiveis.filter(idx => idx !== timeIdx);
-      }
-      for (const mulher of mulheres) {
-        const timeIdx = timesDisponiveis.shift()!;
-        times[timeIdx].players[p] = mulher;
-      }
-    }
-    const timesCom4 = times.filter(t => t.menCount > 3);
-    if (timesCom4.length > 0) {
-      message.error('Erro inesperado: algum time ficou com 4 homens. Tente novamente.');
+    if (!areAllPotesComplete) {
+      message.warning("Complete todos os potes antes de embaralhar.");
       return;
     }
-    const newTeams: TeamGenerated[] = times.map((t, idx) => ({
-      teamIndex: idx + 1,
-      players: t.players.map(id => {
-        const player = playerMap.get(id!);
-        return { id: player!.id, name: player!.name, sex: player!.sex, score: 0 };
-      }),
+
+    const playerMap = new Map(activePlayers.map((player) => [player.id, player]));
+    const shuffledPotes = potes.map((pote) => shuffleArray([...pote]));
+
+    const potesInfo = shuffledPotes.map((pote) =>
+      pote.map((id) => ({
+        id,
+        sex: playerMap.get(id)?.sex,
+      }))
+    );
+
+    const teams: {
+      players: (string | null)[];
+      menCount: number;
+    }[] = [];
+
+    for (let index = 0; index < teamCount; index++) {
+      teams.push({
+        players: new Array(playersPerTeam).fill(null),
+        menCount: 0,
+      });
+    }
+
+    for (let poteIndex = 0; poteIndex < playersPerTeam; poteIndex++) {
+      const playersFromPot = potesInfo[poteIndex];
+
+      const men = playersFromPot
+        .filter((player) => player.sex === "M")
+        .map((player) => player.id);
+
+      const women = playersFromPot
+        .filter((player) => player.sex === "F")
+        .map((player) => player.id);
+
+      let availableTeams = teams
+        .map((team, index) => ({
+          index,
+          occupied: team.players[poteIndex] !== null,
+        }))
+        .filter((team) => !team.occupied)
+        .map((team) => team.index);
+
+      const orderedTeams = teams
+        .map((team, index) => ({
+          index,
+          menCount: team.menCount,
+        }))
+        .sort((a, b) => a.menCount - b.menCount)
+        .map((team) => team.index);
+
+      const eligibleTeams = orderedTeams.filter(
+        (index) =>
+          availableTeams.includes(index) && teams[index].menCount < 3
+      );
+
+      if (men.length > eligibleTeams.length) {
+        message.error(
+          "Não há times suficientes com menos de 3 homens para alocar todos os homens. Tente novamente ou ajuste as seleções."
+        );
+        return;
+      }
+
+      for (const man of men) {
+        const teamIndex = eligibleTeams.shift();
+
+        if (teamIndex == null) continue;
+
+        teams[teamIndex].players[poteIndex] = man;
+        teams[teamIndex].menCount += 1;
+
+        availableTeams = availableTeams.filter((index) => index !== teamIndex);
+      }
+
+      for (const woman of women) {
+        const teamIndex = availableTeams.shift();
+
+        if (teamIndex == null) continue;
+
+        teams[teamIndex].players[poteIndex] = woman;
+      }
+    }
+
+    const teamsWithFourMen = teams.filter((team) => team.menCount > 3);
+
+    if (teamsWithFourMen.length > 0) {
+      message.error("Erro inesperado: algum time ficou com 4 homens.");
+      return;
+    }
+
+    const newTeams: TeamGenerated[] = teams.map((team, index) => ({
+      teamIndex: index + 1,
+      players: team.players
+        .filter((id): id is string => Boolean(id))
+        .map((id) => {
+          const player = playerMap.get(id);
+
+          return {
+            id: player?.id || id,
+            name: player?.name || "Jogador",
+            sex: player?.sex || "M",
+            score: 0,
+          };
+        }),
     }));
+
     setGeneratedTeams(newTeams);
-    message.success('Times gerados com sucesso!');
-  }, [potes, teamCount, playersPerTeam, activePlayers]);
+
+    message.success("Times gerados com sucesso!");
+  }, [areAllPotesComplete, activePlayers, potes, teamCount, playersPerTeam]);
 
   const handleSave = async () => {
     if (generatedTeams.length === 0) return;
+
     setSaving(true);
+
     try {
       const payload = {
-        teams: generatedTeams.map(team => ({
+        teams: generatedTeams.map((team) => ({
           teamIndex: team.teamIndex,
-          players: team.players.map(p => ({ id: p.id, name: p.name, sex: p.sex, score: 0 })),
+          players: team.players.map((player) => ({
+            id: player.id,
+            name: player.name,
+            sex: player.sex,
+            score: 0,
+          })),
         })),
       };
-      const response = await http.post('/teams/generate-from-pots', payload);
+
+      const response = await http.post("/teams/generate-from-pots", payload);
       const result = response.data;
-      navigate(`/teams/result?sessionId=${result.sessionId}&teams=${encodeURIComponent(JSON.stringify(result.teams))}`);
+
+      navigate(
+        `/teams/result?sessionId=${result.sessionId}&teams=${encodeURIComponent(
+          JSON.stringify(result.teams)
+        )}`
+      );
     } catch (error: any) {
-      message.error(error.response?.data?.message || 'Falha ao salvar times');
+      message.error(error.response?.data?.message || "Falha ao salvar times");
     } finally {
       setSaving(false);
     }
@@ -168,160 +295,198 @@ export const PotSelection: React.FC = () => {
     setPlayerQuery("");
   };
 
-  if (loading) return <div style={{ padding: 24, color: '#fff' }}>Carregando jogadores...</div>;
-  if (error) return <Alert message="Erro" description={error} type="error" style={{ margin: 24 }} />;
+  if (loading) {
+    return (
+      <div className="teamgen-loading-state">
+        <Spin />
+
+        <span>Carregando jogadores...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert
+        message="Erro"
+        description={error}
+        type="error"
+        className="teamgen-error"
+      />
+    );
+  }
 
   return (
-    <div style={{
-      padding: isMobile ? 8 : 'clamp(12px, 2vw, 24px)',
-      maxWidth: 1400,
-      margin: '0 auto',
-      width: '100%',
-      boxSizing: 'border-box',
-      height: 'calc(100vh - 90px)',
-      display: 'flex',
-      flexDirection: 'column',
-      overflow: 'hidden',
-    }}>
-      {/* Barra Superior */}
-      <div style={{
-        backgroundColor: '#1a1a1a',
-        border: '1px solid #333',
-        borderRadius: 8,
-        padding: isMobile ? 12 : 16,
-        marginBottom: 16,
-        flexShrink: 0,
-      }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <label style={{ marginRight: 4, color: '#ccc', fontWeight: 600 }}>Times:</label>
-              <InputNumber min={1} value={teamCount} onChange={(v) => setTeamCount(Number(v || 1))} style={{ width: 80 }} />
+    <div className="pot-workspace">
+      <div className="teamgen-panel teamgen-topbar">
+        <div className="teamgen-topbar-row">
+          <div className="teamgen-controls">
+            <div className="teamgen-control">
+              <label>Times:</label>
+
+              <InputNumber
+                min={1}
+                value={teamCount}
+                onChange={(value) => setTeamCount(Number(value || 1))}
+                className="teamgen-number"
+              />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <label style={{ marginRight: 4, color: '#ccc', fontWeight: 600 }}>Jogadores/time:</label>
-              <InputNumber min={2} value={playersPerTeam} onChange={(v) => setPlayersPerTeam(Number(v || 2))} style={{ width: 100 }} />
+
+            <div className="teamgen-control">
+              <label>Jogadores/time:</label>
+
+              <InputNumber
+                min={2}
+                value={playersPerTeam}
+                onChange={(value) => setPlayersPerTeam(Number(value || 2))}
+                className="teamgen-number wide"
+              />
             </div>
           </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <Button onClick={handleGenerate} disabled={!areAllPotesComplete} type="primary" size={isMobile ? 'small' : 'middle'}>
+
+          <div className="teamgen-actions">
+            <Button
+              onClick={handleGenerate}
+              disabled={!areAllPotesComplete}
+              type="primary"
+              size={isMobile ? "small" : "middle"}
+            >
               Embaralhar Times
             </Button>
+
             {generatedTeams.length > 0 && (
-              <Button onClick={handleSave} loading={saving} type="primary" size={isMobile ? 'small' : 'middle'}
-                style={{ backgroundColor: '#2f9bff', borderColor: '#2f9bff', fontWeight: 'bold' }}>
+              <Button
+                onClick={handleSave}
+                loading={saving}
+                type="primary"
+                size={isMobile ? "small" : "middle"}
+                className="teamgen-button-info"
+              >
                 Salvar
               </Button>
             )}
-            <Button onClick={resetAll} size={isMobile ? 'small' : 'middle'}>Limpar</Button>
+
+            <Button
+              onClick={resetAll}
+              size={isMobile ? "small" : "middle"}
+              className="teamgen-button-danger"
+            >
+              Limpar
+            </Button>
           </div>
+        </div>
+
+        <div className="teamgen-meta">
+          {potes.length} potes • {teamCount} jogadores por pote • Pote atual:{" "}
+          <b>{currentPoteIndex + 1}</b>
         </div>
       </div>
 
-      {/* Área de seleção com scroll */}
-      <div style={{
-        flex: 1,
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#1a1a1a',
-        border: '1px solid #333',
-        borderRadius: 8,
-        padding: isMobile ? 12 : 16,
-      }}>
-        {/* Cabeçalho do pote atual */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexShrink: 0 }}>
-          <Space size={[4, 4]} wrap>
-            <Button onClick={goToPrevPote} disabled={currentPoteIndex === 0} size={isMobile ? 'small' : 'middle'}>Anterior</Button>
-            <Button onClick={goToNextPote} disabled={!isCurrentPoteComplete || currentPoteIndex === potes.length - 1} type="primary" size={isMobile ? 'small' : 'middle'}>Próximo</Button>
-          </Space>
+      <div className="teamgen-panel pot-selection-panel">
+        <div className="pot-nav-row">
+          <div className="pot-nav-buttons">
+            <Button
+              onClick={goToPrevPote}
+              disabled={currentPoteIndex === 0}
+              size={isMobile ? "small" : "middle"}
+            >
+              Anterior
+            </Button>
+
+            <Button
+              onClick={goToNextPote}
+              disabled={
+                !isCurrentPoteComplete || currentPoteIndex === potes.length - 1
+              }
+              type="primary"
+              size={isMobile ? "small" : "middle"}
+            >
+              Próximo
+            </Button>
+          </div>
+
+          <Text className="teamgen-meta">
+            Selecionados neste pote: <b>{currentPote.length}</b> /{" "}
+            <b>{teamCount}</b>
+          </Text>
         </div>
 
-        {/* Navegação entre potes */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', flexShrink: 0 }}>
-          {potes.map((_, index) => {
-            const disabled = !areAllPotesComplete && index !== currentPoteIndex && potes[index].length < teamCount;
+        <div className="pot-tabs">
+          {potes.map((pote, index) => {
+            const disabled =
+              !areAllPotesComplete &&
+              index !== currentPoteIndex &&
+              pote.length < teamCount;
+
             return (
               <Button
                 key={index}
-                type={currentPoteIndex === index ? 'primary' : 'default'}
-                onClick={() => setCurrentPoteIndex(index)}
+                type={currentPoteIndex === index ? "primary" : "default"}
+                onClick={() => {
+                  setCurrentPoteIndex(index);
+                  setPlayerQuery("");
+                }}
                 disabled={disabled}
                 size="small"
               >
-                Pote {index + 1} ({potes[index].length}/{teamCount})
+                Pote {index + 1} ({pote.length}/{teamCount})
               </Button>
             );
           })}
         </div>
 
-        {/* Busca */}
         <Input
           placeholder="Buscar jogador..."
           value={playerQuery}
-          onChange={(e) => setPlayerQuery(e.target.value)}
-          style={{ marginBottom: 12, flexShrink: 0 }}
+          onChange={(event) => setPlayerQuery(event.target.value)}
+          className="pot-search"
         />
 
-        {/* Lista de jogadores com scroll */}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
-          <Row gutter={[12, 12]}>
-            {filteredPlayers.map(player => {
-              const isSelected = potes[currentPoteIndex]?.includes(player.id);
+        <div className="teamgen-scroll-area">
+          <div className="teamgen-teams-grid compact">
+            {filteredPlayers.map((player) => {
+              const isSelected = currentPote.includes(player.id);
               const disabled = isCurrentPoteComplete && !isSelected;
+
               return (
-                <Col xs={12} sm={8} md={6} lg={4} key={player.id}>
-                  <Checkbox
-                    checked={isSelected}
-                    onChange={() => togglePlayer(player.id)}
-                    disabled={disabled}
-                    style={{ color: disabled ? '#666' : '#ccc' }}
-                  >
-                    {player.name}
-                  </Checkbox>
-                </Col>
+                <Checkbox
+                  key={player.id}
+                  checked={isSelected}
+                  onChange={() => togglePlayer(player.id)}
+                  disabled={disabled}
+                  className="teamgen-player-checkbox"
+                >
+                  {player.name}
+                </Checkbox>
               );
             })}
+
             {filteredPlayers.length === 0 && (
-              <Col span={24}>
-                <Text style={{ color: '#aaa' }}>Nenhum jogador disponível.</Text>
-              </Col>
+              <div className="teamgen-empty">
+                Nenhum jogador disponível.
+              </div>
             )}
-          </Row>
+          </div>
         </div>
       </div>
 
-      {/* Times gerados */}
       {generatedTeams.length > 0 && (
-        <div style={{
-          backgroundColor: '#1a1a1a',
-          border: '1px solid #333',
-          borderRadius: 8,
-          padding: isMobile ? 12 : 16,
-          marginTop: 16,
-          flexShrink: 0,
-          maxHeight: '30vh',
-          overflowY: 'auto',
-        }}>
-          <h3 style={{ color: '#01ff69', margin: '0 0 12px 0', fontSize: 'clamp(16px, 2.5vw, 20px)' }}>Times Gerados</h3>
-          <Row gutter={[12, 12]}>
-            {generatedTeams.map(team => (
-              <Col xs={24} sm={12} md={8} key={team.teamIndex}>
-                <Card
-                  type="inner"
-                  title={<span style={{ color: '#fff' }}>Time {team.teamIndex}</span>}
-                  style={{ backgroundColor: '#262626', border: '1px solid #444' }}
-                  styles={{ body: { padding: 12 } }}
-                >
-                  {team.players.map(player => (
-                    <div key={player.id} style={{ color: '#ccc', fontSize: 14, marginBottom: 4 }}>
-                      {player.name} <span style={{ color: '#888', fontSize: 12 }}>({player.sex})</span>
-                    </div>
-                  ))}
-                </Card>
-              </Col>
+        <div className="teamgen-panel pot-generated-panel">
+          <h3 className="pot-generated-title">Times Gerados</h3>
+
+          <div className="pot-generated-grid">
+            {generatedTeams.map((team) => (
+              <div key={team.teamIndex} className="pot-team-card">
+                <div className="pot-team-title">Time {team.teamIndex}</div>
+
+                {team.players.map((player) => (
+                  <div key={player.id} className="pot-player">
+                    {player.name} <span>({player.sex})</span>
+                  </div>
+                ))}
+              </div>
             ))}
-          </Row>
+          </div>
         </div>
       )}
     </div>

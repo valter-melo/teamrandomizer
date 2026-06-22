@@ -1581,3 +1581,2403 @@ a:hover { color: var(--primary-hover); }
     justify-self: flex-start;
   }
 }
+
+/* ============================================================
+   TELA: DESEMPENHO DOS ATLETAS
+   ============================================================ */
+
+.performance-page {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: clamp(12px, 3vw, 24px);
+  box-sizing: border-box;
+}
+
+.performance-title.ant-typography {
+  color: var(--primary);
+  margin-bottom: var(--s-5);
+  font-size: clamp(22px, 5vw, 32px);
+  font-weight: 900;
+}
+
+.performance-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-4);
+  margin-bottom: var(--s-5);
+}
+
+.performance-stat-card {
+  --stat-color: var(--primary);
+  height: 100%;
+  border-left: 4px solid var(--stat-color) !important;
+}
+
+.performance-stat-card.stat-primary {
+  --stat-color: var(--primary);
+}
+
+.performance-stat-card.stat-info {
+  --stat-color: var(--info);
+}
+
+.performance-stat-card.stat-warning {
+  --stat-color: var(--warn);
+}
+
+.performance-stat-card.stat-danger {
+  --stat-color: var(--danger);
+}
+
+.performance-stat-title {
+  color: var(--text-2);
+  font-size: var(--fs-2);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.performance-stat-card .ant-statistic-content {
+  color: var(--stat-color) !important;
+  font-size: clamp(28px, 5vw, 38px) !important;
+  font-weight: 950 !important;
+}
+
+.performance-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-bottom: var(--s-4);
+}
+
+.performance-search {
+  width: clamp(220px, 40vw, 280px);
+}
+
+.performance-select {
+  width: 190px;
+}
+
+.performance-ranking-card.ant-card {
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+  overflow: hidden;
+}
+
+.performance-ranking-card .ant-card-body {
+  padding: 0;
+}
+
+.performance-section-title {
+  color: var(--primary);
+  font-size: clamp(17px, 3vw, 21px);
+  font-weight: 950;
+}
+
+.performance-rank {
+  font-weight: 950;
+  color: var(--text-2);
+}
+
+.performance-rank.top-1 {
+  color: var(--warn);
+}
+
+.performance-rank.top-2 {
+  color: #9ca3af;
+}
+
+.performance-rank.top-3 {
+  color: #cd7f32;
+}
+
+.performance-player-name {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.overall-tag.ant-tag,
+.level-tag {
+  margin: 0;
+  border-radius: 999px !important;
+  padding: 3px 10px;
+  font-weight: 900 !important;
+}
+
+.overall-high {
+  color: var(--primary);
+  background: rgba(1, 255, 105, 0.12);
+  border-color: rgba(1, 255, 105, 0.32);
+}
+
+.overall-medium {
+  color: var(--warn);
+  background: rgba(255, 159, 26, 0.12);
+  border-color: rgba(255, 159, 26, 0.32);
+}
+
+.overall-low {
+  color: var(--danger);
+  background: rgba(255, 77, 79, 0.12);
+  border-color: rgba(255, 77, 79, 0.32);
+}
+
+.skill-score {
+  display: inline-block;
+  min-width: 28px;
+  text-align: center;
+  padding: 3px 8px;
+  border-radius: var(--r-xs);
+  font-weight: 900;
+}
+
+.skill-5 {
+  color: var(--primary);
+  background: rgba(1, 255, 105, 0.12);
+}
+
+.skill-4 {
+  color: var(--info);
+  background: rgba(47, 155, 255, 0.12);
+}
+
+.skill-3 {
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.12);
+}
+
+.skill-2 {
+  color: var(--warn);
+  background: rgba(255, 159, 26, 0.12);
+}
+
+.skill-1 {
+  color: var(--danger);
+  background: rgba(255, 77, 79, 0.12);
+}
+
+.skill-0,
+.skill-empty {
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.level-tag {
+  display: inline-block;
+  font-size: var(--fs-1);
+}
+
+.level-elite {
+  color: var(--warn);
+  background: rgba(255, 159, 26, 0.12);
+  border: 1px solid rgba(255, 159, 26, 0.32);
+}
+
+.level-muito-alto {
+  color: var(--info);
+  background: rgba(47, 155, 255, 0.12);
+  border: 1px solid rgba(47, 155, 255, 0.32);
+}
+
+.level-alto {
+  color: var(--primary);
+  background: rgba(1, 255, 105, 0.12);
+  border: 1px solid rgba(1, 255, 105, 0.32);
+}
+
+.level-medio {
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.32);
+}
+
+.level-a-desenvolver,
+.level-iniciante {
+  color: var(--danger);
+  background: rgba(255, 77, 79, 0.12);
+  border: 1px solid rgba(255, 77, 79, 0.32);
+}
+
+.performance-progress {
+  width: 80px;
+  max-width: 100%;
+  height: 8px;
+  background: rgba(47, 155, 255, 0.14);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.performance-progress-fill {
+  height: 100%;
+  width: var(--progress);
+  background: linear-gradient(90deg, var(--info), var(--primary));
+  border-radius: 999px;
+}
+
+.performance-evolution-btn.ant-btn {
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.performance-evolution-btn.ant-btn:hover {
+  background: rgba(1, 255, 105, 0.1) !important;
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+.performance-modal-title {
+  color: var(--primary);
+  font-weight: 900;
+}
+
+.performance-modal-close {
+  color: var(--primary);
+}
+
+.performance-chart-wrapper {
+  width: 100%;
+  height: clamp(260px, 50vw, 420px);
+}
+
+.performance-empty-chart {
+  text-align: center;
+  padding: 40px var(--s-4);
+  color: var(--text-2);
+}
+
+@media (max-width: 900px) {
+  .performance-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .performance-search,
+  .performance-select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .performance-page {
+    padding: 10px;
+  }
+
+  .performance-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   TELA: SKILLS
+   ============================================================ */
+
+.skills-page {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: clamp(12px, 3vw, 24px);
+  box-sizing: border-box;
+  color: var(--text);
+}
+
+.skills-header {
+  margin-bottom: var(--s-5);
+}
+
+.skills-kicker {
+  display: block;
+  color: var(--muted);
+  font-size: var(--fs-1);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--s-1);
+}
+
+.skills-title.ant-typography {
+  color: var(--primary);
+  margin: 0;
+  font-size: clamp(24px, 5vw, 32px);
+  font-weight: 950;
+  line-height: 1.12;
+}
+
+.skills-subtitle {
+  display: block;
+  margin-top: var(--s-2);
+  color: var(--text-2);
+  font-size: var(--fs-2);
+}
+
+.skills-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.skills-card.ant-card {
+  background:
+    radial-gradient(circle at top left, rgba(1, 255, 105, 0.065), transparent 34%),
+    var(--surface) !important;
+  border: 1px solid var(--border-primary) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+
+.skills-card .ant-card-head {
+  border-bottom: 1px solid var(--border-primary) !important;
+}
+
+.skills-card .ant-card-body {
+  padding: clamp(12px, 3vw, 24px);
+}
+
+.skills-section-title {
+  color: var(--primary);
+  font-size: clamp(17px, 3vw, 21px);
+  font-weight: 950;
+}
+
+.skills-create-form .ant-form-item {
+  margin-bottom: 0;
+}
+
+.skills-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 150px;
+  align-items: end;
+  gap: var(--s-3);
+}
+
+.skills-submit .action-btn-compact,
+.skills-submit button {
+  width: 100%;
+  min-height: 38px;
+}
+
+.skills-table-card .ant-card-body {
+  padding: 0;
+}
+
+.skill-name {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.skill-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 62px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: var(--fs-1);
+  font-weight: 900;
+}
+
+.skill-status.active {
+  color: var(--primary);
+  background: rgba(1, 255, 105, 0.12);
+  border: 1px solid rgba(1, 255, 105, 0.32);
+}
+
+.skill-status.inactive {
+  color: var(--danger);
+  background: rgba(255, 77, 79, 0.12);
+  border: 1px solid rgba(255, 77, 79, 0.32);
+}
+
+.skills-empty {
+  padding: 28px var(--s-4);
+  text-align: center;
+  color: var(--text-2);
+}
+
+@media (max-width: 640px) {
+  .skills-page {
+    padding: 10px;
+  }
+
+  .skills-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   TELA: POSIÇÕES
+   ============================================================ */
+
+.positions-page {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: clamp(12px, 3vw, 24px);
+  box-sizing: border-box;
+  color: var(--text);
+}
+
+.positions-header {
+  margin-bottom: var(--s-5);
+}
+
+.positions-kicker {
+  display: block;
+  color: var(--muted);
+  font-size: var(--fs-1);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--s-1);
+}
+
+.positions-title.ant-typography {
+  color: var(--primary);
+  margin: 0;
+  font-size: clamp(24px, 5vw, 32px);
+  font-weight: 950;
+  line-height: 1.12;
+}
+
+.positions-subtitle {
+  display: block;
+  margin-top: var(--s-2);
+  color: var(--text-2);
+  font-size: var(--fs-2);
+}
+
+.positions-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.positions-card.ant-card {
+  background:
+    radial-gradient(circle at top left, rgba(1, 255, 105, 0.065), transparent 34%),
+    var(--surface) !important;
+  border: 1px solid var(--border-primary) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+
+.positions-card .ant-card-head {
+  border-bottom: 1px solid var(--border-primary) !important;
+}
+
+.positions-card .ant-card-body {
+  padding: clamp(12px, 3vw, 24px);
+}
+
+.positions-section-title {
+  color: var(--primary);
+  font-size: clamp(17px, 3vw, 21px);
+  font-weight: 950;
+}
+
+.positions-create-form .ant-form-item {
+  margin-bottom: 0;
+}
+
+.positions-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 150px;
+  align-items: end;
+  gap: var(--s-3);
+}
+
+.positions-submit .action-btn-compact,
+.positions-submit button {
+  width: 100%;
+  min-height: 38px;
+}
+
+.positions-table-card .ant-card-body {
+  padding: 0;
+}
+
+.position-name {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.position-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 62px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: var(--fs-1);
+  font-weight: 900;
+}
+
+.position-status.active {
+  color: var(--primary);
+  background: rgba(1, 255, 105, 0.12);
+  border: 1px solid rgba(1, 255, 105, 0.32);
+}
+
+.position-status.inactive {
+  color: var(--danger);
+  background: rgba(255, 77, 79, 0.12);
+  border: 1px solid rgba(255, 77, 79, 0.32);
+}
+
+.positions-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.positions-action {
+  font-size: var(--fs-1);
+  white-space: nowrap;
+}
+
+.positions-empty {
+  padding: 28px var(--s-4);
+  text-align: center;
+  color: var(--text-2);
+}
+
+.positions-modal-title {
+  color: var(--primary);
+  font-weight: 900;
+}
+
+.positions-modal-close {
+  color: var(--primary);
+}
+
+.positions-modal .ant-modal-content {
+  background: var(--surface) !important;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--r-lg) !important;
+}
+
+.positions-modal .ant-modal-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.positions-modal .ant-modal-body {
+  background: var(--surface) !important;
+}
+
+.positions-modal .ant-radio-wrapper {
+  color: var(--text);
+}
+
+@media (max-width: 640px) {
+  .positions-page {
+    padding: 10px;
+  }
+
+  .positions-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .positions-actions {
+    justify-content: flex-start;
+  }
+}
+
+/* ============================================================
+   TELA: JOGADORES
+   ============================================================ */
+
+.players-page {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: clamp(12px, 3vw, 24px);
+  box-sizing: border-box;
+  color: var(--text);
+}
+
+.players-header {
+  margin-bottom: var(--s-5);
+}
+
+.players-kicker {
+  display: block;
+  color: var(--muted);
+  font-size: var(--fs-1);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--s-1);
+}
+
+.players-title.ant-typography {
+  color: var(--primary);
+  margin: 0;
+  font-size: clamp(24px, 5vw, 32px);
+  font-weight: 950;
+  line-height: 1.12;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.players-subtitle {
+  display: block;
+  margin-top: var(--s-2);
+  color: var(--text-2);
+  font-size: var(--fs-2);
+}
+
+.players-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.players-card.ant-card {
+  background:
+    radial-gradient(circle at top left, rgba(1, 255, 105, 0.065), transparent 34%),
+    var(--surface) !important;
+  border: 1px solid var(--border-primary) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+
+.players-card .ant-card-head {
+  border-bottom: 1px solid var(--border-primary) !important;
+}
+
+.players-card .ant-card-body {
+  padding: clamp(12px, 3vw, 24px);
+}
+
+.players-table-card .ant-card-body {
+  padding: 0;
+}
+
+.players-section-title {
+  color: var(--primary);
+  font-size: clamp(17px, 3vw, 21px);
+  font-weight: 950;
+}
+
+.players-form .ant-form-item {
+  margin-bottom: var(--s-3);
+}
+
+.players-sex-group.ant-radio-group {
+  width: 100%;
+  display: flex;
+}
+
+.players-sex-group .ant-radio-button-wrapper {
+  flex: 1;
+  text-align: center;
+  font-weight: 800;
+}
+
+.players-full-control {
+  width: 100%;
+}
+
+.players-submit .action-btn-compact,
+.players-submit button {
+  width: 100%;
+  min-height: 38px;
+}
+
+.players-refresh-btn {
+  font-size: var(--fs-2);
+  white-space: nowrap;
+}
+
+.player-name {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.player-sex-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: var(--fs-1);
+  font-weight: 950;
+}
+
+.player-sex-tag.male {
+  color: var(--info);
+  background: rgba(47, 155, 255, 0.12);
+  border: 1px solid rgba(47, 155, 255, 0.32);
+}
+
+.player-sex-tag.female {
+  color: #ff7ab6;
+  background: rgba(255, 122, 182, 0.12);
+  border: 1px solid rgba(255, 122, 182, 0.32);
+}
+
+.player-position-tag,
+.player-position-empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 120px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: var(--fs-1);
+  font-weight: 900;
+}
+
+.player-position-tag {
+  color: var(--info);
+  background: rgba(47, 155, 255, 0.12);
+  border: 1px solid rgba(47, 155, 255, 0.32);
+}
+
+.player-position-empty {
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.player-average {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: var(--fs-1);
+  font-weight: 950;
+}
+
+.player-average.high {
+  color: var(--primary);
+  background: rgba(1, 255, 105, 0.12);
+  border: 1px solid rgba(1, 255, 105, 0.32);
+}
+
+.player-average.medium {
+  color: var(--warn);
+  background: rgba(255, 159, 26, 0.12);
+  border: 1px solid rgba(255, 159, 26, 0.32);
+}
+
+.player-average.low {
+  color: var(--danger);
+  background: rgba(255, 77, 79, 0.12);
+  border: 1px solid rgba(255, 77, 79, 0.32);
+}
+
+.player-average.empty {
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.players-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.players-table-action {
+  height: 32px;
+  line-height: 32px;
+  padding: 0 8px;
+  font-size: var(--fs-1);
+  white-space: nowrap;
+}
+
+.players-empty {
+  padding: 28px var(--s-4);
+  text-align: center;
+  color: var(--text-2);
+}
+
+.players-modal-title {
+  color: var(--primary);
+  font-weight: 900;
+}
+
+.players-modal-close {
+  color: var(--primary);
+}
+
+.players-modal .ant-modal-content {
+  background: var(--surface) !important;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--r-lg) !important;
+}
+
+.players-modal .ant-modal-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.players-modal .ant-modal-body {
+  background: var(--surface) !important;
+}
+
+.players-modal .ant-radio-wrapper {
+  color: var(--text);
+}
+
+.players-priority-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.players-priority-item {
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  gap: var(--s-2);
+  align-items: center;
+  padding: var(--s-2);
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.players-priority-name {
+  color: var(--text-2);
+  font-weight: 800;
+  font-size: var(--fs-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .players-page {
+    padding: 10px;
+  }
+
+  .players-title.ant-typography {
+    align-items: flex-start;
+  }
+
+  .players-actions {
+    justify-content: flex-start;
+  }
+
+  .players-priority-item {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   TELA: GERAÇÃO DE TIMES
+   ============================================================ */
+
+.team-generator-page {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: clamp(12px, 3vw, 24px);
+  box-sizing: border-box;
+  color: var(--text);
+}
+
+.team-generator-header {
+  margin-bottom: var(--s-5);
+}
+
+.team-generator-kicker {
+  display: block;
+  color: var(--muted);
+  font-size: var(--fs-1);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--s-1);
+}
+
+.team-generator-title.ant-typography {
+  color: var(--primary);
+  margin: 0;
+  font-size: clamp(24px, 5vw, 32px);
+  font-weight: 950;
+  line-height: 1.12;
+}
+
+.team-generator-subtitle {
+  display: block;
+  margin-top: var(--s-2);
+  color: var(--text-2);
+  font-size: var(--fs-2);
+}
+
+.team-generator-tabs .ant-tabs-nav {
+  margin-bottom: var(--s-4);
+}
+
+.team-generator-tabs .ant-tabs-nav::before {
+  border-bottom-color: var(--border-primary) !important;
+}
+
+.team-generator-tabs .ant-tabs-tab {
+  color: var(--text-2);
+  font-weight: 900;
+}
+
+.team-generator-tabs .ant-tabs-tab:hover {
+  color: var(--primary);
+}
+
+.team-generator-tabs .ant-tabs-tab-active .team-generator-tab-label {
+  color: var(--primary);
+}
+
+.team-generator-tabs .ant-tabs-ink-bar {
+  background: var(--primary) !important;
+}
+
+.team-generator-tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: clamp(14px, 2.5vw, 18px);
+  font-weight: 900;
+}
+
+/* Área geral */
+
+.teamgen-workspace,
+.pot-workspace {
+  width: 100%;
+  height: calc(100vh - 230px);
+  min-height: 560px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.teamgen-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.teamgen-panel {
+  background:
+    radial-gradient(circle at top left, rgba(1, 255, 105, 0.055), transparent 34%),
+    var(--surface) !important;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-2);
+}
+
+/* Barra superior */
+
+.teamgen-topbar {
+  flex-shrink: 0;
+  padding: var(--s-4);
+  margin-bottom: var(--s-4);
+}
+
+.teamgen-topbar-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+.teamgen-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+.teamgen-control {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.teamgen-control label {
+  color: var(--text-2);
+  font-weight: 800;
+  font-size: var(--fs-2);
+}
+
+.teamgen-number {
+  width: 90px;
+}
+
+.teamgen-number.wide {
+  width: 110px;
+}
+
+.teamgen-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.teamgen-meta {
+  margin-top: var(--s-2);
+  color: var(--text-2);
+  font-size: var(--fs-2);
+}
+
+.teamgen-meta b {
+  color: var(--primary);
+}
+
+/* Botões auxiliares */
+
+.teamgen-button-outline.ant-btn {
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.teamgen-button-outline.ant-btn:hover {
+  background: rgba(1, 255, 105, 0.1) !important;
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+.teamgen-button-danger.ant-btn {
+  border-color: var(--danger);
+  color: var(--danger);
+  font-weight: 800;
+}
+
+.teamgen-button-danger.ant-btn:hover {
+  background: rgba(255, 77, 79, 0.1) !important;
+  border-color: var(--danger) !important;
+  color: var(--danger) !important;
+}
+
+.teamgen-button-info.ant-btn {
+  background: var(--info);
+  border-color: var(--info);
+  color: #fff;
+  font-weight: 900;
+}
+
+.teamgen-button-info.ant-btn:hover {
+  background: #55adff !important;
+  border-color: #55adff !important;
+  color: #fff !important;
+}
+
+/* Steps */
+
+.teamgen-step-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--s-4);
+  display: flex;
+  flex-direction: column;
+}
+
+.teamgen-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-bottom: var(--s-3);
+  flex-shrink: 0;
+}
+
+.teamgen-panel-title {
+  color: var(--primary);
+  margin: 0;
+  font-size: clamp(17px, 3vw, 22px);
+  font-weight: 950;
+}
+
+.teamgen-count-tag.ant-tag {
+  margin: 0;
+  border-radius: 999px !important;
+  padding: 4px 10px;
+  background: rgba(1, 255, 105, 0.12);
+  border-color: rgba(1, 255, 105, 0.32);
+  color: var(--primary);
+  font-weight: 950 !important;
+}
+
+.teamgen-step-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--s-3);
+  margin-bottom: var(--s-3);
+  flex-shrink: 0;
+}
+
+.teamgen-scroll-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.teamgen-player-checkbox.ant-checkbox-wrapper {
+  width: 100%;
+  color: var(--text-2) !important;
+  font-weight: 700;
+}
+
+.teamgen-player-checkbox.ant-checkbox-wrapper-checked {
+  color: var(--primary) !important;
+}
+
+.teamgen-empty {
+  padding: 28px var(--s-4);
+  text-align: center;
+  color: var(--text-2);
+}
+
+/* Step de skills */
+
+.teamgen-skills-layout {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: var(--s-4);
+  min-height: 0;
+}
+
+.teamgen-skill-panel,
+.teamgen-rules-panel {
+  padding: var(--s-4);
+}
+
+.teamgen-skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  max-height: 44vh;
+  overflow: auto;
+  margin-top: var(--s-3);
+}
+
+.teamgen-skill-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+  flex-wrap: wrap;
+}
+
+.teamgen-skill-info {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.teamgen-skill-name {
+  color: var(--text);
+  font-weight: 900;
+}
+
+.teamgen-skill-weight {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.teamgen-skill-weight span,
+.teamgen-rule-label {
+  color: var(--text-2);
+  font-weight: 800;
+  font-size: var(--fs-2);
+}
+
+.teamgen-rules-title {
+  color: var(--primary);
+  margin: 0;
+  font-size: clamp(17px, 3vw, 22px);
+  font-weight: 950;
+}
+
+.teamgen-rules-section {
+  border-top: 1px solid var(--border);
+  margin-top: var(--s-3);
+  padding-top: var(--s-3);
+}
+
+.teamgen-rule-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--s-3);
+}
+
+.teamgen-required-positions {
+  margin-top: var(--s-2);
+}
+
+.teamgen-required-positions .ant-select {
+  width: 100%;
+  margin-top: var(--s-2);
+}
+
+/* Resultado */
+
+.teamgen-result-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--s-4);
+  display: flex;
+  flex-direction: column;
+}
+
+.teamgen-result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--s-3);
+  flex-shrink: 0;
+}
+
+.teamgen-result-title {
+  color: var(--primary);
+  margin: 0;
+  font-size: clamp(19px, 3vw, 26px);
+  font-weight: 950;
+}
+
+.teamgen-session {
+  color: var(--primary);
+  font-weight: 800;
+  font-size: var(--fs-2);
+  overflow-wrap: anywhere;
+}
+
+.teamgen-session span {
+  color: var(--text);
+}
+
+.teamgen-generated-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--s-3);
+  flex-shrink: 0;
+}
+
+.teamgen-teams-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Times gerados */
+
+.teamgen-teams-grid {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.teamgen-teams-grid.compact {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.teamgen-teams-grid.wide {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.teamgen-team-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--s-3);
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.teamgen-team-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(1, 255, 105, 0.35);
+}
+
+.teamgen-team-card.drag-over {
+  border: 2px dashed var(--primary);
+  background: rgba(1, 255, 105, 0.06);
+}
+
+.teamgen-team-title {
+  color: var(--primary);
+  font-size: var(--fs-4);
+  font-weight: 950;
+  margin-bottom: var(--s-2);
+}
+
+.teamgen-team-title span {
+  color: var(--text-2);
+  font-size: var(--fs-1);
+  font-weight: 700;
+}
+
+.teamgen-team-players {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.teamgen-player-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 7px 9px;
+  background: var(--surface-3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--r-xs);
+  cursor: grab;
+}
+
+.teamgen-player-row.disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.teamgen-player-name {
+  color: var(--text);
+  font-weight: 800;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teamgen-player-meta {
+  color: var(--text-2);
+  font-size: var(--fs-1);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+/* Estados */
+
+.teamgen-loading-state {
+  flex: 1;
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  color: var(--text-2);
+  font-weight: 800;
+}
+
+.teamgen-empty-state {
+  flex: 1;
+  padding: 40px var(--s-4);
+  text-align: center;
+  color: var(--text-2);
+}
+
+.teamgen-empty-icon {
+  font-size: 48px;
+  margin-bottom: var(--s-3);
+}
+
+.teamgen-empty-state h3 {
+  color: var(--text);
+  margin-bottom: var(--s-2);
+}
+
+/* Modal ajuste de times */
+
+.teamgen-adjust-modal {
+  top: 0 !important;
+  max-width: 100vw;
+  padding-bottom: 0;
+}
+
+.teamgen-adjust-modal .ant-modal-content {
+  height: 100vh;
+  border-radius: 0 !important;
+  background: var(--bg) !important;
+}
+
+.teamgen-adjust-modal .ant-modal-header {
+  background: var(--bg) !important;
+  border-bottom: 1px solid var(--border-primary) !important;
+}
+
+.teamgen-adjust-modal .ant-modal-body {
+  height: calc(100vh - 86px);
+  padding: clamp(12px, 2vw, 24px);
+  overflow: auto;
+  background: var(--bg) !important;
+}
+
+.teamgen-adjust-modal-title {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.teamgen-adjust-modal-title span {
+  color: var(--primary);
+  font-size: clamp(20px, 3vw, 28px);
+  font-weight: 950;
+}
+
+/* Potes */
+
+.pot-selection-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--s-4);
+  display: flex;
+  flex-direction: column;
+}
+
+.pot-nav-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-3);
+  margin-bottom: var(--s-3);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.pot-nav-buttons,
+.pot-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.pot-tabs {
+  margin-bottom: var(--s-3);
+  flex-shrink: 0;
+}
+
+.pot-search {
+  margin-bottom: var(--s-3);
+  flex-shrink: 0;
+}
+
+.pot-generated-panel {
+  flex-shrink: 0;
+  max-height: 30vh;
+  overflow: auto;
+  padding: var(--s-4);
+  margin-top: var(--s-4);
+}
+
+.pot-generated-title {
+  color: var(--primary);
+  margin: 0 0 var(--s-3);
+  font-size: clamp(17px, 3vw, 22px);
+  font-weight: 950;
+}
+
+.pot-generated-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--s-3);
+}
+
+.pot-team-card {
+  background: var(--surface-3);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-md);
+  padding: var(--s-3);
+}
+
+.pot-team-title {
+  color: var(--text);
+  font-weight: 950;
+  margin-bottom: var(--s-2);
+}
+
+.pot-player {
+  color: var(--text-2);
+  font-size: var(--fs-2);
+  margin-bottom: 4px;
+}
+
+.pot-player span {
+  color: var(--muted);
+  font-size: var(--fs-1);
+}
+
+.teamgen-error {
+  margin: var(--s-4);
+}
+
+/* Responsivo */
+
+@media (max-width: 900px) {
+  .teamgen-workspace,
+  .pot-workspace {
+    height: auto;
+    min-height: calc(100vh - 220px);
+  }
+
+  .teamgen-skills-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .teamgen-step-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .teamgen-control {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .teamgen-number,
+  .teamgen-number.wide {
+    width: 120px;
+  }
+}
+
+@media (max-width: 560px) {
+  .team-generator-page {
+    padding: 10px;
+  }
+
+  .teamgen-topbar,
+  .teamgen-step-panel,
+  .teamgen-result-panel,
+  .teamgen-skill-panel,
+  .teamgen-rules-panel,
+  .pot-selection-panel,
+  .pot-generated-panel {
+    padding: var(--s-3);
+  }
+
+  .teamgen-actions,
+  .teamgen-actions .ant-btn,
+  .pot-nav-buttons .ant-btn {
+    width: 100%;
+  }
+
+  .teamgen-actions .ant-btn {
+    justify-content: center;
+  }
+
+  .teamgen-adjust-modal-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .teamgen-adjust-modal-title .teamgen-actions {
+    width: 100%;
+  }
+}
+
+/* ============================================================
+   COMPONENTE: GERAÇÃO MANUAL DE TIMES / CAMPEONATO
+   ============================================================ */
+
+.manual-teams-page {
+  width: 100%;
+  max-width: 1400px;
+  height: calc(100vh - 90px);
+  margin: 0 auto;
+  padding: clamp(12px, 3vw, 24px);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--text);
+}
+
+.manual-teams-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-3);
+  margin-bottom: var(--s-4);
+  flex-shrink: 0;
+}
+
+.manual-teams-title.ant-typography {
+  color: var(--primary);
+  margin: 0;
+  font-size: clamp(20px, 4vw, 28px);
+  font-weight: 950;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.manual-teams-counter.ant-badge .ant-badge-count {
+  background: var(--primary);
+  color: #000;
+  font-weight: 950;
+  box-shadow: none;
+}
+
+/* ============================================================
+   GRID DESKTOP
+   ============================================================ */
+
+.manual-teams-grid {
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.manual-teams-grid.ant-row {
+  flex: 1;
+  min-height: 0;
+}
+
+.manual-teams-grid > .ant-col {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+}
+
+.manual-teams-grid > .ant-col > .manual-teams-card {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+/* ============================================================
+   CARDS PRINCIPAIS
+   ============================================================ */
+
+.manual-teams-card.ant-card {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(circle at top left, rgba(1, 255, 105, 0.055), transparent 34%),
+    var(--surface) !important;
+  border: 1px solid var(--border-primary) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+
+.manual-teams-card .ant-card-head {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-primary) !important;
+}
+
+.manual-teams-card .ant-card-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: var(--s-4);
+}
+
+.manual-teams-list-card .ant-card-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 !important;
+}
+
+.manual-teams-card-title {
+  color: var(--primary);
+  font-size: clamp(15px, 2.5vw, 18px);
+  font-weight: 950;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+/* ============================================================
+   CONFIGURAÇÃO
+   ============================================================ */
+
+.manual-teams-config-stack {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.manual-teams-field-label {
+  display: block;
+  color: var(--text-2);
+  margin-bottom: var(--s-1);
+  font-weight: 800;
+}
+
+.manual-teams-progress-box {
+  background: rgba(1, 255, 105, 0.1);
+  border: 1px solid rgba(1, 255, 105, 0.22);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.manual-teams-progress-box span {
+  color: var(--primary);
+  font-weight: 950;
+}
+
+.manual-teams-page .players-full-control {
+  width: 100%;
+}
+
+/* ============================================================
+   SCROLL INTERNO DOS CARDS
+   ============================================================ */
+
+.manual-teams-scroll {
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  padding: var(--s-4);
+  -webkit-overflow-scrolling: touch;
+}
+
+.manual-teams-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.manual-teams-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+}
+
+.manual-teams-scroll::-webkit-scrollbar-thumb {
+  background: rgba(1, 255, 105, 0.35);
+  border-radius: 999px;
+}
+
+.manual-teams-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(1, 255, 105, 0.55);
+}
+
+/* ============================================================
+   JOGADORES DISPONÍVEIS
+   ============================================================ */
+
+.manual-teams-player-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.manual-teams-player-name {
+  color: var(--text-2);
+  font-size: var(--fs-2);
+  font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.manual-teams-add-btn.ant-btn {
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.manual-teams-add-btn.ant-btn:hover {
+  background: rgba(1, 255, 105, 0.1) !important;
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+/* ============================================================
+   TIMES
+   ============================================================ */
+
+.manual-team-card.ant-card {
+  background: var(--surface-3) !important;
+  border: 1px solid var(--border-2) !important;
+  border-radius: var(--r-md) !important;
+  margin-bottom: var(--s-2);
+}
+
+.manual-team-card .ant-card-head {
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.manual-team-card .ant-card-body {
+  padding: 10px !important;
+  display: block;
+  overflow: visible;
+}
+
+.manual-team-title {
+  color: var(--text);
+  font-size: var(--fs-2);
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.manual-team-title .ant-badge-count {
+  background: var(--primary);
+  color: #000;
+  font-weight: 950;
+  box-shadow: none;
+}
+
+.manual-team-name-input {
+  margin-bottom: var(--s-2);
+}
+
+.manual-team-player {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.manual-team-player-name {
+  color: var(--text-2);
+  font-size: var(--fs-2);
+  font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.manual-team-empty {
+  color: var(--muted);
+  font-size: var(--fs-1);
+}
+
+.manual-team-vacancies {
+  display: block;
+  margin-top: var(--s-1);
+  color: var(--muted);
+  font-size: var(--fs-1);
+}
+
+/* ============================================================
+   MOBILE / TABS
+   ============================================================ */
+
+.manual-teams-mobile-shell {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.manual-teams-mobile-tabs.ant-tabs {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.manual-teams-mobile-tabs .ant-tabs-nav {
+  flex-shrink: 0;
+  margin-bottom: 0;
+}
+
+.manual-teams-mobile-tabs .ant-tabs-content-holder {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.manual-teams-mobile-tabs .ant-tabs-content {
+  height: 100%;
+  min-height: 0;
+}
+
+.manual-teams-mobile-tabs .ant-tabs-tabpane {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.manual-teams-mobile-pane {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.manual-teams-mobile-pane > .manual-teams-card {
+  height: 100%;
+  min-height: 0;
+}
+
+.manual-teams-mobile-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) 0;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+}
+
+.manual-teams-mobile-footer span {
+  color: var(--text-2);
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+
+.manual-teams-modal-title {
+  color: var(--primary);
+  font-size: clamp(17px, 3vw, 22px);
+  font-weight: 950;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.manual-teams-modal-close {
+  color: var(--primary);
+}
+
+.manual-teams-modal .ant-modal-content {
+  background: var(--surface) !important;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--r-lg) !important;
+}
+
+.manual-teams-modal .ant-modal-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.manual-teams-modal .ant-modal-body {
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+}
+
+.manual-teams-modal .ant-radio-wrapper {
+  color: var(--text);
+}
+
+/* ============================================================
+   GRUPOS / CONFIGURAÇÕES DO CAMPEONATO
+   ============================================================ */
+
+.manual-teams-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.manual-teams-group-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.manual-teams-group-row span {
+  color: var(--text-2);
+  font-weight: 800;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.manual-teams-group-select {
+  width: 150px;
+  flex-shrink: 0;
+}
+
+.manual-teams-sets-card.ant-card {
+  background: var(--surface-3) !important;
+  border: 1px solid var(--border-2) !important;
+  border-radius: var(--r-md) !important;
+  margin-bottom: var(--s-4);
+}
+
+.manual-teams-sets-card .ant-card-head {
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.manual-teams-sets-card .ant-card-head-title {
+  color: var(--primary);
+  font-weight: 950;
+}
+
+.manual-teams-submit.ant-btn {
+  height: 44px;
+  font-weight: 950;
+  color: #000 !important;
+}
+
+/* ============================================================
+   RESPONSIVO
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .manual-teams-page {
+    padding: 8px;
+  }
+
+  .manual-teams-header {
+    margin-bottom: var(--s-3);
+  }
+
+  .manual-teams-card .ant-card-body {
+    padding: var(--s-3);
+  }
+
+  .manual-teams-list-card .ant-card-body {
+    padding: 0 !important;
+  }
+
+  .manual-teams-scroll {
+    padding: var(--s-3);
+  }
+
+  .manual-teams-group-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .manual-teams-group-select {
+    width: 100%;
+  }
+}
+
+/* ============================================================
+   TELA: LISTA DE CAMPEONATOS
+   ============================================================ */
+
+.championships-page {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(12px, 3vw, 24px);
+  box-sizing: border-box;
+  color: var(--text);
+}
+
+.championships-header {
+  margin-bottom: var(--s-5);
+}
+
+.championships-kicker {
+  display: block;
+  color: var(--muted);
+  font-size: var(--fs-1);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--s-1);
+}
+
+.championships-title.ant-typography {
+  color: var(--primary);
+  margin: 0;
+  font-size: clamp(24px, 5vw, 32px);
+  font-weight: 950;
+  line-height: 1.12;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.championships-subtitle {
+  display: block;
+  margin-top: var(--s-2);
+  color: var(--text-2);
+  font-size: var(--fs-2);
+}
+
+.championships-card.ant-card {
+  background:
+    radial-gradient(circle at top left, rgba(1, 255, 105, 0.065), transparent 34%),
+    var(--surface) !important;
+  border: 1px solid var(--border-primary) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+
+.championships-card .ant-card-head {
+  border-bottom: 1px solid var(--border-primary) !important;
+}
+
+.championships-card .ant-card-body {
+  padding: 0;
+}
+
+.championships-section-title {
+  color: var(--primary);
+  font-size: clamp(17px, 3vw, 21px);
+  font-weight: 950;
+}
+
+.championship-name {
+  color: var(--text);
+  font-weight: 900;
+}
+
+.championship-number {
+  color: var(--text);
+  font-weight: 850;
+}
+
+.championship-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 112px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: var(--fs-1);
+  font-weight: 900;
+  border: 1px solid transparent;
+}
+
+.championship-status.created {
+  color: var(--warn);
+  background: rgba(255, 159, 26, 0.12);
+  border-color: rgba(255, 159, 26, 0.32);
+}
+
+.championship-status.in-progress {
+  color: var(--info);
+  background: rgba(47, 155, 255, 0.12);
+  border-color: rgba(47, 155, 255, 0.32);
+}
+
+.championship-status.finished {
+  color: var(--primary);
+  background: rgba(1, 255, 105, 0.12);
+  border-color: rgba(1, 255, 105, 0.32);
+}
+
+.championship-status.default {
+  color: var(--text-2);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.championship-details-btn.ant-btn {
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 900;
+}
+
+.championship-details-btn.ant-btn:hover {
+  background: rgba(1, 255, 105, 0.1) !important;
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+.championships-empty,
+.championships-loading,
+.championships-error {
+  padding: 40px var(--s-4);
+  text-align: center;
+  font-weight: 800;
+}
+
+.championships-loading {
+  color: var(--text-2);
+}
+
+.championships-error {
+  color: var(--danger);
+}
+
+.championships-empty {
+  color: var(--text-2);
+}
+
+@media (max-width: 640px) {
+  .championships-page {
+    padding: 10px;
+  }
+
+  .championship-status {
+    min-width: 98px;
+  }
+}
+
+/* ============================================================
+   COMPONENTE: CLASSIFICAÇÃO DO GRUPO
+   ============================================================ */
+
+.group-standings-card.ant-card {
+  margin-bottom: var(--s-4);
+  background:
+    radial-gradient(circle at top left, rgba(1, 255, 105, 0.055), transparent 34%),
+    var(--surface) !important;
+  border: 1px solid var(--border-primary) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+
+.group-standings-card .ant-card-head {
+  border-bottom: 1px solid var(--border-primary) !important;
+}
+
+.group-standings-card .ant-card-body {
+  padding: 0 !important;
+}
+
+.group-standings-title {
+  color: var(--primary);
+  font-size: clamp(15px, 2.5vw, 22px);
+  font-weight: 950;
+}
+
+.group-standings-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.group-standings-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.group-standings-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+}
+
+.group-standings-scroll::-webkit-scrollbar-thumb {
+  background: rgba(1, 255, 105, 0.35);
+  border-radius: 999px;
+}
+
+.group-standings-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(1, 255, 105, 0.55);
+}
+
+.group-standings-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  background: var(--surface);
+  color: var(--text);
+  font-size: clamp(13px, 1.4vw, 18px);
+}
+
+.group-standings-table th {
+  background: var(--bg);
+  color: var(--primary);
+  padding: clamp(8px, 1vw, 14px);
+  font-size: clamp(13px, 1.4vw, 18px);
+  font-weight: 950;
+  border: 1px solid var(--border-2);
+  white-space: nowrap;
+}
+
+.group-standings-table td {
+  padding: clamp(8px, 1vw, 14px);
+  border: 1px solid var(--border-2);
+  color: var(--text-2);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.group-standings-table th.align-left,
+.group-standings-table td.align-left {
+  text-align: left;
+}
+
+.group-standings-table th.align-center,
+.group-standings-table td.align-center {
+  text-align: center;
+}
+
+.group-standings-row {
+  border-left: 4px solid transparent;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.group-standings-row:hover {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.group-standings-row.qualified {
+  background: rgba(1, 255, 105, 0.12);
+  border-left-color: var(--primary);
+}
+
+.group-standings-row.qualified td {
+  color: var(--primary);
+  font-weight: 950;
+}
+
+.group-standings-team {
+  color: var(--text);
+  font-weight: 950;
+}
+
+.group-standings-row.qualified .group-standings-team {
+  color: var(--primary);
+}
+
+@media (max-width: 768px) {
+  .group-standings-table {
+    min-width: 680px;
+    font-size: clamp(10px, 2vw, 13px);
+  }
+
+  .group-standings-table th {
+    padding: 6px 5px;
+    font-size: clamp(10px, 2vw, 13px);
+  }
+
+  .group-standings-table td {
+    padding: 6px 5px;
+    font-size: clamp(10px, 2vw, 13px);
+  }
+
+  .group-standings-title {
+    font-size: clamp(13px, 3vw, 17px);
+  }
+}

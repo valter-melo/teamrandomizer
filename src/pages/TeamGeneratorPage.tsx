@@ -1,14 +1,12 @@
 import { useCallback, useState } from "react";
-import { Tabs } from "antd";
+import { Tabs, Typography } from "antd";
 import type { TabsProps } from "antd";
-import {
-  DatabaseOutlined,
-  FundOutlined,
-} from "@ant-design/icons";
-import { useMediaQuery } from "react-responsive";
+import { DatabaseOutlined, FundOutlined } from "@ant-design/icons";
 
 import DbTeamGenerator from "../components/DbTeamGenerator";
 import { PotSelection } from "../components/PotSelection";
+
+const { Title, Text } = Typography;
 
 export type PlayerColumns = {
   coluna1: string[];
@@ -21,43 +19,55 @@ type TabKey = "database" | "potes";
 
 export default function TeamGenerator() {
   const [activeTab, setActiveTab] = useState<TabKey>("database");
-  const isMobile = useMediaQuery({ maxWidth: 768 });
 
   const tabsItems: TabsProps["items"] = [
     {
       key: "database",
       label: (
-        <span style={{ fontSize: 'clamp(14px, 2.5vw, 18px)', fontWeight: "bold" }}>
-          <DatabaseOutlined /> Sorteio
+        <span className="team-generator-tab-label">
+          <DatabaseOutlined />
+          Sorteio
         </span>
       ),
     },
     {
       key: "potes",
       label: (
-        <span style={{ fontSize: 'clamp(14px, 2.5vw, 18px)', fontWeight: "bold" }}>
-          <FundOutlined /> Potes
+        <span className="team-generator-tab-label">
+          <FundOutlined />
+          Potes
         </span>
       ),
-    }
+    },
   ];
 
-  const onTabChange = useCallback((k: string) => {
-    setActiveTab(k as TabKey);
+  const onTabChange = useCallback((key: string) => {
+    setActiveTab(key as TabKey);
   }, []);
 
   return (
-    <div style={{ padding: isMobile ? '8px' : 'clamp(12px, 2vw, 24px)', maxWidth: 1400, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+    <main className="team-generator-page">
+      <header className="team-generator-header">
+        <Title level={2} className="team-generator-title">
+          Geração de Times
+        </Title>
+
+        <Text className="team-generator-subtitle">
+          Monte times por sorteio inteligente ou organize manualmente por potes.
+        </Text>
+      </header>
+
       <Tabs
         activeKey={activeTab}
         onChange={onTabChange}
         items={tabsItems}
         size="large"
-        style={{ overflowX: 'auto' }}
-        tabBarStyle={{ color: "#01ff69", fontWeight: "bold" }}
-      />      
+        className="team-generator-tabs"
+      />
+
       {activeTab === "database" && <DbTeamGenerator />}
+
       {activeTab === "potes" && <PotSelection />}
-    </div>
+    </main>
   );
-};
+}

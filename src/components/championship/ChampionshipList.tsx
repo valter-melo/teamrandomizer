@@ -1,67 +1,112 @@
-import React from 'react';
-import { Card, Table, Tag, Button, Typography } from 'antd';
-import { useNavigate } from 'react-router-dom';
-import { useChampionships } from '../../hooks/useChampionships';
+import React from "react";
+import { Button, Card, Table, Typography } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import { TrophyOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
-const { Text } = Typography;
+import { useChampionships } from "../../hooks/useChampionships";
 
-const statusMap: Record<string, { label: string; color: string }> = {
-  CREATED: { label: 'Não iniciado', color: 'orange' },
-  IN_PROGRESS: { label: 'Em andamento', color: 'blue' },
-  FINISHED: { label: 'Finalizado', color: 'green' },
+const { Title, Text } = Typography;
+
+type ChampionshipStatus = "CREATED" | "IN_PROGRESS" | "FINISHED";
+
+type ChampionshipSummary = {
+  id: string;
+  name: string;
+  status: ChampionshipStatus | string;
+  teamCount: number;
+  groupsCount: number;
+};
+
+const statusMap: Record<
+  string,
+  {
+    label: string;
+    className: string;
+  }
+> = {
+  CREATED: {
+    label: "Não iniciado",
+    className: "created",
+  },
+  IN_PROGRESS: {
+    label: "Em andamento",
+    className: "in-progress",
+  },
+  FINISHED: {
+    label: "Finalizado",
+    className: "finished",
+  },
 };
 
 export const ChampionshipList: React.FC = () => {
   const navigate = useNavigate();
+
   const { useList } = useChampionships();
   const { data, isLoading, error } = useList();
 
-  if (isLoading) return <div style={{ color: '#fff', textAlign: 'center', padding: 40 }}>Carregando...</div>;
-  if (error) return <div style={{ color: '#f5222d', textAlign: 'center', padding: 40 }}>Erro ao carregar campeonatos</div>;
+  const championships = (data ?? []) as ChampionshipSummary[];
 
-  const columns = [
+  const columns: ColumnsType<ChampionshipSummary> = [
     {
-      title: 'Nome',
-      dataIndex: 'name',
-      key: 'name',
-      width: 200,
+      title: "Nome",
+      dataIndex: "name",
+      key: "name",
+      width: 240,
       ellipsis: true,
-      render: (name: string) => <Text strong style={{ color: '#fff' }}>{name}</Text>
+      render: (name: string) => (
+        <span className="championship-name">{name}</span>
+      ),
     },
     {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      width: 140,
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      width: 160,
       render: (status: string) => {
-        const info = statusMap[status] || { label: status, color: 'default' };
-        return <Tag color={info.color}>{info.label}</Tag>;
-      }
+        const info = statusMap[status] || {
+          label: status,
+          className: "default",
+        };
+
+        return (
+          <span className={`championship-status ${info.className}`}>
+            {info.label}
+          </span>
+        );
+      },
     },
     {
-      title: 'Times',
-      dataIndex: 'teamCount',
-      key: 'teamCount',
-      width: 80,
-      align: 'center' as const,
+      title: "Times",
+      dataIndex: "teamCount",
+      key: "teamCount",
+      width: 90,
+      align: "center",
+      render: (value: number) => (
+        <span className="championship-number">{value ?? 0}</span>
+      ),
     },
     {
-      title: 'Grupos',
-      dataIndex: 'groupsCount',
-      key: 'groupsCount',
-      width: 80,
-      align: 'center' as const,
+      title: "Grupos",
+      dataIndex: "groupsCount",
+      key: "groupsCount",
+      width: 90,
+      align: "center",
+      render: (value: number) => (
+        <span className="championship-number">{value ?? 0}</span>
+      ),
     },
     {
-      title: 'Ações',
-      key: 'actions',
-      width: 120,
-      render: (_: any, record: any) => (
+      title: "Ações",
+      key: "actions",
+      width: 130,
+      align: "center",
+      render: (_, record) => (
         <Button
-          type="primary"
           ghost
+          type="primary"
+          className="championship-details-btn"
           onClick={() => navigate(`/championships/${record.id}`)}
-          style={{ color: '#01ff69', borderColor: '#01ff69' }}
         >
           Detalhes
         </Button>
@@ -69,26 +114,67 @@ export const ChampionshipList: React.FC = () => {
     },
   ];
 
+  if (isLoading) {
+    return (
+      <main className="championships-page">
+        <div className="championships-loading">Carregando campeonatos...</div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="championships-page">
+        <div className="championships-error">
+          Erro ao carregar campeonatos.
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <div style={{ padding: 'clamp(12px, 3vw, 24px)', maxWidth: 1200, margin: '0 auto' }}>
+    <main className="championships-page">
+      <header className="championships-header">
+        <Title level={2} className="championships-title">
+          <TrophyOutlined />
+          Campeonatos
+        </Title>
+
+        <Text className="championships-subtitle">
+          Acompanhe os campeonatos criados, seus status, grupos e quantidade de
+          times.
+        </Text>
+      </header>
+
       <Card
-        title={<span style={{ color: '#01ff69', fontSize: 'clamp(18px, 3vw, 24px)', fontWeight: 'bold' }}>Campeonatos</span>}
-        style={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: 8 }}
-        styles={{
-          header: { borderBottom: '1px solid #333' },
-          body: { padding: 'clamp(12px, 3vw, 24px)' },
-        }}
+        className="championships-card"
+        title={
+          <span className="championships-section-title">
+            Lista de Campeonatos
+          </span>
+        }
       >
-        <Table
-          dataSource={data}
-          columns={columns}
+        <Table<ChampionshipSummary>
           rowKey="id"
-          scroll={{ x: 'max-content' }}
-          pagination={{ responsive: true, pageSize: 10, showSizeChanger: false }}
-          style={{ backgroundColor: '#1a1a1a' }}
-          rowClassName={() => 'dark-row'}
+          dataSource={championships}
+          columns={columns}
+          scroll={{
+            x: "max-content",
+          }}
+          pagination={{
+            responsive: true,
+            pageSize: 10,
+            showSizeChanger: false,
+          }}
+          locale={{
+            emptyText: (
+              <div className="championships-empty">
+                Nenhum campeonato cadastrado.
+              </div>
+            ),
+          }}
         />
       </Card>
-    </div>
+    </main>
   );
 };

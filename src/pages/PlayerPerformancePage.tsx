@@ -1,24 +1,39 @@
-import React, { useEffect, useState } from 'react';
-import { Card, Row, Col, Typography, Statistic, Table, Input, Select, Space, Tag, Modal, Spin, Button } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  TrophyOutlined,
-  UserOutlined,
-  StarOutlined,
+  Button,
+  Card,
+  Input,
+  Modal,
+  Select,
+  Spin,
+  Statistic,
+  Table,
+  Tag,
+  Typography,
+  message,
+} from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import {
+  CloseOutlined,
+  LineChartOutlined,
   RiseOutlined,
   SearchOutlined,
-  LineChartOutlined,
+  StarOutlined,
+  TrophyOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
-import { http } from '../api/http';
 import {
-  LineChart,
+  CartesianGrid,
+  Legend,
   Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
 } from 'recharts';
+
+import { http } from '../api/http';
 
 const { Title } = Typography;
 
@@ -34,169 +49,181 @@ interface PlayerPerformance {
   lastUpdate: string;
 }
 
-const LEVEL_COLORS: Record<string, string> = {
-  Elite: '#f59e0b',
-  'Muito alto': '#38bdf8',
-  Alto: '#22c55e',
-  Médio: '#a78bfa',
-  'A desenvolver': '#ef4444',
-  Iniciante: '#fb7185',
-};
+interface PlayerEvolution {
+  skillName: string;
+  points: {
+    date: string;
+    rating: number;
+  }[];
+}
 
-const SKILL_COLORS: Record<number, string> = {
-  5: '#10b981',
-  4: '#38bdf8',
-  3: '#a78bfa',
-  2: '#f59e0b',
-  1: '#ef4444',
-  0: '#6b7280',
-};
+type StatTone = 'primary' | 'info' | 'warning' | 'danger';
 
 const StatCard: React.FC<{
   icon: React.ReactNode;
   title: string;
   value: number;
-  color: string;
-}> = ({ icon, title, value, color }) => (
-  <Card
-    style={{
-      borderLeft: `4px solid ${color}`,
-      backgroundColor: '#1a1a1a',
-      borderColor: '#333',
-      borderRadius: 8,
-      height: '100%',
-    }}
-  >
+  tone: StatTone;
+}> = ({ icon, title, value, tone }) => (
+  <Card className={`dashboard-card performance-stat-card stat-${tone}`}>
     <Statistic
-      title={<span style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 16px)' }}>{title}</span>}
+      title={<span className="performance-stat-title">{title}</span>}
       value={value}
-      styles={{ content: { display: 'flex', alignItems: 'center', gap: 12 } }}
       prefix={icon}
     />
   </Card>
 );
 
 export default function PlayerPerformancePage() {
+  const [messageApi, contextHolder] = message.useMessage();
+
   const [data, setData] = useState<PlayerPerformance[]>([]);
   const [loading, setLoading] = useState(true);
+
   const [search, setSearch] = useState('');
-  const [levelFilter, setLevelFilter] = useState<string | undefined>(undefined);
+  const [levelFilter, setLevelFilter] = useState<string | undefined>();
   const [sortSkill, setSortSkill] = useState<string>('overall');
+
   const [evolutionData, setEvolutionData] = useState<any[]>([]);
   const [evolutionModalOpen, setEvolutionModalOpen] = useState(false);
   const [evolutionSkills, setEvolutionSkills] = useState<string[]>([]);
   const [evolutionLoading, setEvolutionLoading] = useState(false);
 
   useEffect(() => {
-    http
-      .get('/players/performance')
-      .then((res) => setData(res.data))
-      .finally(() => setLoading(false));
-  }, []);
+    const loadPerformance = async () => {
+      try {
+        const res = await http.get('/players/performance');
+        setData(Array.isArray(res.data) ? res.data : []);
+      } catch {
+        messageApi.error('Não foi possível carregar o desempenho dos atletas.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPerformance();
+  }, [messageApi]);
+
+  const allSkills = useMemo(() => {
+    return data.length > 0 ? Object.keys(data[0].skills || {}) : [];
+  }, [data]);
+
+  const filtered = useMemo(() => {
+    return data
+      .filter(
+        (player) =>
+          player.name.toLowerCase().includes(search.toLowerCase()) &&
+          (!levelFilter || player.nivel === levelFilter),
+      )
+      .sort((a, b) => {
+        if (sortSkill === 'overall') return b.overall - a.overall;
+
+        const aVal = a.skills[sortSkill] || 0;
+        const bVal = b.skills[sortSkill] || 0;
+
+        return bVal - aVal || b.overall - a.overall;
+      });
+  }, [data, search, levelFilter, sortSkill]);
+
+  const kpis = useMemo(() => {
+    return {
+      total: data.length,
+      avgOverall: data.length
+        ? Math.round(
+            (data.reduce((sum, player) => sum + player.overall, 0) / data.length) * 10,
+          ) / 10
+        : 0,
+      elite: data.filter((player) => player.nivel === 'Elite').length,
+      developing: data.filter(
+        (player) =>
+          player.nivel === 'A desenvolver' || player.nivel === 'Iniciante',
+      ).length,
+    };
+  }, [data]);
+
+  const normalizeLevelClass = (level: string) => {
+    return level
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, '-');
+  };
+
+  const getOverallClass = (value: number) => {
+    if (value >= 4) return 'overall-high';
+    if (value >= 3) return 'overall-medium';
+    return 'overall-low';
+  };
 
   const handleViewEvolution = async (playerId: string) => {
     setEvolutionLoading(true);
+
     try {
       const res = await http.get(`/players/${playerId}/evolution`);
-      const evolutions = res.data as { skillName: string; points: { date: string; rating: number }[] }[];
+      const evolutions = res.data as PlayerEvolution[];
 
       const dateSet = new Set<string>();
       const skillsSet = new Set<string>();
-      evolutions.forEach(skill => {
+
+      evolutions.forEach((skill) => {
         skillsSet.add(skill.skillName);
-        skill.points.forEach(p => dateSet.add(p.date));
+        skill.points.forEach((point) => dateSet.add(point.date));
       });
 
       const sortedDates = Array.from(dateSet).sort();
       const skillsArray = Array.from(skillsSet);
 
-      const chartData = sortedDates.map(dateStr => {
+      const chartData = sortedDates.map((dateStr) => {
         const point: any = {
           date: new Date(dateStr).toLocaleDateString('pt-BR'),
         };
-        evolutions.forEach(skill => {
-          const found = skill.points.find(p => p.date === dateStr);
+
+        evolutions.forEach((skill) => {
+          const found = skill.points.find((item) => item.date === dateStr);
           point[skill.skillName] = found ? found.rating : null;
         });
+
         return point;
       });
 
       setEvolutionSkills(skillsArray);
       setEvolutionData(chartData);
       setEvolutionModalOpen(true);
-    } catch (err) {
-      console.error(err);
+    } catch {
+      messageApi.error('Não foi possível carregar a evolução do atleta.');
     } finally {
       setEvolutionLoading(false);
     }
   };
 
-  const filtered = data
-    .filter(
-      (p) =>
-        p.name.toLowerCase().includes(search.toLowerCase()) &&
-        (!levelFilter || p.nivel === levelFilter)
-    )
-    .sort((a, b) => {
-      if (sortSkill === 'overall') return b.overall - a.overall;
-      const aVal = a.skills[sortSkill] || 0;
-      const bVal = b.skills[sortSkill] || 0;
-      return bVal - aVal || b.overall - a.overall;
-    });
-
-  const kpis = {
-    total: data.length,
-    avgOverall: data.length
-      ? Math.round(
-          (data.reduce((s, p) => s + p.overall, 0) / data.length) * 10
-        ) / 10
-      : 0,
-    elite: data.filter((p) => p.nivel === 'Elite').length,
-    developing: data.filter(
-      (p) => p.nivel === 'A desenvolver' || p.nivel === 'Iniciante'
-    ).length,
-  };
-
-  const allSkills = data.length > 0 ? Object.keys(data[0].skills) : [];
-
-  const columns = [
+  const columns: ColumnsType<PlayerPerformance> = [
     {
       title: '#',
       key: 'rank',
-      width: 50,
-      render: (_: any, __: any, index: number) => (
-        <span
-          style={{
-            fontWeight: 800,
-            color:
-              index < 3
-                ? ['#f59e0b', '#9ca3af', '#cd7f32'][index]
-                : '#aaa',
-          }}
-        >
-          {index + 1}
-        </span>
+      width: 54,
+      render: (_, __, index) => (
+        <span className={`performance-rank top-${index + 1}`}>{index + 1}</span>
       ),
     },
     {
       title: 'Atleta',
       dataIndex: 'name',
       key: 'name',
-      width: 160,
+      width: 170,
       ellipsis: true,
       render: (name: string) => (
-        <span style={{ color: '#fff', fontWeight: 600 }}>{name}</span>
+        <span className="performance-player-name">{name}</span>
       ),
     },
     {
       title: 'Overall',
       dataIndex: 'overall',
       key: 'overall',
-      width: 90,
-      sorter: (a: PlayerPerformance, b: PlayerPerformance) => a.overall - b.overall,
-      render: (val: number) => (
-        <Tag color={val >= 4 ? 'green' : val >= 3 ? 'gold' : 'red'}>
-          {val.toFixed(1)}
+      width: 95,
+      sorter: (a, b) => a.overall - b.overall,
+      render: (value: number) => (
+        <Tag className={`overall-tag ${getOverallClass(value)}`}>
+          {value.toFixed(1)}
         </Tag>
       ),
     },
@@ -204,43 +231,21 @@ export default function PlayerPerformancePage() {
       title: skill,
       dataIndex: ['skills', skill],
       key: skill,
-      width: 80,
-      render: (val: number) =>
-        val != null ? (
-          <span
-            style={{
-              display: 'inline-block',
-              padding: '2px 8px',
-              borderRadius: 6,
-              backgroundColor: `${SKILL_COLORS[val] || '#374151'}22`,
-              color: SKILL_COLORS[val] || '#fff',
-              fontWeight: 700,
-            }}
-          >
-            {val}
-          </span>
+      width: 82,
+      render: (value: number) =>
+        value != null ? (
+          <span className={`skill-score skill-${value}`}>{value}</span>
         ) : (
-          <span style={{ color: '#4b5563' }}>—</span>
+          <span className="skill-score skill-empty">—</span>
         ),
     })),
     {
       title: 'Nível',
       dataIndex: 'nivel',
       key: 'nivel',
-      width: 110,
+      width: 130,
       render: (nivel: string) => (
-        <span
-          style={{
-            display: 'inline-block',
-            padding: '2px 12px',
-            borderRadius: 999,
-            backgroundColor: `${LEVEL_COLORS[nivel]}22`,
-            border: `1px solid ${LEVEL_COLORS[nivel]}55`,
-            color: LEVEL_COLORS[nivel],
-            fontWeight: 700,
-            fontSize: 12,
-          }}
-        >
+        <span className={`level-tag level-${normalizeLevelClass(nivel)}`}>
           {nivel}
         </span>
       ),
@@ -248,25 +253,16 @@ export default function PlayerPerformancePage() {
     {
       title: 'Progresso',
       key: 'bar',
-      width: 90,
-      render: (_: any, record: PlayerPerformance) => (
-        <div
-          style={{
-            width: '100%',
-            maxWidth: 80,
-            height: 8,
-            background: '#21314d',
-            borderRadius: 99,
-            overflow: 'hidden',
-          }}
-        >
+      width: 110,
+      render: (_, record) => (
+        <div className="performance-progress">
           <div
-            style={{
-              width: `${(record.overall / 5) * 100}%`,
-              height: '100%',
-              background: `linear-gradient(90deg, #38bdf8, #22c55e)`,
-              borderRadius: 99,
-            }}
+            className="performance-progress-fill"
+            style={
+              {
+                '--progress': `${(record.overall / 5) * 100}%`,
+              } as React.CSSProperties
+            }
           />
         </div>
       ),
@@ -274,11 +270,12 @@ export default function PlayerPerformancePage() {
     {
       title: 'Evolução',
       key: 'evolution',
-      width: 100,
-      render: (_: any, record: PlayerPerformance) => (
+      width: 110,
+      render: (_, record) => (
         <Button
           icon={<LineChartOutlined />}
           size="small"
+          className="performance-evolution-btn"
           onClick={() => handleViewEvolution(record.id)}
         >
           Evolução
@@ -287,150 +284,194 @@ export default function PlayerPerformancePage() {
     },
   ];
 
-  if (loading)
-    return <Spin size="large" style={{ display: 'block', marginTop: 50 }} />;
+  if (loading) {
+    return (
+      <div className="dashboard-loading">
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: 'clamp(12px, 3vw, 24px)', maxWidth: 1400, margin: '0 auto' }}>
-      <Title level={2} style={{ color: '#01ff69', marginBottom: 24, fontSize: 'clamp(20px, 5vw, 28px)' }}>
+    <main className="performance-page">
+      {contextHolder}
+
+      <Title level={2} className="performance-title">
         🏐 Desempenho dos Atletas
       </Title>
 
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={12} sm={6}>
-          <StatCard
-            icon={<UserOutlined />}
-            title="ATLETAS"
-            value={kpis.total}
-            color="#01ff69"
-          />
-        </Col>
-        <Col xs={12} sm={6}>
-          <StatCard
-            icon={<StarOutlined />}
-            title="MÉDIA GERAL"
-            value={kpis.avgOverall}
-            color="#38bdf8"
-          />
-        </Col>
-        <Col xs={12} sm={6}>
-          <StatCard
-            icon={<TrophyOutlined />}
-            title="ELITE"
-            value={kpis.elite}
-            color="#f59e0b"
-          />
-        </Col>
-        <Col xs={12} sm={6}>
-          <StatCard
-            icon={<RiseOutlined />}
-            title="A DESENVOLVER"
-            value={kpis.developing}
-            color="#ef4444"
-          />
-        </Col>
-      </Row>
+      <section className="performance-kpi-grid">
+        <StatCard
+          icon={<UserOutlined />}
+          title="Atletas"
+          value={kpis.total}
+          tone="primary"
+        />
 
-      <Space style={{ marginBottom: 16, flexWrap: 'wrap' }} size={[8, 8]}>
+        <StatCard
+          icon={<StarOutlined />}
+          title="Média geral"
+          value={kpis.avgOverall}
+          tone="info"
+        />
+
+        <StatCard
+          icon={<TrophyOutlined />}
+          title="Elite"
+          value={kpis.elite}
+          tone="warning"
+        />
+
+        <StatCard
+          icon={<RiseOutlined />}
+          title="A desenvolver"
+          value={kpis.developing}
+          tone="danger"
+        />
+      </section>
+
+      <section className="performance-filters">
         <Input
           prefix={<SearchOutlined />}
           placeholder="Buscar atleta..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ width: 'clamp(180px, 100%, 250px)' }}
+          onChange={(event) => setSearch(event.target.value)}
+          className="performance-search"
         />
-        <Space wrap size={[8, 8]}>
-          <Select
-            placeholder="Filtrar por nível"
-            allowClear
-            style={{ width: 180 }}
-            styles={{ placeholder: { color: '#ffffff80' } }}
-            value={levelFilter}
-            onChange={setLevelFilter}
-            options={[
-              'Elite',
-              'Muito alto',
-              'Alto',
-              'Médio',
-              'A desenvolver',
-              'Iniciante',
-            ].map((n) => ({ value: n, label: n }))}
-          />
-          <Select
-            placeholder="Ordenar por"
-            style={{ width: 200 }}
-            styles={{ placeholder: { color: '#ffffff80' } }}
-            value={sortSkill}
-            onChange={setSortSkill}
-            options={[
-              { value: 'overall', label: 'Overall' },
-              ...allSkills.map((s) => ({ value: s, label: s })),
-            ]}
-          />
-        </Space>
-      </Space>
+
+        <Select
+          placeholder="Filtrar por nível"
+          allowClear
+          value={levelFilter}
+          onChange={setLevelFilter}
+          className="performance-select"
+          options={[
+            'Elite',
+            'Muito alto',
+            'Alto',
+            'Médio',
+            'A desenvolver',
+            'Iniciante',
+          ].map((level) => ({
+            value: level,
+            label: level,
+          }))}
+        />
+
+        <Select
+          placeholder="Ordenar por"
+          value={sortSkill}
+          onChange={setSortSkill}
+          className="performance-select"
+          options={[
+            {
+              value: 'overall',
+              label: 'Overall',
+            },
+            ...allSkills.map((skill) => ({
+              value: skill,
+              label: skill,
+            })),
+          ]}
+        />
+      </section>
 
       <Card
-        title={
-          <span style={{ color: '#01ff69', fontSize: 'clamp(16px, 2.5vw, 20px)' }}>Ranking Geral</span>
-        }
-        style={{
-          backgroundColor: '#1a1a1a',
-          borderColor: '#333',
-          borderRadius: 8,
-        }}
-        styles={{ body: { padding: 0 }}}
+        className="performance-ranking-card"
+        title={<span className="performance-section-title">Ranking Geral</span>}
       >
-        <Table
+        <Table<PlayerPerformance>
           dataSource={filtered}
           columns={columns}
           rowKey="id"
-          pagination={{ pageSize: 15, responsive: true }}
-          scroll={{ x: 'max-content' }}
-          style={{ backgroundColor: '#1a1a1a' }}
-          rowClassName={() => 'dark-row'}
+          pagination={{
+            pageSize: 15,
+            responsive: true,
+          }}
+          scroll={{
+            x: 'max-content',
+          }}
         />
       </Card>
 
       <Modal
-        title={<span style={{ color: '#01ff69' }}>Evolução dos Ratings</span>}
+        title={
+          <span className="performance-modal-title">
+            Evolução dos Ratings
+          </span>
+        }
         open={evolutionModalOpen}
         onCancel={() => setEvolutionModalOpen(false)}
         footer={null}
         width="min(95vw, 900px)"
-        style={{ top: 20 }}
-        styles={{ body: { backgroundColor: '#1a1a1a', padding: 'clamp(12px, 3vw, 24px)' }}}
+        closeIcon={<CloseOutlined className="performance-modal-close" />}
       >
         {evolutionLoading ? (
           <Spin />
         ) : evolutionData.length > 0 ? (
-          <div style={{ width: '100%', height: 'clamp(250px, 50vw, 400px)' }}>
+          <div className="performance-chart-wrapper">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={evolutionData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
+                margin={{
+                  top: 20,
+                  right: 30,
+                  left: 20,
+                  bottom: 10,
+                }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                <XAxis dataKey="date" stroke="#aaa" tick={{ fontSize: 12 }} />
-                <YAxis domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} stroke="#aaa" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#1a1a1a',
-                    border: '1px solid #333',
-                    borderRadius: 8,
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--border)"
+                />
+
+                <XAxis
+                  dataKey="date"
+                  stroke="var(--text-2)"
+                  tick={{
+                    fontSize: 12,
+                    fill: 'var(--text-2)',
                   }}
                 />
+
+                <YAxis
+                  domain={[0, 5]}
+                  ticks={[0, 1, 2, 3, 4, 5]}
+                  stroke="var(--text-2)"
+                  tick={{
+                    fill: 'var(--text-2)',
+                  }}
+                />
+
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'var(--surface-2)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--r-sm)',
+                    color: 'var(--text)',
+                  }}
+                />
+
                 <Legend />
-                {evolutionSkills.map((skill, idx) => (
+
+                {evolutionSkills.map((skill, index) => (
                   <Line
                     key={skill}
                     type="monotone"
                     dataKey={skill}
                     stroke={
-                      ['#38bdf8', '#22c55e', '#f59e0b', '#a78bfa', '#ef4444'][idx % 5]
+                      [
+                        'var(--info)',
+                        'var(--primary)',
+                        'var(--warn)',
+                        '#a78bfa',
+                        'var(--danger)',
+                      ][index % 5]
                     }
                     strokeWidth={2}
-                    dot={{ r: 4 }}
+                    dot={{
+                      r: 4,
+                    }}
                     connectNulls={false}
                   />
                 ))}
@@ -438,11 +479,11 @@ export default function PlayerPerformancePage() {
             </ResponsiveContainer>
           </div>
         ) : (
-          <div style={{ textAlign: 'center', padding: 40, color: '#aaa' }}>
+          <div className="performance-empty-chart">
             Nenhum dado de evolução disponível para este atleta.
           </div>
         )}
       </Modal>
-    </div>
+    </main>
   );
 }
